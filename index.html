@@ -241,6 +241,11 @@ a { color: inherit; }
 .deck::before { content: ''; position: absolute; inset: 0; z-index: 200; pointer-events: none; background: linear-gradient(90deg, rgba(9, 12, 11, .75), rgba(9, 12, 11, 0) 18%, rgba(9, 12, 11, 0) 82%, rgba(9, 12, 11, .75)); }
 .deck-stage { position: absolute; inset: 0; }
 .deck-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease; }
+.deck-arrow { position: absolute; z-index: 205; top: 42%; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid rgba(255, 255, 255, .14); border-radius: 50%; background: rgba(12, 16, 15, .35); color: rgba(255, 255, 255, .78); cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity .25s, background .25s; }
+.deck-arrow:hover { background: rgba(12, 16, 15, .6); color: #fff; }
+.deck-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.deck-prev { left: 10px; } .deck-next { right: 10px; }
+.deck-arrow[disabled] { opacity: 0; pointer-events: none; }
 .deck-tag { position: absolute; z-index: 210; left: 50%; bottom: 12px; display: flex; align-items: center; width: max-content; max-width: calc(100% - 16px); margin: 0; border-radius: 14px; background: rgba(14, 20, 18, .66); border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 12px 34px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .06); color: #fff; transform: translateX(-50%); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .deck-intro { position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; overflow: hidden; border-radius: 2px; opacity: 0; transition: opacity .4s; pointer-events: none; }
 .deck-intro i { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, #b24dff, #18d8f0); transform: scaleX(0); transform-origin: left; }
@@ -329,7 +334,7 @@ a { color: inherit; }
   <!-- 01 Trennwand -->
   <section id="trennwand" class="stack room-shower" data-chapter="trennwand" aria-labelledby="trennwand-title">
     <div class="gate chapter-gate" data-part="Glaswand">
-      <img src="img/dusche-tor.jpg" alt="Runde Glasdusche mit Relief und blauem Licht in der Kante" style="object-position: 50% 40%" loading="lazy">
+      <img src="img/dusche-tor.jpg" alt="Gebogene Glastrennwand mit Noten-Relief und LED-Licht in der Kante" style="object-position: 50% 45%" loading="lazy">
       <div class="gate-text">
         <span class="chapter-number">01</span>
         <h2 id="trennwand-title">Trennwand</h2>
@@ -358,6 +363,8 @@ a { color: inherit; }
         <div class="row-head"><div><h3>Kombinationen</h3><span>Visualisierung</span></div><p>Form, Struktur und Relief frei kombinierbar. 50 Beispiele aus tausenden Möglichkeiten.</p></div>
         <div class="deck" id="deck" tabindex="0" role="group" aria-roledescription="Karussell" aria-label="Glaskombinationen, mit den Pfeiltasten blättern">
           <div class="deck-stage"></div>
+          <button class="deck-arrow deck-prev" type="button" aria-label="Vorheriges Glas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button class="deck-arrow deck-next" type="button" aria-label="Nächstes Glas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
           <div class="deck-tag"><span class="deck-intro" aria-hidden="true"><i></i></span>
             <div class="deck-tag-info" aria-live="polite"><span class="deck-tag-n">Nº <b id="deck-n">01</b><i> / 50</i></span><dl><div><dt>Form</dt><dd id="tag-form">Rundbogen</dd></div><div><dt>Struktur</dt><dd id="tag-structure">Float</dd></div><div><dt id="tag-relief-label">Sandstrahl</dt><dd id="tag-relief">Schriftzug</dd></div></dl></div>
             <div class="deck-tag-ctrl">
@@ -373,27 +380,23 @@ a { color: inherit; }
       </div>
 
       <div class="part" data-part="Projekte">
-        <div class="row-head"><div><h3>Projekte</h3><span>Originalfotos · 17</span></div><p>Realisierte Trennwände und Duschen, mit Licht, Relief und freier Form.</p></div>
+        <div class="row-head"><div><h3>Projekte</h3><span>Originalfotos · 13</span></div><p>Realisierte Trennwände und Raumteiler, mit Licht, Relief und freier Form.</p></div>
         <div class="mosaic" data-gallery>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Runddusche mit LED"><img src="img/tw-01-t.jpg" data-full="img/tw-01.jpg" alt="Runddusche mit LED" width="1067" height="1600" loading="lazy"></button><figcaption>Runddusche mit LED</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Runddusche in Orange"><img src="img/tw-02-t.jpg" data-full="img/tw-02.jpg" alt="Runddusche in Orange" width="1047" height="1600" loading="lazy"></button><figcaption>Runddusche in Orange</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Erlebnisdusche mit Delfinen"><img src="img/tw-03-t.jpg" data-full="img/tw-03.jpg" alt="Erlebnisdusche mit Delfinen" width="827" height="1209" loading="lazy"></button><figcaption>Erlebnisdusche mit Delfinen</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Palme mit LED-Kante"><img src="img/tw-04-t.jpg" data-full="img/tw-04.jpg" alt="Palme mit LED-Kante" width="1200" height="1600" loading="lazy"></button><figcaption>Palme mit LED-Kante</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Relief in rotem Licht"><img src="img/tw-05-t.jpg" data-full="img/tw-05.jpg" alt="Relief in rotem Licht" width="1200" height="1600" loading="lazy"></button><figcaption>Relief in rotem Licht</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Walk-in mit blauem Licht"><img src="img/tw-06-t.jpg" data-full="img/tw-06.jpg" alt="Walk-in mit blauem Licht" width="1067" height="1600" loading="lazy"></button><figcaption>Walk-in mit blauem Licht</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Noten, freie Form"><img src="img/tw-07-t.jpg" data-full="img/tw-07.jpg" alt="Noten, freie Form" width="1200" height="1600" loading="lazy"></button><figcaption>Noten, freie Form</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Runddusche Türkis"><img src="img/tw-08-t.jpg" data-full="img/tw-08.jpg" alt="Runddusche Türkis" width="1042" height="1600" loading="lazy"></button><figcaption>Runddusche Türkis</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Geschwungene Glaswand"><img src="img/tw-09-t.jpg" data-full="img/tw-09.jpg" alt="Geschwungene Glaswand" width="1200" height="1600" loading="lazy"></button><figcaption>Geschwungene Glaswand</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Welle und Glasbausteine"><img src="img/tw-10-t.jpg" data-full="img/tw-10.jpg" alt="Welle und Glasbausteine" width="1270" height="1588" loading="lazy"></button><figcaption>Welle und Glasbausteine</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Grün beleuchtete Wand"><img src="img/tw-11-t.jpg" data-full="img/tw-11.jpg" alt="Grün beleuchtete Wand" width="1067" height="1600" loading="lazy"></button><figcaption>Grün beleuchtete Wand</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Eckdusche in Violett"><img src="img/tw-12-t.jpg" data-full="img/tw-12.jpg" alt="Eckdusche in Violett" width="1200" height="1599" loading="lazy"></button><figcaption>Eckdusche in Violett</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Rotes Relief, dunkles Bad"><img src="img/tw-13-t.jpg" data-full="img/tw-13.jpg" alt="Rotes Relief, dunkles Bad" width="1067" height="1600" loading="lazy"></button><figcaption>Rotes Relief, dunkles Bad</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Türkis unter der Dachschräge"><img src="img/tw-14-t.jpg" data-full="img/tw-14.jpg" alt="Türkis unter der Dachschräge" width="1046" height="1600" loading="lazy"></button><figcaption>Türkis unter der Dachschräge</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Gebogen, satiniert"><img src="img/tw-15-t.jpg" data-full="img/tw-15.jpg" alt="Gebogen, satiniert" width="1200" height="1600" loading="lazy"></button><figcaption>Gebogen, satiniert</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Struktur im Altbau"><img src="img/tw-16-t.jpg" data-full="img/tw-16.jpg" alt="Struktur im Altbau" width="1067" height="1600" loading="lazy"></button><figcaption>Struktur im Altbau</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Traumfänger im Detail"><img src="img/tw-17-t.jpg" data-full="img/tw-17.jpg" alt="Traumfänger im Detail" width="1600" height="1600" loading="lazy"></button><figcaption>Traumfänger im Detail</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Noten mit LED-Kante"><img src="img/tw-01-t.jpg" data-full="img/tw-01.jpg" alt="Noten mit LED-Kante" width="1200" height="1600" loading="lazy"></button><figcaption>Noten mit LED-Kante</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Welle in Violett"><img src="img/tw-02-t.jpg" data-full="img/tw-02.jpg" alt="Welle in Violett" width="480" height="640" loading="lazy"></button><figcaption>Welle in Violett</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Delfin an der Badewanne"><img src="img/tw-03-t.jpg" data-full="img/tw-03.jpg" alt="Delfin an der Badewanne" width="1064" height="1600" loading="lazy"></button><figcaption>Delfin an der Badewanne</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Zwei Trennwände im Altbau"><img src="img/tw-04-t.jpg" data-full="img/tw-04.jpg" alt="Zwei Trennwände im Altbau" width="1600" height="822" loading="lazy"></button><figcaption>Zwei Trennwände im Altbau</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Treppenhaus mit eigenen Motiven"><img src="img/tw-05-t.jpg" data-full="img/tw-05.jpg" alt="Treppenhaus mit eigenen Motiven" width="1465" height="1172" loading="lazy"></button><figcaption>Treppenhaus mit eigenen Motiven</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Welle im Durchgang"><img src="img/tw-06-t.jpg" data-full="img/tw-06.jpg" alt="Welle im Durchgang" width="796" height="1226" loading="lazy"></button><figcaption>Welle im Durchgang</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Raumteiler unter Holzbalken"><img src="img/tw-07-t.jpg" data-full="img/tw-07.jpg" alt="Raumteiler unter Holzbalken" width="1067" height="1600" loading="lazy"></button><figcaption>Raumteiler unter Holzbalken</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Segelschiff im Detail"><img src="img/tw-08-t.jpg" data-full="img/tw-08.jpg" alt="Segelschiff im Detail" width="1600" height="1451" loading="lazy"></button><figcaption>Segelschiff im Detail</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Welle im Detail"><img src="img/tw-09-t.jpg" data-full="img/tw-09.jpg" alt="Welle im Detail" width="480" height="640" loading="lazy"></button><figcaption>Welle im Detail</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Glasbild Segelschiff"><img src="img/tw-10-t.jpg" data-full="img/tw-10.jpg" alt="Glasbild Segelschiff" width="1147" height="1600" loading="lazy"></button><figcaption>Glasbild Segelschiff</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Glasbild Taube"><img src="img/tw-11-t.jpg" data-full="img/tw-11.jpg" alt="Glasbild Taube" width="1170" height="1600" loading="lazy"></button><figcaption>Glasbild Taube</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Türeinlage mit Segeln"><img src="img/tw-12-t.jpg" data-full="img/tw-12.jpg" alt="Türeinlage mit Segeln" width="1067" height="1600" loading="lazy"></button><figcaption>Türeinlage mit Segeln</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Freies Relief, gross"><img src="img/tw-13-t.jpg" data-full="img/tw-13.jpg" alt="Freies Relief, gross" width="1549" height="1600" loading="lazy"></button><figcaption>Freies Relief, gross</figcaption></figure>
         </div>
-        <button class="mosaic-all" type="button">Alle 17 Fotos ansehen <span aria-hidden="true">→</span></button>
+        <button class="mosaic-all" type="button">Alle 13 Fotos ansehen <span aria-hidden="true">→</span></button>
       </div>
 
       <div class="part tech" data-part="Gut zu wissen">
@@ -726,6 +729,7 @@ a { color: inherit; }
   const deckN = document.getElementById('deck-n')
   const tag = deck.querySelector('.deck-tag-info'), tagInfo = tag
   const randomButton = deck.querySelector('.deck-random')
+  const prevButton = deck.querySelector('.deck-prev'), nextButton = deck.querySelector('.deck-next')
   const ledButton = deck.querySelector('.deck-led')
   const tagReliefLabel = document.getElementById('tag-relief-label')
   const tagForm = document.getElementById('tag-form'), tagStructure = document.getElementById('tag-structure'), tagRelief = document.getElementById('tag-relief')
@@ -734,6 +738,7 @@ a { color: inherit; }
     deckN.textContent = String(index + 1).padStart(2, '0')
     tagForm.textContent = c.form; tagStructure.textContent = c.structure; tagRelief.textContent = c.relief
     tagReliefLabel.textContent = c.float ? 'Sandstrahl' : 'Relief'
+    prevButton.disabled = index === 0; nextButton.disabled = index === combos.length - 1
     tag.setAttribute('aria-label', `Kombination ${index + 1} von ${combos.length}: ${c.name}`)
     tagInfo.classList.remove('is-new'); void tagInfo.offsetWidth; tagInfo.classList.add('is-new')
   }
@@ -763,10 +768,16 @@ a { color: inherit; }
       introState = 'running'
       introBar.classList.add('is-running')
       introTimer = setTimeout(() => { if (introState === 'running') { deckRandom?.(); endIntro() } }, reduced ? 1200 : 3000)
-    }, { threshold: 0.6 })
+    }, { threshold: 0.45 })
     watch.observe(deck)
   }
-  deck.addEventListener('pointerdown', endIntro, true)
+  // only a real interaction cancels it: a sideways drag, a button or a key. Scrolling the page
+  // with a finger on the deck does not.
+  let introX = null
+  deck.addEventListener('pointerdown', e => { introX = e.clientX; if (e.target.closest('button')) endIntro() }, true)
+  deck.addEventListener('pointermove', e => { if (introX !== null && Math.abs(e.clientX - introX) > 12) endIntro() }, true)
+  deck.addEventListener('pointerup', () => { introX = null }, true)
+  deck.addEventListener('pointercancel', () => { introX = null }, true)
   deck.addEventListener('keydown', endIntro, true)
   const startImageDeck = () => {
     if (deckStarted) return
@@ -784,6 +795,8 @@ a { color: inherit; }
     }
     deck.addEventListener('pointerdown', event => { x0 = event.target.closest('button') ? null : event.clientX })
     randomButton.addEventListener('click', () => show(randomNear(index)))
+    prevButton.addEventListener('click', () => show(index - 1))
+    nextButton.addEventListener('click', () => show(index + 1))
     deckRandom = () => show(randomNear(index))
     deck.addEventListener('pointerup', event => {
       if (x0 === null) return
@@ -821,6 +834,8 @@ a { color: inherit; }
         ledButton.setAttribute('aria-label', `LED-Licht wechseln: ${l.name}`)
       })
       randomButton.addEventListener('click', () => live.random())
+      prevButton.addEventListener('click', () => live.step(-1))
+      nextButton.addEventListener('click', () => live.step(1))
       startIntro()
     } catch (error) {
       console.warn('3D-Deck nicht verfügbar, Bilder werden gezeigt.', error)

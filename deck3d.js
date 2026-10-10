@@ -119,7 +119,7 @@ export async function initDeck3D({ deck, combos, base = 'img/glas/', onIndex, re
       attenuationColor: '#d6eee4', attenuationDistance: 1400, specularIntensity: 1, envMapIntensity: 1,
       normalMap, normalScale: new THREE.Vector2(1.5, 1.5),
     })
-    const own = { crinkleMap: { value: crinkle }, crinkleRepeat: { value: new THREE.Vector2(2.02, 4.04) }, crinkleScale: { value: isFloat ? 0 : 2.5 }, floatGlass: { value: isFloat ? 1 : 0 },
+    const own = { crinkleMap: { value: crinkle }, crinkleRepeat: { value: new THREE.Vector2(2.02, 4.04) }, crinkleScale: { value: isFloat ? 0 : 1.7 }, floatGlass: { value: isFloat ? 1 : 0 },
       escapeMap: { value: escape }, edgeMap: { value: edges }, shade: { value: 1 },
       ledOn: { value: 0 }, roomGlow: { value: 0.42 }, veil: { value: 0 } }
     m.userData.uniforms = own
@@ -365,7 +365,7 @@ float facing = 0.0;`)
   composer.render()
   canvas.classList.add('is-ready')
   wake()
-  return { setLight, light: () => led, random }
+  return { setLight, light: () => led, random, step: d => goTo(Math.round(aim) + d) }
 }
 
 // ------------------------------------------------------------------ geometry
