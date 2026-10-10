@@ -1,0 +1,883 @@
+<!doctype html><html lang="de-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><title>Glas im Bad – Büchler Glas</title><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Manrope:wght@400;500;600&display=swap">
+<style>
+/* Layout: one vertical column for the phone. Each chapter is its own room:
+   a full-bleed photo gate, its own background tone, and a sticky bar that names where you are. */
+:root {
+  --bg: #f3f5f2;
+  --surface: #ffffff;
+  --fg: #1c2622;
+  --muted: #66746e;
+  --line: #d9e0db;
+  --accent: #2f6f62;
+  --panel: #e8ede9;
+  --room2-bg: #1b2320;
+  --room2-fg: #eef2ef;
+  --room2-muted: #a3b0aa;
+  --room2-line: #34403b;
+  --room2-panel: #252f2b;
+  --room3-bg: #eee6da;
+  --room3-fg: #2a221b;
+  --room3-muted: #77695a;
+  --room3-line: #d8ccbb;
+  --room3-panel: #e4d9c9;
+  --stage: #0b0f0e;
+  --on-photo: #ffffff;
+  --scrim: rgba(10, 14, 13, .84);
+  --display: 'Manrope', 'Helvetica Neue', Arial, sans-serif;
+  --text: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+  --gutter: clamp(20px, 5vw, 48px);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #101412; --surface: #171d1b; --fg: #e6ebe8; --muted: #97a39e; --line: #2a3330; --accent: #7cc3b2; --panel: #1a211e;
+  --room2-bg: #e9ece7; --room2-fg: #1c2622; --room2-muted: #5f6c66; --room2-line: #cdd5d0; --room2-panel: #dde2dd;
+  --room3-bg: #1e1913; --room3-fg: #efe6da; --room3-muted: #ab9d8b; --room3-line: #3a3128; --room3-panel: #2a231b;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #101412; --surface: #171d1b; --fg: #e6ebe8; --muted: #97a39e; --line: #2a3330; --accent: #7cc3b2; --panel: #1a211e;
+  --room2-bg: #e9ece7; --room2-fg: #1c2622; --room2-muted: #5f6c66; --room2-line: #cdd5d0; --room2-panel: #dde2dd;
+  --room3-bg: #1e1913; --room3-fg: #efe6da; --room3-muted: #ab9d8b; --room3-line: #3a3128; --room3-panel: #2a231b;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--stage); color: var(--fg); font: 400 16px/1.55 var(--text); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 500; letter-spacing: -.025em; text-wrap: balance; }
+h3 { font-size: 24px; line-height: 1.15; }
+p { margin: 0; }
+img { display: block; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.wrap { padding-inline: var(--gutter); max-width: 980px; margin-inline: auto; }
+.label { font-size: 11px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.tag { position: absolute; left: 10px; bottom: 10px; padding: 4px 9px; border-radius: 999px; background: rgba(10, 14, 13, .58); color: var(--on-photo); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
+.tag.top { left: auto; right: 10px; top: 10px; bottom: auto; }
+
+/* Hero: three real rooms in sequence; the chapter index doubles as the progress bar. */
+.hero { --hero-dur: 5.5s; position: relative; display: flex; flex-direction: column; justify-content: space-between; height: 100svh; min-height: 600px; max-height: 1000px; overflow: hidden; background: #0b0f0e; color: var(--on-photo); }
+.hero-slides { position: absolute; inset: 0 0 auto; height: 66%; overflow: hidden; }
+.hero-slides::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,15,14,.5) 0%, rgba(11,15,14,0) 18%, rgba(11,15,14,0) 62%, #0b0f0e 100%); z-index: 1; }
+.hero-slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1.2s ease; }
+.hero-slide.is-active { opacity: 1; }
+.hero-slide img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); }
+.hero-slide.is-active img { animation: drift 8s ease-out forwards; }
+@keyframes drift { to { transform: scale(1.1); } }
+.hero-top, .hero-body { position: relative; z-index: 2; }
+.hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px var(--gutter); }
+.brand-logo { display: block; height: 22px; width: auto; filter: drop-shadow(0 1px 8px rgba(0,0,0,.5)); }
+.logo-slot { padding: 6px 12px; border: 1px dashed rgba(255,255,255,.6); border-radius: 999px; font-size: 12px; color: rgba(255,255,255,.85); white-space: nowrap; }
+.hero-edition { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.75); white-space: nowrap; }
+.hero-body { display: grid; gap: 12px; width: 100%; max-width: 980px; margin-inline: auto; padding: 0 var(--gutter) max(20px, env(safe-area-inset-bottom)); }
+.hero-body .label { color: rgba(255,255,255,.72); }
+.hero h1 { font-size: clamp(36px, 10.4vw, 88px); line-height: .98; letter-spacing: -.04em; }
+.hero h1 span { display: block; white-space: nowrap; }
+.hero p { max-width: 30em; color: rgba(255,255,255,.84); font-size: 16px; }
+.hero-index { display: grid; margin-top: 8px; border-top: 1px solid rgba(255,255,255,.22); }
+.hero-index a { position: relative; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.22); color: #fff; text-decoration: none; opacity: .6; transition: opacity .4s; }
+.hero-index a.is-active { opacity: 1; }
+.hero-index .n { font: 500 12px/1 var(--display); letter-spacing: .14em; }
+.hero-index b { display: block; font: 500 19px/1.2 var(--display); letter-spacing: -.01em; }
+.hero-index small { display: block; font-size: 13px; line-height: 1.3; color: rgba(255,255,255,.72); }
+.hero-index .go { font-size: 18px; }
+.hero-index i { position: absolute; left: 0; bottom: -1px; width: 0; height: 1px; background: #fff; }
+.hero-index a.is-active i { animation: fill var(--hero-dur) linear forwards; }
+.hero.paused .hero-index a.is-active i, .hero.paused .hero-slide.is-active img { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } .hero-slide.is-active img { animation: none; } .hero-index a.is-active i { animation: none; width: 100%; } }
+@media (max-height: 700px) { .hero p { display: none; } .hero-index small { display: none; } }
+
+/* Photo gates: the cover and each chapter open with one full-bleed photo. */
+.gate { position: relative; height: min(76svh, 760px); min-height: 460px; overflow: hidden; background: #0b0f0e; color: var(--on-photo); }
+.gate > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.gate::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,14,13,0) 32%, var(--scrim) 100%); }
+.gate-text { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; display: grid; gap: 12px; padding: 0 var(--gutter) 28px; max-width: 980px; margin-inline: auto; }
+.gate-text .label { color: rgba(255,255,255,.74); }
+.gate-text p { max-width: 32em; color: rgba(255,255,255,.86); font-size: 16.5px; }
+.chapter-gate { height: min(86svh, 820px); }
+.chapter-number { font: 500 13px/1 var(--display); letter-spacing: .2em; color: rgba(255,255,255,.8); display: flex; align-items: center; gap: 10px; }
+.chapter-number::after { content: ''; width: 40px; height: 1px; background: rgba(255,255,255,.6); }
+.chapter-gate h2 { font-size: clamp(60px, 18vw, 150px); line-height: .9; letter-spacing: -.045em; }
+.chapter-gate .sub { font: 500 clamp(20px, 5.4vw, 30px)/1.15 var(--display); color: #fff; }
+
+/* Sticky chapter bar: always says which room you are in. */
+.chapterbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px var(--gutter); background: var(--cb-bg, var(--bg)); color: var(--cb-fg, var(--fg)); border-bottom: 1px solid var(--cb-line, var(--line)); transition: background .45s, color .45s, border-color .45s; }
+.chapterbar[data-chapter="lavabo"] { --cb-bg: var(--room2-bg); --cb-fg: var(--room2-fg); --cb-line: var(--room2-line); }
+.chapterbar[data-chapter="rueckwand"] { --cb-bg: var(--room3-bg); --cb-fg: var(--room3-fg); --cb-line: var(--room3-line); }
+.cb-where { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.cb-where b { font: 600 15px/1 var(--display); letter-spacing: -.01em; white-space: nowrap; }
+.cb-where span { font-size: 13px; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-steps { display: flex; gap: 6px; flex: 0 0 auto; }
+.cb-steps a { display: block; width: 20px; height: 4px; border-radius: 2px; background: currentColor; opacity: .22; transition: opacity .3s, width .3s; }
+.cb-steps a[aria-current="true"] { opacity: 1; width: 34px; }
+
+/* Room change on scroll: each chapter holds still at its end, steps back and dims,
+   while the next one rises over it with rounded corners. */
+.stack { --recede: 0; position: sticky; top: calc(100svh - var(--h, 100svh)); transform: scale(calc(1 - var(--recede) * .07)); transform-origin: 50% calc(100% - 50svh); overflow: clip; }
+.stack::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; height: 100svh; background: #000; opacity: calc(var(--recede) * .55); pointer-events: none; }
+.hero.stack { z-index: 1; transform-origin: 50% 50%; }
+#trennwand { z-index: 2; } #lavabo { z-index: 3; } #rueckwand { z-index: 4; }
+#trennwand, #lavabo, #rueckwand, .contact { border-radius: 26px 26px calc(var(--recede) * 30px) calc(var(--recede) * 30px); box-shadow: 0 -18px 40px rgba(0,0,0,.35); }
+.contact { position: relative; z-index: 5; border-radius: 26px 26px 0 0; }
+@media (prefers-reduced-motion: reduce) { .stack { transform: none; } .stack::after { display: none; } }
+
+/* Rooms. */
+.room { display: grid; gap: 30px; padding-block: 40px calc(56px + 8svh); }
+.benefits + .part { margin-top: 26px; }
+.room-shower { background: var(--bg); color: var(--fg); }
+.room-basin { --fg: var(--room2-fg); --muted: var(--room2-muted); --line: var(--room2-line); --panel: var(--room2-panel); background: var(--room2-bg); color: var(--fg); }
+.room-kitchen { --fg: var(--room3-fg); --muted: var(--room3-muted); --line: var(--room3-line); --panel: var(--room3-panel); background: var(--room3-bg); color: var(--fg); }
+.intro { font-size: 17px; color: var(--muted); max-width: 34em; }
+.part { display: grid; gap: 14px; scroll-margin-top: 56px; }
+.note { font-size: 13px; color: var(--muted); }
+
+/* Before / after: two real photos of the same room, tap to switch. */
+.ba { position: relative; width: 100%; aspect-ratio: 3 / 4; max-width: 100%; max-height: 80svh; margin-inline: auto; overflow: hidden; border-radius: 4px; background: #0b0f0e; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .7s ease; }
+.ba .after { opacity: 0; }
+.ba[data-show="nachher"] .after { opacity: 1; }
+.ba-switch { position: absolute; z-index: 2; left: 50%; bottom: 14px; display: flex; padding: 4px; border-radius: 999px; background: rgba(10,14,13,.6); backdrop-filter: blur(10px); transform: translateX(-50%); }
+.ba-switch button { min-width: 92px; min-height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: none; color: rgba(255,255,255,.8); font: 500 14px/1 var(--text); cursor: pointer; transition: background .3s, color .3s; }
+.ba-switch button[aria-pressed="true"] { background: #fff; color: #1c2622; }
+@media (prefers-reduced-motion: reduce) { .ba img { transition: none; } }
+
+/* Benefits: one at a time, story-style bars; tap or arrow keys to move on. */
+.benefits { --dur: 3.6s; display: grid; gap: 18px; padding: 22px 20px 24px; border-radius: 6px; background: var(--panel); cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.benefit-bars { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; }
+.benefit-bars span { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.benefit-bars i { display: block; height: 100%; width: 0; background: var(--fg); }
+.benefit-bars span.done i { width: 100%; }
+.benefit-bars span.now i { animation: fill var(--dur) linear forwards; }
+.benefits.paused .benefit-bars span.now i { animation-play-state: paused; }
+@keyframes fill { to { width: 100%; } }
+.benefit-stage { display: grid; }
+.benefit { grid-area: 1 / 1; display: grid; gap: 6px; align-content: start; opacity: 0; transform: translateY(6px); transition: opacity .5s ease, transform .5s ease; }
+.benefit.now { opacity: 1; transform: none; }
+.benefit strong { font: 500 clamp(28px, 8vw, 40px)/1.05 var(--display); letter-spacing: -.03em; }
+.benefit span { font-size: 17px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .benefit { transition: none; transform: none; } .benefit-bars span.now i { animation: none; width: 100%; } }
+
+/* Swipe rows: full-bleed, snapping. */
+.row-head { display: grid; gap: 6px; }
+.row-head div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.row-head div span { font-size: 12px; color: var(--muted); white-space: nowrap; letter-spacing: .02em; }
+.row-head p { color: var(--muted); font-size: 15px; }
+.swipe { display: flex; align-items: flex-start; gap: 12px; margin-inline: calc(-1 * var(--gutter)); padding: 4px var(--gutter) 6px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; }
+.swipe::-webkit-scrollbar { display: none; }
+.card { flex: 0 0 min(70vw, 300px); display: grid; gap: 8px; margin: 0; scroll-snap-align: start; }
+.card .media { position: relative; aspect-ratio: 2 / 3; max-width: 100%; overflow: hidden; border-radius: 4px; background: #0b0f0e; }
+.card .media img { width: 100%; height: 100%; object-fit: cover; }
+/* Projekte mosaic: five featured photos, the rest in the lightbox. */
+.mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: clamp(150px, 42vw, 230px); gap: 6px; }
+.mosaic .tile { position: relative; margin: 0; overflow: hidden; border-radius: 6px; background: #0b0f0e; }
+.mosaic .tile:first-child { grid-row: span 2; }
+.mosaic .tile:nth-child(4) { grid-column: span 2; }
+.mosaic .tile:nth-child(5) { grid-column: span 2; grid-row: span 2; }
+.mosaic .tile:nth-child(n+6) { display: none; }
+.mosaic button { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.mosaic img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+.mosaic .tile:hover img { transform: scale(1.04); }
+.mosaic figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px; background: linear-gradient(transparent, rgba(0, 0, 0, .62)); color: #fff; font: 500 12.5px/1.25 var(--text); pointer-events: none; }
+@media (min-width: 760px) { .mosaic { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 210px; } .mosaic .tile:nth-child(4), .mosaic .tile:nth-child(5) { grid-column: span 1; grid-row: span 1; } .mosaic .tile:nth-child(n+6) { display: block; } .mosaic .tile:nth-child(n+9) { display: none; } }
+.mosaic-all { justify-self: start; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--fg); font: 500 14px/1 var(--text); cursor: pointer; }
+.card .media img { cursor: zoom-in; }
+/* Lightbox */
+.lightbox { width: 100vw; max-width: none; height: 100svh; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(6, 8, 8, .96); color: #fff; overscroll-behavior: contain; }
+.lightbox::backdrop { background: rgba(0, 0, 0, .8); }
+.lightbox[open] { display: grid; grid-template-rows: auto 1fr auto; }
+.lb-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font: 500 13px/1 var(--text); color: rgba(255, 255, 255, .7); }
+.lb-close, .lb-nav { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .1); color: #fff; font: 400 22px/1 var(--text); cursor: pointer; }
+.lb-stage { position: relative; display: grid; place-items: center; min-height: 0; padding: 0 8px; touch-action: pan-y pinch-zoom; }
+.lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; user-select: none; -webkit-user-drag: none; transition: opacity .25s; }
+.lb-nav { position: absolute; top: 50%; transform: translateY(-50%); }
+.lb-prev { left: 12px; } .lb-next { right: 12px; }
+.lb-cap { padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); text-align: center; font: 500 15px/1.3 var(--display); }
+@media (max-width: 600px) { .lb-nav { display: none; } }
+.card figcaption { display: flex; align-items: center; gap: 10px; font: 500 15px/1.2 var(--display); }
+.card figcaption img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+.card figcaption small { font: 400 12px/1.3 var(--text); color: var(--muted); }
+.card.wide { flex-basis: min(84vw, 420px); }
+.card.wide .media { aspect-ratio: 4 / 3; }
+.card.basin { flex-basis: min(64vw, 280px); }
+.card.basin .media { aspect-ratio: 4 / 3; background: #ecf0ed; }
+.card.basin .media img { object-fit: contain; }
+
+.plates { display: flex; flex-wrap: wrap; gap: 10px; }
+.plates figure { display: grid; justify-items: center; gap: 4px; width: 64px; margin: 0; font-size: 11px; text-align: center; color: var(--muted); }
+.plates img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+
+/* Technical data: key numbers in the page, the full sheet on demand. */
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.facts li { display: grid; gap: 2px; align-content: start; padding: 14px 14px 16px; border-radius: 6px; background: var(--panel); }
+.facts strong { font: 500 24px/1.1 var(--display); letter-spacing: -.02em; }
+.facts span { font-size: 13px; line-height: 1.35; color: var(--muted); }
+.tech-open { justify-self: start; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px; border: 1px solid var(--fg); border-radius: 999px; background: none; color: var(--fg); font: 500 15px/1 var(--text); cursor: pointer; }
+.tech-sheet { position: fixed; inset: auto 0 0; width: 100%; max-width: 640px; max-height: 88svh; margin: 0 auto; padding: 0; border: 0; border-radius: 22px 22px 0 0; background: var(--surface); color: var(--fg); overflow: auto; overscroll-behavior: contain; }
+.tech-sheet[open] { animation: sheet-in .35s cubic-bezier(.2,.8,.2,1); }
+.tech-sheet::backdrop { background: rgba(0,0,0,.55); }
+@keyframes sheet-in { from { transform: translateY(40px); opacity: 0; } }
+.sheet-body:focus { outline: none; }
+.sheet-body { display: grid; gap: 18px; padding: 10px var(--gutter) max(28px, env(safe-area-inset-bottom)); }
+.sheet-body::before { content: ''; justify-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
+.sheet-head { position: sticky; top: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-block: 6px 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.sheet-head h2 { margin-top: 4px; font-size: 26px; line-height: 1.1; }
+.sheet-close { flex: 0 0 auto; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--panel); color: var(--fg); font-size: 22px; line-height: 1; cursor: pointer; }
+.spec { display: grid; margin: 0; }
+.spec div { display: grid; grid-template-columns: 7.5em 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.spec dt { font-size: 13px; color: var(--muted); }
+.spec dd { margin: 0; font-size: 15px; line-height: 1.45; }
+.spec-links { display: grid; gap: 8px; }
+.spec-links a { font-size: 15px; color: var(--accent); }
+.pdf-btn { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding: 16px 18px; border-radius: 14px; background: #17201d; color: #fff; text-decoration: none; }
+.pdf-btn span { display: grid; gap: 4px; }
+.pdf-btn b { font: 600 17px/1.2 var(--display); }
+.pdf-btn small { font: 400 12.5px/1.35 var(--text); color: rgba(255, 255, 255, .7); }
+.pdf-btn i { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #b24dff, #18d8f0); font: 600 20px/1 var(--text); font-style: normal; }
+.spec-note { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .tech-sheet[open] { animation: none; } }
+
+/* Combination deck: live 3D glasses (deck3d.js); without WebGL, frames rendered from the same scene. */
+.deck { --cw: min(56vw, 280px); position: relative; height: calc(var(--cw) * 2 + 190px); margin-inline: calc(-1 * var(--gutter)); overflow: hidden; background: #0b100f; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; outline: none; isolation: isolate; }
+.deck:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.deck::before { content: ''; position: absolute; inset: 0; z-index: 200; pointer-events: none; background: linear-gradient(90deg, rgba(9, 12, 11, .75), rgba(9, 12, 11, 0) 18%, rgba(9, 12, 11, 0) 82%, rgba(9, 12, 11, .75)); }
+.deck-stage { position: absolute; inset: 0; }
+.deck-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease; }
+.deck-tag { position: absolute; z-index: 210; left: 50%; bottom: 12px; display: flex; align-items: center; width: max-content; max-width: calc(100% - 16px); margin: 0; border-radius: 14px; background: rgba(14, 20, 18, .66); border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 12px 34px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .06); color: #fff; transform: translateX(-50%); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.deck-intro { position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; overflow: hidden; border-radius: 2px; opacity: 0; transition: opacity .4s; pointer-events: none; }
+.deck-intro i { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, #b24dff, #18d8f0); transform: scaleX(0); transform-origin: left; }
+.deck-intro.is-running { opacity: .9; }
+.deck-intro.is-running i { animation: intro-fill 3s linear forwards; }
+@keyframes intro-fill { to { transform: scaleX(1); } }
+.deck-tag-info { display: flex; align-items: stretch; min-width: 0; padding: 9px 0 8px 2px; }
+.deck-tag-info.is-new { animation: tag-in .45s cubic-bezier(.2, .7, .2, 1); }
+@keyframes tag-in { from { opacity: .25; transform: translateY(4px); } }
+.deck-tag-n { display: grid; align-content: center; padding: 0 10px 0 9px; border-right: 1px solid rgba(255, 255, 255, .14); font: 500 8.5px/1 var(--text); letter-spacing: .12em; color: #8fd6bd; white-space: nowrap; }
+.deck-tag-n b { display: block; margin-top: 3px; font: 600 18px/1 var(--display, var(--text)); letter-spacing: 0; color: #fff; font-variant-numeric: tabular-nums; }
+.deck-tag-n i { font-style: normal; font-size: 8.5px; letter-spacing: .04em; color: rgba(255, 255, 255, .45); }
+.deck-tag dl { display: flex; min-width: 0; margin: 0; }
+.deck-tag dl div { display: grid; align-content: center; gap: 3px; min-width: 0; padding: 0 9px; border-right: 1px solid rgba(255, 255, 255, .1); }
+.deck-tag dt { font: 500 7.5px/1 var(--text); letter-spacing: .12em; text-transform: uppercase; color: rgba(255, 255, 255, .5); }
+.deck-tag dd { margin: 0; overflow: hidden; font: 500 12px/1.15 var(--text); white-space: nowrap; text-overflow: ellipsis; }
+.deck-tag-ctrl { display: flex; align-items: center; gap: 2px; padding: 0 6px 0 4px; border-left: 1px solid rgba(255, 255, 255, .14); }
+.deck-led, .deck-random { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: none; color: #fff; cursor: pointer; }
+.deck-led i { width: 16px; height: 16px; border-radius: 50%; background: var(--sw, transparent); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .85), 0 0 12px var(--glow, rgba(150, 120, 255, .7)); transition: background .25s, box-shadow .25s; }
+.deck-led.is-off i { background: linear-gradient(135deg, transparent 44%, rgba(255, 255, 255, .7) 45% 55%, transparent 56%); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .5); }
+.deck:not(.is-3d) .deck-led { display: none; }
+.deck-random svg { width: 18px; height: 18px; fill: currentColor; transition: transform .35s; }
+.deck-random:active svg { transform: rotate(90deg); }
+@media (max-width: 380px) { .deck-tag dl div { padding: 0 7px; } .deck-tag dd { font-size: 11px; } .deck-tag-n { padding: 0 8px 0 7px; } }
+.deck-canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .8s ease; }
+.deck-canvas.is-ready { opacity: 1; }
+.deck.is-3d .deck-stage { display: none; }
+.deck.is-3d ~ .deck-foot .deck-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; font-size: 13px; color: var(--muted); }
+
+/* Model drawings. */
+.card.model { flex-basis: min(80vw, 360px); }
+.card.model .media { aspect-ratio: 4 / 3; background: #fff; }
+.card.model .media img { object-fit: contain; padding: 6px; }
+.card.model figcaption span { display: grid; gap: 2px; }
+.card.model figcaption small { font: 400 12.5px/1.35 var(--text); color: var(--muted); }
+
+/* Contact. */
+.contact { display: grid; gap: 12px; padding-block: 56px; background: var(--surface); border-top: 1px solid var(--line); }
+.contact h2 { font-size: clamp(32px, 8vw, 56px); line-height: 1.02; }
+.contact dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 8px 0 0; font-size: 15px; }
+.contact dt { color: var(--muted); }
+.contact dd { margin: 0; }
+.footer { position: relative; z-index: 6; background: var(--bg); }
+.footer .wrap { display: grid; gap: 4px; padding-block: 22px 30px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+@media (min-width: 760px) {
+  .ba, .benefits { width: min(100%, calc(560px + 5vw)); max-width: none; margin-inline: auto; }
+  .ba { max-height: 86svh; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+@media (prefers-reduced-motion: reduce) { .chapterbar, .cb-steps a { transition: none; } }
+</style>
+
+<section class="hero stack" id="start" aria-labelledby="cover-title">
+  <div class="hero-slides">
+    <figure class="hero-slide is-active"><img src="img/licht-3.jpg" alt="Glaswand mit Relief und türkiser Lichtkante in einer Dusche" style="object-position: 40% 50%" fetchpriority="high"></figure>
+    <figure class="hero-slide"><img src="img/foto-washbasin-room-glass.jpg" alt="Bad mit beleuchtetem Glaslavabo und strukturierter Glaswand" style="object-position: 20% 50%" loading="lazy"></figure>
+    <figure class="hero-slide"><img src="img/rw-f1.jpg" alt="Küche mit Glasrückwand im Verlauf von Gelb nach Rot" style="object-position: 50% 50%" loading="lazy"></figure>
+  </div>
+  <div class="hero-top">
+    <img class="brand-logo" src="img/buechler-glas-light.svg" alt="Büchler Glas" width="168" height="22">
+    <span class="hero-edition">Katalog 2026</span>
+  </div>
+  <div class="hero-body">
+    <span class="label">Glas für Bad und Küche</span>
+    <h1 id="cover-title"><span>Ein Element.</span> <span>Ein anderer Raum.</span></h1>
+    <p>Im Ofen geformt, von Hand gefertigt. Jedes Stück ein Unikat.</p>
+    <nav class="hero-index" aria-label="Kapitel">
+      <a href="#trennwand" class="is-active"><span class="n">01</span><span class="t"><b>Trennwand</b><small>Von der Wanne zur Glaswand</small></span><span class="go" aria-hidden="true">→</span><i></i></a>
+      <a href="#lavabo"><span class="n">02</span><span class="t"><b>Lavabo</b><small>Vom Becken zum Unikat</small></span><span class="go" aria-hidden="true">→</span><i></i></a>
+      <a href="#rueckwand"><span class="n">03</span><span class="t"><b>Rückwand</b><small>Vom Fliesenspiegel zum Glas</small></span><span class="go" aria-hidden="true">→</span><i></i></a>
+    </nav>
+  </div>
+</section>
+
+<div class="chapterbar" id="chapterbar" data-chapter="trennwand" aria-live="polite">
+  <div class="cb-where"><b id="cb-chapter">01 Trennwand</b><span id="cb-part">Vorher / Nachher</span></div>
+  <nav class="cb-steps" aria-label="Kapitel">
+    <a href="#trennwand" aria-label="01 Trennwand" aria-current="true"></a>
+    <a href="#lavabo" aria-label="02 Lavabo" aria-current="false"></a>
+    <a href="#rueckwand" aria-label="03 Rückwand" aria-current="false"></a>
+  </nav>
+</div>
+
+<main>
+  <!-- 01 Trennwand -->
+  <section id="trennwand" class="stack room-shower" data-chapter="trennwand" aria-labelledby="trennwand-title">
+    <div class="gate chapter-gate" data-part="Glaswand">
+      <img src="img/dusche-tor.jpg" alt="Runde Glasdusche mit Relief und blauem Licht in der Kante" style="object-position: 50% 40%" loading="lazy">
+      <div class="gate-text">
+        <span class="chapter-number">01</span>
+        <h2 id="trennwand-title">Trennwand</h2>
+        <span class="sub">Von der Wanne zur Glaswand.</span>
+      </div>
+      <span class="tag top">Originalfoto</span>
+    </div>
+
+    <div class="wrap room">
+      <div class="part" data-part="Vorher / Nachher">
+        <p class="intro">Dasselbe Bad, vorher und nachher.</p>
+        <div class="ba" data-show="vorher">
+          <img src="img/dusche-vorher.jpg" alt="Vorher: Badewanne mit hellgrünen Fliesen" class="before" style="object-position: 62% 50%">
+          <img src="img/dusche-nachher.jpg" alt="Nachher: begehbare Dusche mit strukturierter Glaswand" class="after" loading="lazy">
+          <div class="ba-switch" role="group" aria-label="Ansicht wählen"><button type="button" data-to="vorher" aria-pressed="true">Vorher</button><button type="button" data-to="nachher" aria-pressed="false">Nachher</button></div>
+          <span class="tag top">Originalfotos</span>
+        </div>
+      </div>
+
+      <div class="benefits" data-part="Warum Glas" tabindex="0" aria-label="Vorteile, antippen für den nächsten">
+        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Hygiene</strong><span>Kein Stoff, kein Schimmel.</span></div><div class="benefit"><strong>Trocken</strong><span>Das Wasser bleibt in der Dusche.</span></div><div class="benefit"><strong>Mehr Licht</strong><span>Der Blick geht durch. Das Bad wirkt grösser.</span></div><div class="benefit"><strong>Sichtschutz</strong><span>Blicke bleiben draussen, Licht kommt herein.</span></div><div class="benefit"><strong>Komfort</strong><span>Offen und hell. Nichts klebt am Körper.</span></div><div class="benefit"><strong>Zeitlos</strong><span>Glas kommt nicht aus der Mode.</span></div></div>
+      </div>
+
+      <div class="part kombi" data-part="Kombinationen">
+        <div class="row-head"><div><h3>Kombinationen</h3><span>Visualisierung</span></div><p>Form, Struktur und Relief frei kombinierbar. 50 Beispiele aus tausenden Möglichkeiten.</p></div>
+        <div class="deck" id="deck" tabindex="0" role="group" aria-roledescription="Karussell" aria-label="Glaskombinationen, mit den Pfeiltasten blättern">
+          <div class="deck-stage"></div>
+          <div class="deck-tag"><span class="deck-intro" aria-hidden="true"><i></i></span>
+            <div class="deck-tag-info" aria-live="polite"><span class="deck-tag-n">Nº <b id="deck-n">01</b><i> / 50</i></span><dl><div><dt>Form</dt><dd id="tag-form">Rundbogen</dd></div><div><dt>Struktur</dt><dd id="tag-structure">Float</dd></div><div><dt id="tag-relief-label">Sandstrahl</dt><dd id="tag-relief">Schriftzug</dd></div></dl></div>
+            <div class="deck-tag-ctrl">
+              <button class="deck-led" type="button" aria-label="LED-Licht wechseln: Violett · Türkis" title="Violett · Türkis" style="--sw: linear-gradient(90deg, #b24dff, #18d8f0)"><i></i></button>
+              <button class="deck-random" type="button" aria-label="Zufällige Kombination zeigen" title="Zufällige Kombination"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="7" r="1.4"/><circle cx="13" cy="13" r="1.4"/><circle cx="13" cy="7" r="1.4"/><circle cx="7" cy="13" r="1.4"/><circle cx="10" cy="10" r="1.4"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="deck-foot">
+          <span class="deck-spec">1050 × 2100 mm · 10 mm</span>
+        </div>
+        <script type="application/json" id="deck-data">[{"file": "kombi-01.jpg", "name": "Rundbogen + Float + Schriftzug „Seien Sie kreativ“ mit Logo Büchler Glas", "form": "Rundbogen", "structure": "Float", "relief": "Schriftzug", "maps": "float-kreativ-logo", "float": true}, {"file": "kombi-02.jpg", "name": "Rundbogen + Arc Sweep + Palme", "form": "Rundbogen", "structure": "Arc Sweep", "relief": "Palme", "maps": "arc-sweep-palme"}, {"file": "kombi-03.jpg", "name": "Gebogen C + Rake Fan", "form": "Gebogen C", "structure": "Rake Fan", "relief": "Ohne", "maps": "rake-fan-ohne"}, {"file": "kombi-04.jpg", "name": "Entwurf 06 + Abstract + Delfine", "form": "Entwurf 06", "structure": "Abstract", "relief": "Delfine", "maps": "abstract-delfine"}, {"file": "kombi-05.jpg", "name": "Rechteck + Float + Streifen (sandgestrahlt)", "form": "Rechteck", "structure": "Float", "relief": "Streifen", "maps": "float-streifen", "float": true}, {"file": "kombi-06.jpg", "name": "Facette + Linear + Leuchtturm", "form": "Facette", "structure": "Linear", "relief": "Leuchtturm", "maps": "linear-leuchtturm"}, {"file": "kombi-07.jpg", "name": "Entwurf 07 + Linear + Leuchtturm", "form": "Entwurf 07", "structure": "Linear", "relief": "Leuchtturm", "maps": "linear-leuchtturm"}, {"file": "kombi-08.jpg", "name": "Rechteck + Lateral Sweep + Welle", "form": "Rechteck", "structure": "Lateral Sweep", "relief": "Welle", "maps": "lateral-sweep-wave"}, {"file": "kombi-09.jpg", "name": "Schräg + Flow Scape + Segelboot", "form": "Schräg", "structure": "Flow Scape", "relief": "Segelboot", "maps": "flow-scape-segelboot"}, {"file": "kombi-10.jpg", "name": "Abgerundet + Minimal + Edelweiss", "form": "Abgerundet", "structure": "Minimal", "relief": "Edelweiss", "maps": "minimal-edelweiss"}, {"file": "kombi-11.jpg", "name": "Gebogen J + Flow Scape + Bambus", "form": "Gebogen J", "structure": "Flow Scape", "relief": "Bambus", "maps": "flow-scape-bambus"}, {"file": "kombi-12.jpg", "name": "Rundbogen + Minimal + Noten", "form": "Rundbogen", "structure": "Minimal", "relief": "Noten", "maps": "minimal-noten"}, {"file": "kombi-13.jpg", "name": "Gebogen C + Arc Sweep + Zwei Palmen", "form": "Gebogen C", "structure": "Arc Sweep", "relief": "Zwei Palmen", "maps": "arc-sweep-palmen"}, {"file": "kombi-14.jpg", "name": "Entwurf 06 + Rake Fan + Palme", "form": "Entwurf 06", "structure": "Rake Fan", "relief": "Palme", "maps": "rake-fan-palme"}, {"file": "kombi-15.jpg", "name": "Facette + Abstract", "form": "Facette", "structure": "Abstract", "relief": "Ohne", "maps": "abstract-ohne"}, {"file": "kombi-16.jpg", "name": "Rechteck + Linear + Delfine", "form": "Rechteck", "structure": "Linear", "relief": "Delfine", "maps": "linear-delfine"}, {"file": "kombi-17.jpg", "name": "Schräg + Lateral Sweep + Leuchtturm", "form": "Schräg", "structure": "Lateral Sweep", "relief": "Leuchtturm", "maps": "lateral-sweep-leuchtturm"}, {"file": "kombi-18.jpg", "name": "Facette + Float + Verlauf (sandgestrahlt)", "form": "Facette", "structure": "Float", "relief": "Verlauf", "maps": "float-verlauf", "float": true}, {"file": "kombi-19.jpg", "name": "Abgerundet + Linear + Welle", "form": "Abgerundet", "structure": "Linear", "relief": "Welle", "maps": "linear-wave"}, {"file": "kombi-20.jpg", "name": "Entwurf 07 + Float + Verlauf (sandgestrahlt)", "form": "Entwurf 07", "structure": "Float", "relief": "Verlauf", "maps": "float-verlauf", "float": true}, {"file": "kombi-21.jpg", "name": "Gebogen J + Lateral Sweep + Segelboot", "form": "Gebogen J", "structure": "Lateral Sweep", "relief": "Segelboot", "maps": "lateral-sweep-segelboot"}, {"file": "kombi-22.jpg", "name": "Rundbogen + Flow Scape + Edelweiss", "form": "Rundbogen", "structure": "Flow Scape", "relief": "Edelweiss", "maps": "flow-scape-edelweiss"}, {"file": "kombi-23.jpg", "name": "Gebogen C + Minimal + Bambus", "form": "Gebogen C", "structure": "Minimal", "relief": "Bambus", "maps": "minimal-bambus"}, {"file": "kombi-24.jpg", "name": "Entwurf 06 + Arc Sweep + Noten", "form": "Entwurf 06", "structure": "Arc Sweep", "relief": "Noten", "maps": "arc-sweep-noten"}, {"file": "kombi-25.jpg", "name": "Facette + Rake Fan + Zwei Palmen", "form": "Facette", "structure": "Rake Fan", "relief": "Zwei Palmen", "maps": "rake-fan-palmen"}, {"file": "kombi-26.jpg", "name": "Rechteck + Abstract + Palme", "form": "Rechteck", "structure": "Abstract", "relief": "Palme", "maps": "abstract-palme"}, {"file": "kombi-27.jpg", "name": "Schräg + Float + Palme (sandgestrahlt)", "form": "Schräg", "structure": "Float", "relief": "Palme", "maps": "float-palme-sand", "float": true}, {"file": "kombi-28.jpg", "name": "Schräg + Rake Fan", "form": "Schräg", "structure": "Rake Fan", "relief": "Ohne", "maps": "rake-fan-ohne"}, {"file": "kombi-29.jpg", "name": "Abgerundet + Abstract + Delfine", "form": "Abgerundet", "structure": "Abstract", "relief": "Delfine", "maps": "abstract-delfine"}, {"file": "kombi-30.jpg", "name": "Gebogen J + Linear + Leuchtturm", "form": "Gebogen J", "structure": "Linear", "relief": "Leuchtturm", "maps": "linear-leuchtturm"}, {"file": "kombi-31.jpg", "name": "Rundbogen + Lateral Sweep + Welle", "form": "Rundbogen", "structure": "Lateral Sweep", "relief": "Welle", "maps": "lateral-sweep-wave"}, {"file": "kombi-32.jpg", "name": "Entwurf 07 + Flow Scape + Delfine", "form": "Entwurf 07", "structure": "Flow Scape", "relief": "Delfine", "maps": "flow-scape-delfine"}, {"file": "kombi-33.jpg", "name": "Gebogen C + Flow Scape + Segelboot", "form": "Gebogen C", "structure": "Flow Scape", "relief": "Segelboot", "maps": "flow-scape-segelboot"}, {"file": "kombi-34.jpg", "name": "Entwurf 06 + Minimal + Edelweiss", "form": "Entwurf 06", "structure": "Minimal", "relief": "Edelweiss", "maps": "minimal-edelweiss"}, {"file": "kombi-35.jpg", "name": "Facette + Arc Sweep + Bambus", "form": "Facette", "structure": "Arc Sweep", "relief": "Bambus", "maps": "arc-sweep-bambus"}, {"file": "kombi-36.jpg", "name": "Rechteck + Minimal + Noten", "form": "Rechteck", "structure": "Minimal", "relief": "Noten", "maps": "minimal-noten"}, {"file": "kombi-37.jpg", "name": "Gebogen C + Float + Delfine (sandgestrahlt)", "form": "Gebogen C", "structure": "Float", "relief": "Delfine", "maps": "float-delfine-sand", "float": true}, {"file": "kombi-38.jpg", "name": "Schräg + Arc Sweep + Zwei Palmen", "form": "Schräg", "structure": "Arc Sweep", "relief": "Zwei Palmen", "maps": "arc-sweep-palmen"}, {"file": "kombi-39.jpg", "name": "Abgerundet + Rake Fan + Palme", "form": "Abgerundet", "structure": "Rake Fan", "relief": "Palme", "maps": "rake-fan-palme"}, {"file": "kombi-40.jpg", "name": "Gebogen J + Abstract", "form": "Gebogen J", "structure": "Abstract", "relief": "Ohne", "maps": "abstract-ohne"}, {"file": "kombi-41.jpg", "name": "Rundbogen + Linear + Delfine", "form": "Rundbogen", "structure": "Linear", "relief": "Delfine", "maps": "linear-delfine"}, {"file": "kombi-42.jpg", "name": "Gebogen C + Lateral Sweep + Leuchtturm", "form": "Gebogen C", "structure": "Lateral Sweep", "relief": "Leuchtturm", "maps": "lateral-sweep-leuchtturm"}, {"file": "kombi-43.jpg", "name": "Entwurf 06 + Flow Scape + Welle", "form": "Entwurf 06", "structure": "Flow Scape", "relief": "Welle", "maps": "flow-scape-wave"}, {"file": "kombi-44.jpg", "name": "Facette + Lateral Sweep + Katze", "form": "Facette", "structure": "Lateral Sweep", "relief": "Katze", "maps": "lateral-sweep-katze"}, {"file": "kombi-45.jpg", "name": "Abgerundet + Float + Edelweiss (sandgestrahlt)", "form": "Abgerundet", "structure": "Float", "relief": "Edelweiss", "maps": "float-edelweiss-sand", "float": true}, {"file": "kombi-46.jpg", "name": "Entwurf 07 + Abstract + Katze", "form": "Entwurf 07", "structure": "Abstract", "relief": "Katze", "maps": "abstract-katze"}, {"file": "kombi-47.jpg", "name": "Rechteck + Flow Scape + Edelweiss", "form": "Rechteck", "structure": "Flow Scape", "relief": "Edelweiss", "maps": "flow-scape-edelweiss"}, {"file": "kombi-48.jpg", "name": "Schräg + Minimal + Hund", "form": "Schräg", "structure": "Minimal", "relief": "Hund", "maps": "minimal-hund"}, {"file": "kombi-49.jpg", "name": "Abgerundet + Arc Sweep + Schweiz", "form": "Abgerundet", "structure": "Arc Sweep", "relief": "Schweiz", "maps": "arc-sweep-schweiz"}, {"file": "kombi-50.jpg", "name": "Gebogen J + Rake Fan + Besteck", "form": "Gebogen J", "structure": "Rake Fan", "relief": "Besteck", "maps": "rake-fan-besteck"}]</script>
+      </div>
+
+      <div class="part" data-part="Projekte">
+        <div class="row-head"><div><h3>Projekte</h3><span>Originalfotos · 17</span></div><p>Realisierte Trennwände und Duschen, mit Licht, Relief und freier Form.</p></div>
+        <div class="mosaic" data-gallery>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Runddusche mit LED"><img src="img/tw-01-t.jpg" data-full="img/tw-01.jpg" alt="Runddusche mit LED" width="1067" height="1600" loading="lazy"></button><figcaption>Runddusche mit LED</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Runddusche in Orange"><img src="img/tw-02-t.jpg" data-full="img/tw-02.jpg" alt="Runddusche in Orange" width="1047" height="1600" loading="lazy"></button><figcaption>Runddusche in Orange</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Erlebnisdusche mit Delfinen"><img src="img/tw-03-t.jpg" data-full="img/tw-03.jpg" alt="Erlebnisdusche mit Delfinen" width="827" height="1209" loading="lazy"></button><figcaption>Erlebnisdusche mit Delfinen</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Palme mit LED-Kante"><img src="img/tw-04-t.jpg" data-full="img/tw-04.jpg" alt="Palme mit LED-Kante" width="1200" height="1600" loading="lazy"></button><figcaption>Palme mit LED-Kante</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Relief in rotem Licht"><img src="img/tw-05-t.jpg" data-full="img/tw-05.jpg" alt="Relief in rotem Licht" width="1200" height="1600" loading="lazy"></button><figcaption>Relief in rotem Licht</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Walk-in mit blauem Licht"><img src="img/tw-06-t.jpg" data-full="img/tw-06.jpg" alt="Walk-in mit blauem Licht" width="1067" height="1600" loading="lazy"></button><figcaption>Walk-in mit blauem Licht</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Noten, freie Form"><img src="img/tw-07-t.jpg" data-full="img/tw-07.jpg" alt="Noten, freie Form" width="1200" height="1600" loading="lazy"></button><figcaption>Noten, freie Form</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Runddusche Türkis"><img src="img/tw-08-t.jpg" data-full="img/tw-08.jpg" alt="Runddusche Türkis" width="1042" height="1600" loading="lazy"></button><figcaption>Runddusche Türkis</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Geschwungene Glaswand"><img src="img/tw-09-t.jpg" data-full="img/tw-09.jpg" alt="Geschwungene Glaswand" width="1200" height="1600" loading="lazy"></button><figcaption>Geschwungene Glaswand</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Welle und Glasbausteine"><img src="img/tw-10-t.jpg" data-full="img/tw-10.jpg" alt="Welle und Glasbausteine" width="1270" height="1588" loading="lazy"></button><figcaption>Welle und Glasbausteine</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Grün beleuchtete Wand"><img src="img/tw-11-t.jpg" data-full="img/tw-11.jpg" alt="Grün beleuchtete Wand" width="1067" height="1600" loading="lazy"></button><figcaption>Grün beleuchtete Wand</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Eckdusche in Violett"><img src="img/tw-12-t.jpg" data-full="img/tw-12.jpg" alt="Eckdusche in Violett" width="1200" height="1599" loading="lazy"></button><figcaption>Eckdusche in Violett</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Rotes Relief, dunkles Bad"><img src="img/tw-13-t.jpg" data-full="img/tw-13.jpg" alt="Rotes Relief, dunkles Bad" width="1067" height="1600" loading="lazy"></button><figcaption>Rotes Relief, dunkles Bad</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Türkis unter der Dachschräge"><img src="img/tw-14-t.jpg" data-full="img/tw-14.jpg" alt="Türkis unter der Dachschräge" width="1046" height="1600" loading="lazy"></button><figcaption>Türkis unter der Dachschräge</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Gebogen, satiniert"><img src="img/tw-15-t.jpg" data-full="img/tw-15.jpg" alt="Gebogen, satiniert" width="1200" height="1600" loading="lazy"></button><figcaption>Gebogen, satiniert</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Struktur im Altbau"><img src="img/tw-16-t.jpg" data-full="img/tw-16.jpg" alt="Struktur im Altbau" width="1067" height="1600" loading="lazy"></button><figcaption>Struktur im Altbau</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Traumfänger im Detail"><img src="img/tw-17-t.jpg" data-full="img/tw-17.jpg" alt="Traumfänger im Detail" width="1600" height="1600" loading="lazy"></button><figcaption>Traumfänger im Detail</figcaption></figure>
+        </div>
+        <button class="mosaic-all" type="button">Alle 17 Fotos ansehen <span aria-hidden="true">→</span></button>
+      </div>
+
+      <div class="part tech" data-part="Gut zu wissen">
+        <div class="row-head"><h3>Gut zu wissen</h3></div>
+        <ul class="facts"><li><strong>8–12 mm</strong><span>Glasstärke</span></li><li><strong>3 × 2 m</strong><span>maximal pro Glas</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Form, Struktur, Farbe, Relief</span></li></ul>
+        <button class="tech-open" type="button" data-sheet="tech-trennwand">Technische Daten <span aria-hidden="true">↑</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Lavabo -->
+  <section id="lavabo" class="stack room-basin" data-chapter="lavabo" aria-labelledby="lavabo-title">
+    <div class="gate chapter-gate" data-part="Glaslavabo">
+      <img src="img/wt-tor.jpg" alt="Bad mit Glaslavabo, türkisem Licht und Holzbalken" style="object-position: 50% 50%" loading="lazy">
+      <div class="gate-text">
+        <span class="chapter-number">02</span>
+        <h2 id="lavabo-title">Lavabo</h2>
+        <span class="sub">Vom Becken zum Unikat.</span>
+      </div>
+      <span class="tag top">Originalfoto</span>
+    </div>
+
+    <div class="wrap room">
+      <div class="part" data-part="Vorher / Nachher">
+        <p class="intro">Dasselbe Bad, vorher und nachher.</p>
+        <div class="ba" data-show="vorher">
+          <img src="img/wt-vorher.jpg" alt="Vorher: Keramikbecken mit Unterschrank" class="before" style="object-position: 24% 50%">
+          <img src="img/wt-nachher.jpg" alt="Nachher: geschwungenes Glaslavabo mit türkisem Licht" class="after" loading="lazy">
+          <div class="ba-switch" role="group" aria-label="Ansicht wählen"><button type="button" data-to="vorher" aria-pressed="true">Vorher</button><button type="button" data-to="nachher" aria-pressed="false">Nachher</button></div>
+          <span class="tag top">Originalfotos</span>
+        </div>
+      </div>
+
+      <div class="benefits" data-part="Warum Glas" tabindex="0" aria-label="Vorteile, antippen für den nächsten">
+        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Aus einem Stück</strong><span>Keine Fuge, kein Silikon.</span></div><div class="benefit"><strong>Nach Mass</strong><span>Passend zum bestehenden Möbel.</span></div><div class="benefit"><strong>Licht für die Nacht</strong><span>Sanftes Leuchten statt Deckenlampe.</span></div><div class="benefit"><strong>Ein Unikat</strong><span>Kein Stück gleicht dem anderen.</span></div></div>
+      </div>
+
+      <div class="part" data-part="Projekte">
+        <div class="row-head"><div><h3>Projekte</h3><span>Originalfotos · 6 →</span></div><p>Realisierte Lavabos aus Glas.</p></div>
+        <div class="swipe" aria-label="Realisierte Lavabos">
+          <figure class="card wide"><div class="media"><img src="img/wt-p1.jpg" alt="Wasser läuft in ein Glasbecken vor rotem Hintergrund" loading="lazy"></div><figcaption>Detail</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/wt-p2.jpg" alt="Doppellavabo aus Glas mit Licht auf Holzmöbel" loading="lazy"></div><figcaption>Doppellavabo mit Licht</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/wt-p4.jpg" alt="Breites Glaslavabo auf Holzmöbel unter Spiegelschrank" loading="lazy"></div><figcaption>Für zwei</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/wt-p3.jpg" alt="Orangefarbenes Glaslavabo auf dunklem Möbel" loading="lazy"></div><figcaption>In Farbe</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/wt-p5.jpg" alt="Glaslavabo auf Holzunterschrank im Dachbad" loading="lazy"></div><figcaption>Schwebend</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/foto-washbasin.jpg" alt="Geschwungenes Glaslavabo mit Struktur und Licht" loading="lazy"></div><figcaption>Geschwungen</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="part" data-part="Modelle">
+        <div class="row-head"><div><h3>Modelle</h3><span>Zeichnungen · 19 →</span></div><p>Der Umriss ist frei wählbar, die Beckenform fix.</p></div>
+        <div class="swipe" aria-label="Lavabo-Modelle">
+          <figure class="card model"><div class="media"><img src="img/la-1000.png" alt="Zeichnung LA-1000, Becken 50 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1000</b><small>Becken 50 × 35 cm · L 80–120 · T 50–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1025.png" alt="Zeichnung LA-1025, Becken 52 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1025</b><small>Becken 52 × 34 cm · L 80–100 · T 50–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1027.png" alt="Zeichnung LA-1027, Becken 54 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1027</b><small>Becken 54 × 34 cm · L 85–140 · T 50–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1015.png" alt="Zeichnung LA-1015, Becken 60 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1015</b><small>Becken 60 × 34 cm · L 90–140 · T 50–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1026.png" alt="Zeichnung LA-1026, Becken 60 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1026</b><small>Becken 60 × 34 cm · L 90–180 · T 50–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1017.png" alt="Zeichnung LA-1017, Becken 60 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1017</b><small>Becken 60 × 35 cm · Masse nach Mass</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1018.png" alt="Zeichnung LA-1018, Becken 60 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1018</b><small>Becken 60 × 35 cm · Masse nach Mass</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1001.png" alt="Zeichnung LA-1001, Becken 67 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1001</b><small>Becken 67 × 34 cm · L 95–150 · T 50–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1016.png" alt="Zeichnung LA-1016, Becken 74 × 43/34 cm" loading="lazy"></div><figcaption><span><b>LA-1016</b><small>Becken 74 × 43/34 cm · L 100–170 · T 60–65 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1002.png" alt="Zeichnung LA-1002, Becken 94 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1002</b><small>Becken 94 × 34 cm · L 120–190 · T 50–65 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1062.png" alt="Zeichnung LA-1062, Becken 100 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1062</b><small>Becken 100 × 35 cm · L 128–190 · T 50–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1060.png" alt="Zeichnung LA-1060, Becken 120 × 43 cm" loading="lazy"></div><figcaption><span><b>LA-1060</b><small>Becken 120 × 43 cm · L 150–210 · T 60–65 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1063.png" alt="Zeichnung LA-1063, Becken 120 × 40 cm" loading="lazy"></div><figcaption><span><b>LA-1063</b><small>Becken 120 × 40 cm · Masse nach Mass</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1064.png" alt="Zeichnung LA-1064, Becken 120 × 40 cm" loading="lazy"></div><figcaption><span><b>LA-1064</b><small>Becken 120 × 40 cm · Masse nach Mass</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1061.png" alt="Zeichnung LA-1061, Becken 128 × 41 cm" loading="lazy"></div><figcaption><span><b>LA-1061</b><small>Becken 128 × 41 cm · L 160–210 · T 60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1050.png" alt="Zeichnung LA-1050 Piccolo, Becken 42 × 28 cm" loading="lazy"></div><figcaption><span><b>LA-1050 Piccolo</b><small>Becken 42 × 28 cm · L 65–120 · T 35–60 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1065.png" alt="Zeichnung LA-1065 Duo, Becken 2 × 52 × 40 cm" loading="lazy"></div><figcaption><span><b>LA-1065 Duo</b><small>Becken 2 × 52 × 40 cm · L 148 · T 60–70 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1066.png" alt="Zeichnung LA-1066 Duo, Becken 2 × 50 × 37 cm" loading="lazy"></div><figcaption><span><b>LA-1066 Duo</b><small>Becken 2 × 50 × 37 cm · L 160–200 · T 60–65 cm</small></span></figcaption></figure>
+          <figure class="card model"><div class="media"><img src="img/la-1067.png" alt="Zeichnung LA-1067 Duo, Becken 2 × 61,5 × 43 cm" loading="lazy"></div><figcaption><span><b>LA-1067 Duo</b><small>Becken 2 × 61,5 × 43 cm · L 185–200 · T 60–65 cm</small></span></figcaption></figure>
+        </div>
+      </div>
+
+      <div class="part" data-part="Oberflächen">
+        <div class="row-head"><h3>Oberflächen</h3><p>Dieselben Strukturen wie bei der Glaswand.</p></div>
+        <div class="plates">
+          <figure><img src="img/platte-arc-sweep.jpg" alt="" loading="lazy">Arc Sweep</figure>
+          <figure><img src="img/platte-lateral-sweep.jpg" alt="" loading="lazy">Lateral Sweep</figure>
+          <figure><img src="img/platte-flow-scape.jpg" alt="" loading="lazy">Flow Scape</figure>
+          <figure><img src="img/platte-rake-fan.jpg" alt="" loading="lazy">Rake Fan</figure>
+          <figure><img src="img/platte-abstract.jpg" alt="" loading="lazy">Abstract</figure>
+          <figure><img src="img/platte-minimal.jpg" alt="" loading="lazy">Minimal</figure>
+          <figure><img src="img/platte-linear.jpg" alt="" loading="lazy">Linear</figure>
+        </div>
+      </div>
+
+      <div class="part tech" data-part="Gut zu wissen">
+        <div class="row-head"><h3>Gut zu wissen</h3></div>
+        <ul class="facts"><li><strong>19 mm</strong><span>Glasstärke</span></li><li><strong>1 Stück</strong><span>Becken und Platte</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Umriss, Struktur, Farbe</span></li></ul>
+        <button class="tech-open" type="button" data-sheet="tech-lavabo">Technische Daten <span aria-hidden="true">↑</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 Rückwand -->
+  <section id="rueckwand" class="stack room-kitchen" data-chapter="rueckwand" aria-labelledby="rueckwand-title">
+    <div class="gate chapter-gate" data-part="Küche">
+      <img src="img/rw-tor.jpg" alt="Küche mit geschwungener Glasrückwand in Rot und Transparent" style="object-position: 55% 50%" loading="lazy">
+      <div class="gate-text">
+        <span class="chapter-number">03</span>
+        <h2 id="rueckwand-title">Rückwand</h2>
+        <span class="sub">Vom Fliesenspiegel zur Glasrückwand.</span>
+      </div>
+      <span class="tag top">Originalfoto</span>
+    </div>
+
+    <div class="wrap room">
+      <p class="intro" data-part="Küche">Hinter Herd und Spüle: Glas statt Fliesen und Fugen.</p>
+
+      <div class="benefits" data-part="Warum Glas" tabindex="0" aria-label="Vorteile, antippen für den nächsten">
+        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Fugenlos</strong><span>Keine Fugen, in denen sich Fett sammelt.</span></div><div class="benefit"><strong>Pflegeleicht</strong><span>Ein feuchtes Tuch genügt.</span></div><div class="benefit"><strong>Jede Farbe</strong><span>Uni, Verlauf oder Relief.</span></div><div class="benefit"><strong>Mit Licht</strong><span>Unterbauleuchten lassen die Struktur leuchten.</span></div></div>
+      </div>
+
+      <div class="part" data-part="Farben">
+        <div class="row-head"><div><h3>Farben</h3><span>Originalfotos · 5 →</span></div><p>Von Uni bis Verlauf.</p></div>
+        <div class="swipe" aria-label="Farbige Küchenrückwände">
+          <figure class="card wide"><div class="media"><img src="img/rw-f1.jpg" alt="Küchenrückwand im Verlauf von Gelb nach Rot über einer Spüle" loading="lazy"></div><figcaption>Verlauf Gelb–Rot</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/rw-f2.jpg" alt="Orangerote Küchenrückwand mit Armatur" loading="lazy"></div><figcaption>Orange</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/rw-f3.jpg" alt="Weisse Küchenrückwand mit roten Farbspritzern" loading="lazy"></div><figcaption>Farbakzent</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/rw-f4.jpg" alt="Küchenrückwand in Schwarz und Gold" loading="lazy"></div><figcaption>Schwarz–Gold</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/rw-f5.jpg" alt="Geschwungene Küchenrückwand in Rot und Schwarz hinter dem Kochfeld" loading="lazy"></div><figcaption>Geschwungen</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="part" data-part="Relief und Motiv">
+        <div class="row-head"><div><h3>Relief und Motiv</h3><span>Originalfotos · 4 →</span></div><p>Berge, Linien, Strukturen.</p></div>
+        <div class="swipe" aria-label="Küchenrückwände mit Relief und Motiv">
+          <figure class="card wide"><div class="media"><img src="img/rw-r1.jpg" alt="Graue Küchenrückwand mit Bergrelief von Eiger, Mönch und Jungfrau" loading="lazy"></div><figcaption>Eiger, Mönch, Jungfrau</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/rw-r2.jpg" alt="Goldene Küchenrückwand mit Bergrelief unter Licht" loading="lazy"></div><figcaption>Bergrelief im Licht</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/rw-r3.jpg" alt="Küchenrückwand mit Bergpanorama und Tannen in Schwarz" loading="lazy"></div><figcaption>Bergpanorama</figcaption></figure>
+          <figure class="card wide"><div class="media"><img src="img/rw-r4.jpg" alt="Dunkle Küchenrückwand mit Struktur und Unterbaulicht" loading="lazy"></div><figcaption>Struktur mit Licht</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="part tech" data-part="Gut zu wissen">
+        <div class="row-head"><h3>Gut zu wissen</h3></div>
+        <ul class="facts"><li><strong>6–8 mm</strong><span>Glasstärke</span></li><li><strong>3 × 2 m</strong><span>maximal pro Glas</span></li><li><strong>Ausschnitte</strong><span>für Steckdosen</span></li><li><strong>Frei</strong><span>Struktur, Relief, Farbe</span></li></ul>
+        <button class="tech-open" type="button" data-sheet="tech-rueckwand">Technische Daten <span aria-hidden="true">↑</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" data-chapter="kontakt" aria-labelledby="contact-title">
+    <div class="wrap" style="display: grid; gap: 12px; width: 100%" data-part="Beratung">
+      <span class="label">Beratung</span>
+      <h2 id="contact-title">Welches Element zuerst?</h2>
+      <p style="color: var(--muted); max-width: 34em">Sehen und fühlen Sie die Strukturen als Muster in unserer Ausstellung.</p>
+      <dl>
+        <dt>Telefon</dt><dd><a href="tel:+41323222844">+41 32 322 28 44</a></dd>
+        <dt>E-Mail</dt><dd><a href="mailto:info@buechlerglas.ch">info@buechlerglas.ch</a></dd>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<dialog class="lightbox" id="lightbox" aria-label="Foto">
+  <div class="lb-top"><span class="lb-count"></span><button class="lb-close" type="button" aria-label="Schliessen">×</button></div>
+  <div class="lb-stage"><button class="lb-nav lb-prev" type="button" aria-label="Vorheriges Foto">‹</button><img alt=""><button class="lb-nav lb-next" type="button" aria-label="Nächstes Foto">›</button></div>
+  <p class="lb-cap"></p>
+</dialog>
+
+<dialog class="tech-sheet" id="tech-trennwand" aria-labelledby="tech-trennwand-title">
+  <div class="sheet-body" tabindex="-1" autofocus>
+    <header class="sheet-head"><div><span class="label">01 Trennwand · Glaswand</span><h2 id="tech-trennwand-title">Technische Daten</h2></div><button class="sheet-close" type="button" aria-label="Schliessen">×</button></header>
+    <dl class="spec"><div><dt>Glasstärke</dt><dd>8 bis 12 mm</dd></div><div><dt>Masse</dt><dd>Nach Mass, ohne Mindestmass. Maximal 3000 × 2000 mm pro Glas.</dd></div><div><dt>Licht</dt><dd>Mit oder ohne LED in der Kante</dd></div><div><dt>Oberfläche</dt><dd>Jede Struktur, jede Farbe, jedes Relief</dd></div><div><dt>Form</dt><dd>Frei wählbar, zum Beispiel Rechteck, Rundbogen, Schräg oder Abgerundet</dd></div></dl>
+    <a class="pdf-btn" href="technik/glas-technik.pdf" download="Buechler-Glas-Technischer-Katalog.pdf"><span><b>PDF herunterladen</b><small>Technischer Katalog: Formen, Strukturen, Reliefs, Licht und alle Kombinationen</small></span><i aria-hidden="true">↓</i></a>
+    <p class="spec-note">Alle Angaben werden mit der Offerte verbindlich bestätigt.</p>
+  </div>
+</dialog>
+<dialog class="tech-sheet" id="tech-lavabo" aria-labelledby="tech-lavabo-title">
+  <div class="sheet-body" tabindex="-1" autofocus>
+    <header class="sheet-head"><div><span class="label">02 Lavabo</span><h2 id="tech-lavabo-title">Technische Daten</h2></div><button class="sheet-close" type="button" aria-label="Schliessen">×</button></header>
+    <dl class="spec"><div><dt>Glasstärke</dt><dd>19 mm</dd></div><div><dt>Bauweise</dt><dd>Becken und Platte aus einem Stück</dd></div><div><dt>Masse</dt><dd>Je nach Modell, von L 65 bis 210 cm und T 35 bis 70 cm</dd></div><div><dt>Beckentiefe</dt><dd>15 cm</dd></div><div><dt>Form</dt><dd>Umriss frei wählbar. Beckenform fix nach Modell, weitere auf Anfrage.</dd></div><div><dt>Licht</dt><dd>Mit oder ohne LED</dd></div><div><dt>Oberfläche</dt><dd>Jede Struktur, jede Farbe</dd></div></dl>
+    <div class="spec-links"><a href="img/lavabo-formen-1.png" target="_blank" rel="noopener">Formenübersicht, Seite 1 ↗</a><a href="img/lavabo-formen-2.png" target="_blank" rel="noopener">Formenübersicht, Seite 2 ↗</a></div>
+    <a class="pdf-btn" href="technik/glas-technik.pdf" download="Buechler-Glas-Technischer-Katalog.pdf"><span><b>PDF herunterladen</b><small>Technischer Katalog: Formen, Strukturen, Reliefs, Licht und alle Kombinationen</small></span><i aria-hidden="true">↓</i></a>
+    <p class="spec-note">Alle Angaben werden mit der Offerte verbindlich bestätigt.</p>
+  </div>
+</dialog>
+<dialog class="tech-sheet" id="tech-rueckwand" aria-labelledby="tech-rueckwand-title">
+  <div class="sheet-body" tabindex="-1" autofocus>
+    <header class="sheet-head"><div><span class="label">03 Rückwand · Küche</span><h2 id="tech-rueckwand-title">Technische Daten</h2></div><button class="sheet-close" type="button" aria-label="Schliessen">×</button></header>
+    <dl class="spec"><div><dt>Glasstärke</dt><dd>6 bis 8 mm</dd></div><div><dt>Masse</dt><dd>Nach Mass, ohne Mindestmass. Maximal 3000 × 2000 mm pro Glas.</dd></div><div><dt>Bearbeitung</dt><dd>Bohrungen und Ausschnitte, zum Beispiel für Steckdosen</dd></div><div><dt>Licht</dt><dd>Ohne LED in der Kante. Unterbauleuchten bringen die Struktur zur Geltung.</dd></div><div><dt>Oberfläche</dt><dd>Jede Struktur, jedes Relief, jede Farbe</dd></div></dl>
+    <a class="pdf-btn" href="technik/glas-technik.pdf" download="Buechler-Glas-Technischer-Katalog.pdf"><span><b>PDF herunterladen</b><small>Technischer Katalog: Formen, Strukturen, Reliefs, Licht und alle Kombinationen</small></span><i aria-hidden="true">↓</i></a>
+    <p class="spec-note">Alle Angaben werden mit der Offerte verbindlich bestätigt.</p>
+  </div>
+</dialog>
+
+<footer class="footer"><div class="wrap"><span>© 2026 Büchler Glas AG</span><span>Originalfotos zeigen realisierte Projekte. Visualisierungen sind als solche gekennzeichnet.</span><span>Entwurf</span></div></footer>
+
+<script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  /* Hero: crossfade the three rooms; the index line under the active chapter fills up. */
+  const hero = document.querySelector('.hero')
+  const slides = [...hero.querySelectorAll('.hero-slide')]
+  const links = [...hero.querySelectorAll('.hero-index a')]
+  let current = 0
+  const showSlide = next => {
+    current = (next + slides.length) % slides.length
+    slides.forEach((slide, i) => slide.classList.toggle('is-active', i === current))
+    links.forEach((link, i) => {
+      link.classList.remove('is-active')
+      if (i === current) { void link.offsetWidth; link.classList.add('is-active') }
+    })
+  }
+  if (!reduced) {
+    links.forEach(link => link.querySelector('i').addEventListener('animationend', () => showSlide(current + 1)))
+    addEventListener('load', () => slides.forEach(slide => { slide.querySelector('img').loading = 'eager' }))
+  }
+  hero.addEventListener('click', event => { if (!event.target.closest('a')) showSlide(current + 1) })
+
+  /* Before / after: tap the photo or the switch; the first view flips once on its own. */
+  document.querySelectorAll('.ba').forEach(box => {
+    const buttons = [...box.querySelectorAll('.ba-switch button')]
+    const show = state => {
+      box.dataset.show = state
+      buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.to === state)))
+    }
+    let touched = false
+    buttons.forEach(b => b.addEventListener('click', event => { event.stopPropagation(); touched = true; show(b.dataset.to) }))
+    box.addEventListener('click', () => { touched = true; show(box.dataset.show === 'vorher' ? 'nachher' : 'vorher') })
+    if (!reduced) {
+      const io = new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting) return
+        io.disconnect()
+        setTimeout(() => { if (!touched) show('nachher') }, 1400)
+      }, { threshold: 0.6 })
+      io.observe(box)
+    }
+  })
+
+  /* Benefits: auto-advance while visible; tap or arrow keys to move. */
+  document.querySelectorAll('.benefits').forEach(box => {
+    const bars = [...box.querySelectorAll('.benefit-bars span')]
+    const items = [...box.querySelectorAll('.benefit')]
+    let index = 0
+    const go = next => {
+      index = (next + items.length) % items.length
+      items.forEach((item, i) => item.classList.toggle('now', i === index))
+      bars.forEach((bar, i) => {
+        bar.classList.toggle('done', i < index)
+        bar.classList.remove('now')
+        if (i === index) { void bar.offsetWidth; bar.classList.add('now') }
+      })
+    }
+    if (!reduced) bars.forEach(bar => bar.querySelector('i').addEventListener('animationend', () => go(index + 1)))
+    box.addEventListener('click', event => {
+      const rect = box.getBoundingClientRect()
+      go(event.clientX - rect.left < rect.width * 0.3 ? index - 1 : index + 1)
+    })
+    box.addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight') { event.preventDefault(); go(index + 1) }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); go(index - 1) }
+    })
+    new IntersectionObserver(([entry]) => box.classList.toggle('paused', !entry.isIntersecting), { threshold: 0.6 }).observe(box)
+    box.classList.add('paused')
+    go(0)
+  })
+
+  /* Lightbox: tap any project photo to see it large; swipe, arrows or keys to move through the set. */
+  const lb = document.getElementById('lightbox')
+  const lbImg = lb.querySelector('.lb-stage img'), lbCap = lb.querySelector('.lb-cap'), lbCount = lb.querySelector('.lb-count')
+  let lbSet = [], lbAt = 0
+  const lbShow = i => {
+    lbAt = (i + lbSet.length) % lbSet.length
+    const it = lbSet[lbAt]
+    lbImg.src = it.src; lbImg.alt = it.cap; lbCap.textContent = it.cap
+    lbCount.textContent = `${lbAt + 1} / ${lbSet.length}`
+    const next = lbSet[(lbAt + 1) % lbSet.length]; if (next) new Image().src = next.src
+  }
+  const lbOpen = (set, i) => { lbSet = set; lbShow(i); lb.showModal(); document.documentElement.style.overflow = 'hidden' }
+  lb.addEventListener('close', () => { document.documentElement.style.overflow = '' })
+  lb.querySelector('.lb-close').addEventListener('click', () => lb.close())
+  lb.querySelector('.lb-prev').addEventListener('click', () => lbShow(lbAt - 1))
+  lb.querySelector('.lb-next').addEventListener('click', () => lbShow(lbAt + 1))
+  lb.addEventListener('keydown', e => { if (e.key === 'ArrowRight') lbShow(lbAt + 1); if (e.key === 'ArrowLeft') lbShow(lbAt - 1) })
+  let lbX = null
+  lb.querySelector('.lb-stage').addEventListener('pointerdown', e => { lbX = e.clientX })
+  lb.querySelector('.lb-stage').addEventListener('pointerup', e => {
+    if (lbX === null) return
+    const dx = e.clientX - lbX; lbX = null
+    if (Math.abs(dx) > 40) lbShow(lbAt + (dx < 0 ? 1 : -1))
+    else if (e.target === e.currentTarget) lb.close()
+  })
+  const setOf = imgs => imgs.map(img => ({ src: img.dataset.full || img.currentSrc || img.src, cap: img.closest('figure')?.querySelector('figcaption')?.textContent.trim() || img.alt }))
+  document.querySelectorAll('.mosaic').forEach(m => {
+    const imgs = [...m.querySelectorAll('img')]
+    imgs.forEach((img, i) => img.closest('button').addEventListener('click', () => lbOpen(setOf(imgs), i)))
+    m.parentElement.querySelector('.mosaic-all')?.addEventListener('click', () => lbOpen(setOf(imgs), 0))
+  })
+  document.querySelectorAll('.swipe').forEach(row => {
+    const imgs = [...row.querySelectorAll('.card .media img')]
+    imgs.forEach((img, i) => img.addEventListener('click', () => lbOpen(setOf(imgs), i)))
+  })
+
+  /* PDF: a plain link on the website; inside the claude.ai viewer the file is offered through its
+     downloads capability (plain links cannot download there). */
+  let viewerDownloads = null
+  window.claude?.use?.('downloads').then(d => { viewerDownloads = d }).catch(() => {})
+  document.querySelectorAll('.pdf-btn').forEach(link => link.addEventListener('click', async event => {
+    if (!viewerDownloads) return
+    event.preventDefault()
+    try {
+      const blob = await (await fetch(link.href)).blob()
+      await viewerDownloads.save({ filename: link.getAttribute('download'), data: blob })
+    } catch (error) { if (!['declined', 'rate_limited'].includes(error?.code)) window.open(link.href, '_blank') }
+  }))
+
+  /* Technical sheets: open from the chapter, close by button, backdrop tap or Escape. */
+  const root = document.documentElement
+  document.querySelectorAll('.tech-open').forEach(button => button.addEventListener('click', () => {
+    const sheet = document.getElementById(button.dataset.sheet)
+    sheet.showModal()
+    root.style.overflow = 'hidden'
+  }))
+  document.querySelectorAll('.tech-sheet').forEach(sheet => {
+    sheet.addEventListener('close', () => { root.style.overflow = '' })
+    sheet.addEventListener('click', event => { if (event.target === sheet || event.target.closest('.sheet-close')) sheet.close() })
+  })
+
+  /* Combination deck. The live 3D deck (deck3d.js) loads when the deck comes near; if WebGL or the
+     module is not available, the pre-rendered glasses below are used instead. */
+  const deck = document.getElementById('deck')
+  const combos = JSON.parse(document.getElementById('deck-data').textContent)
+  const deckN = document.getElementById('deck-n')
+  const tag = deck.querySelector('.deck-tag-info'), tagInfo = tag
+  const randomButton = deck.querySelector('.deck-random')
+  const ledButton = deck.querySelector('.deck-led')
+  const tagReliefLabel = document.getElementById('tag-relief-label')
+  const tagForm = document.getElementById('tag-form'), tagStructure = document.getElementById('tag-structure'), tagRelief = document.getElementById('tag-relief')
+  const showIndex = index => {
+    const c = combos[index]
+    deckN.textContent = String(index + 1).padStart(2, '0')
+    tagForm.textContent = c.form; tagStructure.textContent = c.structure; tagRelief.textContent = c.relief
+    tagReliefLabel.textContent = c.float ? 'Sandstrahl' : 'Relief'
+    tag.setAttribute('aria-label', `Kombination ${index + 1} von ${combos.length}: ${c.name}`)
+    tagInfo.classList.remove('is-new'); void tagInfo.offsetWidth; tagInfo.classList.add('is-new')
+  }
+  let deckStarted = false
+  const START = 0                                             // the deck opens on „Seien Sie kreativ“
+  const randomNear = here => {                                // 3 to 8 glasses away
+    const options = []
+    for (let d = 3; d <= 8; d++) for (const to of [here - d, here + d]) if (to >= 0 && to < combos.length) options.push(to)
+    return options[Math.floor(Math.random() * options.length)]
+  }
+  let deckRandom = null
+  // Intro: once the deck is in view, a discreet bar fills for 3 s, then the deck rolls to a random
+  // glass once. Any interaction before that cancels it; it never runs again.
+  const introBar = deck.querySelector('.deck-intro')
+  let introTimer = 0, introState = 'waiting'
+  const endIntro = () => {
+    if (introState === 'done') return
+    introState = 'done'
+    clearTimeout(introTimer)
+    introBar.classList.remove('is-running')
+  }
+  const startIntro = () => {
+    if (introState !== 'waiting') return
+    const watch = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || introState !== 'waiting') return
+      watch.disconnect()
+      introState = 'running'
+      introBar.classList.add('is-running')
+      introTimer = setTimeout(() => { if (introState === 'running') { deckRandom?.(); endIntro() } }, reduced ? 1200 : 3000)
+    }, { threshold: 0.6 })
+    watch.observe(deck)
+  }
+  deck.addEventListener('pointerdown', endIntro, true)
+  deck.addEventListener('keydown', endIntro, true)
+  const startImageDeck = () => {
+    if (deckStarted) return
+    deckStarted = true
+    const stage = deck.querySelector('.deck-stage')
+    stage.innerHTML = '<img class="deck-frame" decoding="async">'
+    const frame = stage.querySelector('img')
+    let index = START, x0 = null
+    const show = i => {
+      index = Math.max(0, Math.min(combos.length - 1, i))
+      frame.src = `img/${combos[index].file}`
+      frame.alt = `Glas ${combos[index].name}, 1050 × 2100 mm, 10 mm`
+      if (index + 1 < combos.length) new Image().src = `img/${combos[index + 1].file}`
+      showIndex(index)
+    }
+    deck.addEventListener('pointerdown', event => { x0 = event.target.closest('button') ? null : event.clientX })
+    randomButton.addEventListener('click', () => show(randomNear(index)))
+    deckRandom = () => show(randomNear(index))
+    deck.addEventListener('pointerup', event => {
+      if (x0 === null) return
+      const dx = event.clientX - x0, left = (event.clientX - deck.getBoundingClientRect().left) / deck.clientWidth < 0.33
+      x0 = null
+      show(index + (Math.abs(dx) > 30 ? (dx < 0 ? 1 : -1) : left ? -1 : 1))
+    })
+    deck.addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight') { event.preventDefault(); show(index + 1) }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); show(index - 1) }
+    })
+    show(START)
+    startIntro()
+  }
+  const startDeck = async () => {
+    try {
+      const { initDeck3D } = await import('./deck3d.js')
+      const live = await initDeck3D({ deck, combos, onIndex: showIndex, reduced, start: START })
+      deckRandom = () => live.random()
+      deckStarted = true
+      const lights = [
+        { name: 'Violett · Türkis', sw: 'linear-gradient(90deg, #b24dff, #18d8f0)', glow: 'rgba(150, 120, 255, .7)' },
+        { name: 'Türkis', sw: '#16d6e0', glow: 'rgba(22, 214, 224, .7)' },
+        { name: 'Warmweiss', sw: '#ffbe73', glow: 'rgba(255, 190, 115, .7)' },
+        { name: 'Ohne Licht', off: true },
+      ]
+      let light = 0
+      ledButton.addEventListener('click', () => {
+        light = (light + 1) % lights.length
+        live.setLight(light)
+        const l = lights[light]
+        ledButton.classList.toggle('is-off', Boolean(l.off))
+        if (!l.off) { ledButton.style.setProperty('--sw', l.sw); ledButton.style.setProperty('--glow', l.glow) }
+        ledButton.title = l.name
+        ledButton.setAttribute('aria-label', `LED-Licht wechseln: ${l.name}`)
+      })
+      randomButton.addEventListener('click', () => live.random())
+      startIntro()
+    } catch (error) {
+      console.warn('3D-Deck nicht verfügbar, Bilder werden gezeigt.', error)
+      deck.querySelector('canvas')?.remove()
+      deck.classList.remove('is-3d')
+      startImageDeck()
+    }
+  }
+  new IntersectionObserver((entries, observer) => {
+    if (!entries[0].isIntersecting) return
+    observer.disconnect()
+    startDeck()
+  }, { rootMargin: '900px 0px' }).observe(deck)
+
+  /* Stack: measure each layer so it sticks at its own end, then let the next one cover it. */
+  const layers = [...document.querySelectorAll('.stack')]
+  const above = [...layers.slice(1), document.querySelector('.contact')]
+  const measure = () => layers.forEach(layer => layer.style.setProperty('--h', layer.offsetHeight + 'px'))
+  const sizes = new ResizeObserver(measure)
+  layers.forEach(layer => sizes.observe(layer))
+
+  /* Chapter bar: the chapter whose top has passed the middle of the screen, and its current part. */
+  const bar = document.getElementById('chapterbar')
+  const chapterName = document.getElementById('cb-chapter')
+  const partName = document.getElementById('cb-part')
+  const steps = [...bar.querySelectorAll('.cb-steps a')]
+  const chapters = [...document.querySelectorAll('main [data-chapter]')]
+  const names = { trennwand: '01 Trennwand', lavabo: '02 Lavabo', rueckwand: '03 Rückwand', kontakt: 'Beratung' }
+  let shown = ''
+
+  let queued = false
+  const update = () => {
+    queued = false
+    const vh = innerHeight
+    layers.forEach((layer, i) => {
+      const progress = Math.min(1, Math.max(0, 1 - above[i].getBoundingClientRect().top / vh))
+      if (!reduced) layer.style.setProperty('--recede', progress.toFixed(3))
+      if (layer === hero) hero.classList.toggle('paused', progress > 0.6 || document.hidden)
+    })
+    const middle = vh * 0.5
+    const chapter = chapters.filter(c => c.getBoundingClientRect().top <= middle).pop() ?? chapters[0]
+    const parts = [...chapter.querySelectorAll('[data-part]')]
+    const part = parts.filter(p => p.getBoundingClientRect().top <= middle).pop() ?? parts[0]
+    const key = chapter.dataset.chapter + '|' + (part?.dataset.part ?? '')
+    if (key === shown) return
+    shown = key
+    bar.dataset.chapter = chapter.dataset.chapter
+    chapterName.textContent = names[chapter.dataset.chapter]
+    partName.textContent = chapter.dataset.chapter === 'kontakt' ? '' : part?.dataset.part ?? ''
+    steps.forEach(step => step.setAttribute('aria-current', String(step.getAttribute('href') === '#' + chapter.dataset.chapter)))
+  }
+  const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update) } }
+  addEventListener('scroll', queue, { passive: true })
+  addEventListener('resize', () => { measure(); queue() })
+  document.addEventListener('visibilitychange', queue)
+  measure()
+  update()
+})()
+</script>
+</body></html>
