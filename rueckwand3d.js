@@ -88,19 +88,23 @@ export async function initRueckwand3D({ deck, combos, base = 'img/rueckwand/', o
   const shared = { ledA: { value: ledA }, ledB: { value: ledB } }
   let ledEnabled = false
 
-  // The panel: back-painted glass. The paint (with the structure and the relief in it) is the
-  // base layer; the smooth glass in front is a clear coat that mirrors the kitchen.
+  // The panel: back-painted glass. The paint, with the structure and the relief formed into the
+  // back of the glass, is the base layer, seen through the glass; the glass in front is a clear
+  // coat that mirrors the kitchen. Kiln-formed glass is never quite flat in front either: the
+  // structure shows faintly in its surface, so the reflections of the window and the ceiling
+  // lights ripple across it.
   const panelMaterial = (combo, maps) => {
     const k = combo.s ? (combo.s === 'minimal' ? 1.1 : 1.6) : 0
     const m = new THREE.MeshPhysicalMaterial({
-      color: '#ffffff', roughness: 0.62, metalness: 0, specularIntensity: 0.25,
-      clearcoat: 1, clearcoatRoughness: 0.025, normalMap: maps.ns, normalScale: new THREE.Vector2(k, k), envMapIntensity: 1,
+      color: '#ffffff', roughness: 0.66, metalness: 0, specularIntensity: 0.15,
+      clearcoat: 1, clearcoatRoughness: 0.03, normalMap: maps.ns, normalScale: new THREE.Vector2(k, k), envMapIntensity: 1.25,
+      clearcoatNormalMap: maps.ns, clearcoatNormalScale: new THREE.Vector2(k * 0.32, k * 0.32),
     })
     const own = {
       paintA: { value: new THREE.Color(combo.a) }, paintB: { value: new THREE.Color(combo.b || combo.a) },
       accent: { value: new THREE.Color(combo.ak || combo.a) }, accentOn: { value: combo.ak ? 1 : 0 },
       reliefMap: { value: maps.nr }, accentMap: { value: maps.am }, escS: { value: maps.ss }, escR: { value: maps.sr },
-      reliefScale: { value: combo.r ? 2.2 : 0 }, panelW: { value: combo.w }, ledY: { value: LED_Y }, ledOn: { value: 0 }, shade: { value: 1 },
+      reliefScale: { value: combo.r ? 1.0 : 0 }, panelW: { value: combo.w }, ledY: { value: LED_Y }, ledOn: { value: 0 }, shade: { value: 1 },
     }
     m.userData.uniforms = own
     const normalChunk = THREE.ShaderChunk.normal_fragment_maps.replace('mapN.xy *= normalScale;', `mapN.xy *= normalScale * ( 1.0 - 0.9 * acc.g );
@@ -128,9 +132,9 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
         .replace('#include <color_fragment>', `#include <color_fragment>
 	px = clamp( ( vPlan.x * ${CW.toFixed(1)} - ( ${(CW / 2).toFixed(1)} - panelW * 0.5 ) ) / panelW, 0.0, 1.0 );
 	acc = texture2D( accentMap, vPlan );
-	// seen through 6 mm of glass: a faint green
-	diffuseColor.rgb *= mix( paintA, paintB, smoothstep( 0.1, 0.9, px ) ) * vec3( 0.95, 0.985, 0.97 );
-	diffuseColor.rgb = mix( diffuseColor.rgb, accent * vec3( 0.95, 0.985, 0.97 ), smoothstep( 0.3, 0.75, acc.r ) * accentOn );
+	// seen through 6 to 8 mm of glass: a faint green, a touch of depth
+	diffuseColor.rgb *= mix( paintA, paintB, smoothstep( 0.1, 0.9, px ) ) * vec3( 0.92, 0.975, 0.955 );
+	diffuseColor.rgb = mix( diffuseColor.rgb, accent * vec3( 0.92, 0.975, 0.955 ), smoothstep( 0.05, 0.9, acc.r ) * accentOn );   // the accent is paint behind the glass, its edge soft
 	// hand-applied paint is never perfectly even: a faint cloudiness, a little denser at the edges
 	float cloud = vnoise( vPlan * vec2( 34.0, 14.0 ) ) * 0.6 + vnoise( vPlan * vec2( 110.0, 46.0 ) ) * 0.4;
 	float edge = min( min( px, 1.0 - px ) * panelW, vH ) ;
@@ -139,7 +143,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
         .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 	{
 		// the relief and the structure catch the daylight from the upper left
-		diffuseColor.rgb *= clamp( 1.0 + 1.5 * dot( relief, normalize( vec2( -0.45, 0.9 ) ) ), 0.55, 1.5 );
+		diffuseColor.rgb *= clamp( 1.0 + 0.55 * dot( relief, normalize( vec2( -0.45, 0.9 ) ) ), 0.85, 1.15 );   // soft: the relief lies flush in the glass
 		// the LED under the cabinets: a pool of light from the top edge down, grazing the glass
 		float below = ledY - vH;
 		float fall = below >= 0.0 ? exp( - below / 330.0 ) : exp( below / 70.0 ) * 0.35;
@@ -150,7 +154,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
         .replace('#include <dithering_fragment>', `gl_FragColor.rgb *= shade;
 	#include <dithering_fragment>`)
     }
-    m.customProgramCacheKey = () => 'rueckwand-panel-2'
+    m.customProgramCacheKey = () => 'rueckwand-panel-4'
     return capped(m)
   }
 
@@ -167,7 +171,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     t.wrapS = t.wrapT = THREE.RepeatWrapping
     t.repeat.set(CW / 200, CH / 200)
     const m = new THREE.MeshPhysicalMaterial({ map: t, roughness: 0.3, clearcoat: 0.6, clearcoatRoughness: 0.15 })
-    m.userData.uniforms = { ledOn: { value: 0 }, shade: { value: 1 } }
+    m.userData.uniforms = { ledOn: { value: 0 }, shade: { value: 1 }, ledY: { value: LED_Y } }
     return m
   }
 
@@ -181,7 +185,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
   const chrome = capped(new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 1, roughness: 0.08, envMapIntensity: 1.4 }))
   const sinkInside = new THREE.MeshStandardMaterial({ color: '#b9bcbd', metalness: 0.9, roughness: 0.3, side: THREE.BackSide })
   const hobMat = hob()
-  const edgeMat = new THREE.MeshPhysicalMaterial({ color: '#9fd6c2', roughness: 0.1, emissive: '#2e6a56', emissiveIntensity: 0.2 })
+  const edgeMat = new THREE.MeshPhysicalMaterial({ color: '#a9dcc8', roughness: 0.06, clearcoat: 1, emissive: '#2f6f5a', emissiveIntensity: 0.35 })   // the polished edge, green in its depth
 
   // One kitchen per combination, built when it comes near the front and released when far away.
   const panels = combos.map((combo, i) => ({ combo, i, w: combo.w, group: null, loading: false }))
@@ -205,20 +209,25 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     const add = (mesh, cast = true, receive = true) => { mesh.castShadow = cast; mesh.receiveShadow = receive; group.add(mesh); return mesh }
     const box = (w, h, d, x, y, z, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); return add(m) }
 
-    // the glass panel, on the wall from the worktop up
+    // the glass panel, on the wall from the worktop up, in its outline
     const t = combo.t || 6
-    const pg = new THREE.PlaneGeometry(W, H, 1, 1)
+    const form = panelForm(combo)
+    const shape = new THREE.Shape(form.outline.map(([x, y]) => new THREE.Vector2(x, y)))
+    const pg = new THREE.ShapeGeometry(shape, 32)
     const uv = pg.attributes.uv, pp = pg.attributes.position
-    for (let i = 0; i < pp.count; i++) uv.setXY(i, (pp.getX(i) + CW / 2) / CW, (pp.getY(i) + H / 2) / CH)
-    pg.translate(0, H / 2, 0)
+    for (let i = 0; i < pp.count; i++) uv.setXY(i, (pp.getX(i) + CW / 2) / CW, pp.getY(i) / CH)
     const panelMesh = add(new THREE.Mesh(pg, glass), false, true)
     panelMesh.position.z = t
-    box(W, H, t - 0.5, 0, H / 2, (t - 0.5) / 2, edgeMat).receiveShadow = false
+    const eg = new THREE.ExtrudeGeometry(shape, { depth: t - 0.5, bevelEnabled: false, curveSegments: 32 })
+    add(new THREE.Mesh(eg, edgeMat), true, false)
+    glass.userData.uniforms.ledY.value = form.ledY
     // sockets in cut-outs of the glass
-    for (const sx of [-W / 2 + 420, W / 2 - 520]) socketPair(group, sx, 230, t, combo.fronten === 'Weiss' || combo.fronten === 'Eiche' ? '#f2f1ec' : '#2a2b2c')
+    const light = combo.fronten === 'Weiss' || combo.fronten === 'Eiche' || combo.fronten === 'Salbei'
+    socket(group, -W / 2 + 420, 230, t, light, true)
+    socket(group, W / 2 - 480, 230, t, light, false)
 
     // base cabinets with worktop, sink and hob
-    const sinkX = -W * 0.24, hobX = W * 0.2
+    const sinkX = form.sinkX * W, hobX = form.hobX * W
     box(W, 760, 560, 0, -40 - 380, 280, carcass)
     box(W, 100, 520, 0, FLOOR + 50, 260, carcass)
     const n = Math.max(2, Math.round(W / 600)), fw = W / n
@@ -253,7 +262,21 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
 
     // above: wall cabinets (niche) or a shelf and a hood (up to the ceiling)
     const ledStrip = own(new THREE.MeshBasicMaterial({ color: '#3a3c3d', toneMapped: false }))
-    if (combo.format === 'hoch') {
+    if (combo.format === 'schwung') {                                 // an angled glass hood over the hob, nothing else above
+      const hood = new THREE.Mesh(new THREE.BoxGeometry(800, 520, 30), new THREE.MeshPhysicalMaterial({ color: '#0b0b0c', roughness: 0.05, clearcoat: 1, metalness: 0.2 }))
+      hood.rotation.x = -0.42
+      hood.position.set(hobX, 1000, t + 260)
+      add(hood)
+      box(800, 16, 300, hobX, 760, t + 360, steel)
+    } else if (combo.format === 'bogen') {                            // wall cabinets on the left, the glass rises in an arch beside them
+      const cw = form.cabinet
+      box(cw, 720, 330, -W / 2 + cw / 2, LED_Y + 360, t + 165, carcass)
+      const m = Math.max(1, Math.round(cw / 600)), mw = cw / m
+      for (let j = 0; j < m; j++) box(mw - 3, 714, 19, -W / 2 + mw * (j + 0.5), LED_Y + 360, t + 340, fronts[combo.fronten])
+      box(cw - 40, 6, 12, -W / 2 + cw / 2, LED_Y - 3, t + 50, ledStrip).castShadow = false
+    } else if (combo.format === 'welle') {
+      // a free top edge and nothing above it: the wall stays open
+    } else if (combo.format === 'hoch') {
       const hoodW = 900
       for (const side of [-1, 1]) {
         const x0 = side < 0 ? -W / 2 : hobX + hoodW / 2 + 60, x1 = side < 0 ? hobX - hoodW / 2 - 60 : W / 2
@@ -273,7 +296,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     // soft contact shadows where the glass meets the worktop and the cabinets, and under the plinth
     shade(group, W, 70, 0, 35, t + 0.8, 0, 0.32)
     shade(group, W, 80, 0, 0.8, 40, Math.PI / 2, 0.28)
-    const aoTop = combo.format === 'hoch' ? null : shade(group, W, 140, 0, LED_Y - 70, t + 0.8, Math.PI, 0.3)
+    const aoTop = combo.format === 'nische' ? shade(group, W, 140, 0, LED_Y - 70, t + 0.8, Math.PI, 0.3) : null
     shade(group, W + 600, 140, 300, FLOOR + 0.8, 590, Math.PI / 2, 0.35)
     props(group, panel.i, W, t, sinkX, hobX, fronts.Eiche)
     // a tall unit closes the kitchen on the right
@@ -361,7 +384,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     const i = Math.max(0, Math.min(panels.length - 1, Math.floor(p))), j = Math.min(panels.length - 1, i + 1), f = Math.max(0, Math.min(1, p - i))
     const at = k => {
       const c = panels[k].combo, half = THREE.MathUtils.degToRad(camera.fov / 2)
-      const tall = c.format === 'hoch' ? 2300 : 1900
+      const tall = ['hoch', 'bogen', 'schwung'].includes(c.format) ? 2300 : 1900
       return Math.max(viewWidth(c.w) / 2 / (Math.tan(half) * camera.aspect), tall / 2 / Math.tan(half))
     }
     return at(i) + (at(j) - at(i)) * smoothstep(0, 1, f)
@@ -375,7 +398,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     }
     const d = fit(pos)
     const c = panels[Math.round(Math.max(0, Math.min(panels.length - 1, pos)))].combo
-    target.set(0, c.format === 'hoch' ? 380 : 180, 300)
+    target.set(0, ['hoch', 'bogen', 'schwung'].includes(c.format) ? 380 : 180, 300)
     // standing in the kitchen: the eye about 1.6 m above the floor, whatever the distance
     const a = 0.1 + sway
     camera.position.set(target.x + Math.sin(a) * d, 680, target.z + Math.cos(a) * d)
@@ -501,6 +524,54 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
 
 // ------------------------------------------------------------------ kitchen parts
 
+// The outline of the glass (x across, y up from the worktop, mm), where the hob and the sink sit
+// (as fractions of the width) and where the light comes from:
+//   nische   between worktop and wall cabinets, 650 mm, the LED under the cabinets
+//   hoch     up to the ceiling with a hood and shelves, 1500 mm
+//   welle    no cabinets above: the top edge a long wave, 650 to 900 mm
+//   bogen    wall cabinets on the left; beside them the glass rises to 1300 mm in a large arch
+//   schwung  high behind an angled hood, the top edge sweeping down to 700 mm at the right
+function panelForm(combo) {
+  const W = combo.w, h0 = 0
+  const rect = H => [[-W / 2, h0], [W / 2, h0], [W / 2, H], [-W / 2, H]]
+  const pts = []
+  const line = (x0, y0, x1, y1, n = 2) => { for (let i = 0; i < n; i++) pts.push([x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n]) }
+  if (combo.format === 'welle') {
+    line(-W / 2, 0, W / 2, 0, 2)
+    pts.push([W / 2, 0])
+    const N = 90
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, x = W / 2 - u * W
+      pts.push([x, 780 + 105 * Math.sin(u * Math.PI * 2.3 + 0.6) * (0.75 + 0.25 * Math.cos(u * 4.1))])
+    }
+    return { outline: pts, ledY: 1100, sinkX: -0.24, hobX: 0.2 }
+  }
+  if (combo.format === 'bogen') {
+    const cabinet = Math.round(W * 0.56 / 10) * 10, xc = -W / 2 + cabinet, top = 1300, R = Math.min(W / 2 - xc, 560) * 0.95
+    line(-W / 2, 0, W / 2, 0, 2)
+    line(W / 2, 0, W / 2, top - R, 2)
+    for (let i = 0; i <= 30; i++) { const a = i / 30 * Math.PI / 2; pts.push([W / 2 - R + R * Math.cos(a), top - R + R * Math.sin(a)]) }
+    line(W / 2 - R, top, xc, top, 2)
+    line(xc, top, xc, LED_Y, 2)
+    pts.push([xc, LED_Y], [-W / 2, LED_Y])
+    return { outline: pts, ledY: LED_Y, sinkX: -0.26, hobX: 0.26, cabinet }
+  }
+  if (combo.format === 'schwung') {
+    const xs = -W / 2 + W * 0.52, xe = W / 2 - W * 0.06
+    line(-W / 2, 0, W / 2, 0, 2)
+    pts.push([W / 2, 0], [W / 2, 700])
+    for (let i = 0; i <= 60; i++) {                                     // a concave sweep up to the high part
+      const u = i / 60, x = xe + (xs - xe) * u
+      pts.push([x, 700 + 560 * (1 - Math.cos(u * Math.PI / 2)) ** 1.6 * (u < 1 ? 1 : 1)])
+    }
+    pts.push([-W / 2, 1260])
+    return { outline: pts, ledY: 1300, sinkX: 0.24, hobX: -0.2 }
+  }
+  const H = combo.format === 'hoch' ? 1500 : 650
+  return { outline: rect(H), ledY: LED_Y, sinkX: -0.24, hobX: 0.2 }
+}
+
+
 // a kitchen mixer: a round body and a high arched spout over the sink, a lever on the side
 function mixer(material) {
   const g = new THREE.Group()
@@ -555,24 +626,10 @@ function shade(group, w, h, x, y, z, rx, opacity) {
   return m
 }
 
-// a few everyday things, different in each kitchen, kept to the ends so the glass stays free
+// a few everyday things, different in each kitchen, kept low and to the ends so the glass stays free
 function props(group, i, W, t, sinkX, hobX, woodMat) {
   const kind = i % 4
   const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); return mesh }
-  if (kind === 0 || kind === 2) {                                          // a chopping board leaning on the glass
-    const r = 34, bw = 290, bh = 410
-    const outline = new THREE.Shape()
-    outline.moveTo(-bw / 2 + r, -bh / 2); outline.lineTo(bw / 2 - r, -bh / 2); outline.quadraticCurveTo(bw / 2, -bh / 2, bw / 2, -bh / 2 + r)
-    outline.lineTo(bw / 2, bh / 2 - r); outline.quadraticCurveTo(bw / 2, bh / 2, bw / 2 - r, bh / 2); outline.lineTo(-bw / 2 + r, bh / 2)
-    outline.quadraticCurveTo(-bw / 2, bh / 2, -bw / 2, bh / 2 - r); outline.lineTo(-bw / 2, -bh / 2 + r); outline.quadraticCurveTo(-bw / 2, -bh / 2, -bw / 2 + r, -bh / 2)
-    const hole = new THREE.Path(); hole.absarc(0, bh / 2 - 48, 17, 0, Math.PI * 2, true); outline.holes.push(hole)
-    const geo = new THREE.ExtrudeGeometry(outline, { depth: 16, bevelEnabled: true, bevelSize: 3, bevelThickness: 3, bevelSegments: 3, curveSegments: 16 })
-    geo.scale(1, 1, 1); geo.translate(0, 0, -8)
-    const tex = woodMat.map.clone(); tex.repeat.set(1 / 300, 1 / 300); tex.needsUpdate = true
-    const board = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }))
-    board.rotation.x = -0.12
-    add(board, -W / 2 + 205, 206, t + 40)
-  }
   if (kind === 0 || kind === 1) {                                          // herbs in a pot
     const pot = add(new THREE.Mesh(new THREE.CylinderGeometry(62, 50, 110, 28), new THREE.MeshStandardMaterial({ color: '#b5674a', roughness: 0.8 })), W / 2 - 170, 55, 260)
     const leafMat = new THREE.MeshStandardMaterial({ color: '#4f7a3f', roughness: 0.7 })
@@ -626,19 +683,33 @@ function stone(base, speck, vein, roughness) {
   return new THREE.MeshPhysicalMaterial({ map: t, roughness, clearcoat: 0.6, clearcoatRoughness: 0.18 })
 }
 
-// a double socket in a cut-out of the glass
-function socketPair(group, x, y, t, color) {
-  const frame = new THREE.MeshStandardMaterial({ color, roughness: 0.4 })
-  const hole = new THREE.MeshStandardMaterial({ color: '#555', roughness: 0.6 })
-  const f = new THREE.Mesh(new THREE.BoxGeometry(160, 82, 10), frame)
-  f.position.set(x, y, t + 3)
-  f.castShadow = true
-  group.add(f)
-  for (const dx of [-38, 38]) {
-    const s = new THREE.Mesh(new THREE.CylinderGeometry(24, 24, 4, 28), hole)
-    s.rotation.x = Math.PI / 2
-    s.position.set(x + dx, y, t + 7)
-    group.add(s)
+// a Swiss socket (type 13) in a cut-out of the glass: a square frame with rounded corners, the
+// recessed face with its three pins' holes; single or double
+function socket(group, x, y, t, light, double) {
+  const frameMat = new THREE.MeshPhysicalMaterial({ color: light ? '#f1f0eb' : '#2a2b2c', roughness: 0.32, clearcoat: 0.4 })
+  const faceMat = new THREE.MeshStandardMaterial({ color: light ? '#e2e1dc' : '#232425', roughness: 0.5 })
+  const holeMat = new THREE.MeshBasicMaterial({ color: '#141414' })
+  const n = double ? 2 : 1, w = 84 * n - (n - 1) * 6, h = 84, r = 10
+  const s = new THREE.Shape()
+  s.moveTo(-w / 2 + r, -h / 2); s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r); s.lineTo(w / 2, h / 2 - r)
+  s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); s.lineTo(-w / 2 + r, h / 2); s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r)
+  s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2)
+  const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 7, bevelEnabled: true, bevelSize: 2, bevelThickness: 2, bevelSegments: 3, curveSegments: 8 }), frameMat)
+  frame.position.set(x, y, t)
+  frame.castShadow = true
+  group.add(frame)
+  for (let k = 0; k < n; k++) {
+    const cx = x - w / 2 + 42 + k * 78
+    const face = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, 3, 6), faceMat)   // the hexagonal face of type 13
+    face.rotation.x = Math.PI / 2; face.rotation.y = Math.PI / 6
+    face.position.set(cx, y, t + 8.2)
+    group.add(face)
+    for (const [dx, dy] of [[-10, 3], [10, 3], [0, -8]]) {
+      const hole = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 1, 12), holeMat)
+      hole.rotation.x = Math.PI / 2
+      hole.position.set(cx + dx, y + dy, t + 9.9)
+      group.add(hole)
+    }
   }
 }
 
@@ -697,9 +768,15 @@ function kitchenEnv(renderer) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(v, v * 0.99, v * 0.95), side: THREE.DoubleSide }))
     m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m)
   }
-  box(14, 1.2, 0, 19, 4, 1.4)          // ceiling light
-  box(10, 11, -18, 5, 8, 1.7)          // window on the left
+  box(10, 11, -18, 5, 8, 1.7)          // window on the left, with its bars
+  for (const y of [1.5, 8.5]) box(10.2, 0.35, -17.9, y, 8.05, 0.08)
+  box(0.35, 11.2, -17.9, 5, 8.05, 0.08)
   box(6, 9, 6, 3, 19, 0.35)            // the room behind the camera
+  // recessed spots in the ceiling: small, bright, they show as points of light in the glass
+  for (const [x, z] of [[-9, 2], [-3, 2], [3, 2], [9, 2], [-6, 10], [0, 10], [6, 10]]) {
+    const spot = new THREE.Mesh(new THREE.CircleGeometry(0.42, 20), new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 5.8, 5.3), side: THREE.DoubleSide }))
+    spot.position.set(x, 20.9, z); spot.rotation.x = Math.PI / 2; env.add(spot)
+  }
   const pmrem = new THREE.PMREMGenerator(renderer)
   const texture = pmrem.fromScene(env, 0.02).texture
   pmrem.dispose()
