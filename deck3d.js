@@ -165,14 +165,14 @@ float facing = 0.0;`)
 		vec3 ledF = mix( led, vec3( 1.0 ), 0.22 * floatGlass );
 		float escF = esc * mix( 1.5, 3.0 * grain * ( 0.3 + 0.7 * lit ), floatGlass );
 		// clear float glass carries no glow of its own: only the frosted design lights up
-		totalEmissiveRadiance += ledF * ledOn * shade * lit * ( 0.03 * ( 1.0 - floatGlass ) + escF + 0.95 * spark * spark );
+		totalEmissiveRadiance += ledF * ledOn * shade * lit * ( 0.03 * ( 1.0 - floatGlass ) + escF + 0.45 * spark * spark );
 		// room light scattered by the facets and the relief: the silvery look of the glass by day
 		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * roomGlow * shade * ( ( 0.03 + 0.08 * spark ) * ( 1.0 - floatGlass ) + 0.8 * clamp( facing, 0.0, 1.0 ) + 0.16 * esc * ( 1.0 - floatGlass ) );
 		// sandblasted areas: a soft satin glow, much brighter with the LED
 		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * frostAmt * shade * ( 0.07 + roomGlow * 0.7 ) * grain;
 	}`)
     }
-    m.customProgramCacheKey = () => 'kiln-glass-5'
+    m.customProgramCacheKey = () => 'kiln-glass-6'
     return m
   }
 
