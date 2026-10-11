@@ -233,6 +233,8 @@ float facing = 0.0;`)
       panel.group.position.set(Math.sign(d) * reach * GW, 0, -ad * 900)
       let turn = -Math.max(-1.4, Math.min(1.4, d)) * 0.7
       if (ad < 0.5) turn += sway * (1 - ad * 2)
+      // a bent glass seen straight on looks flat: on stage it turns a little so the bend shows
+      if (/^Gebogen/.test(panel.combo.form)) turn += 0.44 * (1 - smoothstep(0, 1, ad))
       panel.group.rotation.y = turn
       panel.group.scale.setScalar(1 + 0.2 * (1 - smoothstep(0, 1, ad)))   // the glass on stage is 20 % larger
       // side glasses step back into the shadow
