@@ -95,7 +95,7 @@ a { color: inherit; }
   .gate > img { left: 50%; width: 980px; transform: translateX(-50%); }
   .gate::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, #0b0f0e calc(50% - 490px), rgba(11,15,14,0) calc(50% - 330px), rgba(11,15,14,0) calc(50% + 330px), #0b0f0e calc(50% + 490px)); }
   .gate::after { z-index: 1; }
-  .gate-text, .gate .tag { z-index: 2; }
+  .gate .gate-text, .gate .tag { z-index: 2; }
   .gate .tag.top { right: calc(50% - 476px); }
 }
 .gate-text { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; display: grid; gap: 12px; padding: 0 var(--gutter) 28px; max-width: 980px; margin-inline: auto; }
