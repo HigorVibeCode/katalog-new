@@ -1,7 +1,9 @@
 // Live 3D washbasin deck: the lavabo combinations as real glass washbasins on a wall. Each is one
-// 19 mm glass slab with the basin formed 150 mm deep in the same glass. The top is always smooth
-// and glossy; the underside carries the surface (Float: smooth, Minimal, Struktur) and the paint,
-// one colour or a Verlauf, seen through the glass. LED light in the edge escapes where the
+// 19 mm glass slab with the basin formed 150 mm deep in the same glass, or a flat slab with a
+// glass bowl standing on it (Aufsatzbecken), some with a glass upstand at the wall, some in a
+// corner. The top is always smooth and glossy; the underside carries the surface (Float: smooth,
+// Minimal, Struktur) and the paint, one colour or a Verlauf, seen through the glass – or no paint
+// at all (Klar): clear glass with only its texture. LED light in the edge escapes where the
 // underside is structured, at the edge and around the basin. Shapes and textures come from
 // scripts/lavabo-forms.py (formen.json, e-*, n-*, s-*).
 import * as THREE from 'three'
@@ -92,6 +94,7 @@ export async function initLavabo3D({ deck, combos, base = 'img/lavabo/', onIndex
   }
   const black = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1)
   black.channel = 1; black.needsUpdate = true
+  const furniture = { Holz: wood(), Weiss: new THREE.MeshStandardMaterial({ color: '#ecebe6', roughness: 0.35 }) }
 
   const ledA = new THREE.Color(), ledB = new THREE.Color(), ledMid = new THREE.Color()
   const shared = { ledA: { value: ledA }, ledB: { value: ledB } }
@@ -111,9 +114,10 @@ export async function initLavabo3D({ deck, combos, base = 'img/lavabo/', onIndex
 
   // the paint on the underside: colour (a Verlauf from left to right), the surface as normals,
   // and the LED light escaping where the surface is structured and near the lit edges
-  const paint = (combo, normalMap, escape, edges) => {
+  const paint = (combo, normalMap, escape, edges, roughness = 0.4) => {
     const k = BUMP[combo.unterseite] ?? 1
-    const m = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.4, metalness: 0, normalMap, normalScale: new THREE.Vector2(k, k) })
+    // the paint lies under the glass: its own sheen is faint, the gloss comes from the glass above
+    const m = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: Math.max(roughness, 0.55), specularIntensity: 0.22, metalness: 0, normalMap, normalScale: new THREE.Vector2(k, k) })
     const own = {
       paintA: { value: new THREE.Color(combo.a) }, paintB: { value: new THREE.Color(combo.b || combo.a) },
       edgeMap: { value: edges }, escapeMap: { value: escape }, ledOn: { value: 0 }, shade: { value: 1 },
@@ -151,6 +155,55 @@ vec2 relief = vec2( 0.0 );`)
     return capped(m)
   }
 
+  // Clear glass without paint (Klar): the texture of the underside seen in the clear glass, which
+  // shows the wall and the furniture below; the LED lights the edge and the texture.
+  const clearGlass = (combo, normalMap, escape, edges) => {
+    const k = (BUMP[combo.unterseite] ?? 1) * 0.45
+    const m = new THREE.MeshPhysicalMaterial({
+      color: '#ffffff', roughness: combo.unterseite === 'Float' ? 0.02 : 0.16, transmission: 1, thickness: T * 1.6, ior: 1.5,
+      attenuationColor: '#94d6bf', attenuationDistance: 150, specularIntensity: 1, normalMap, normalScale: new THREE.Vector2(k, k),
+    })
+    const own = { edgeMap: { value: edges }, escapeMap: { value: escape }, ledOn: { value: 0 }, shade: { value: 1 } }
+    m.userData.uniforms = own
+    m.onBeforeCompile = shader => {
+      Object.assign(shader.uniforms, own, shared)
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec2 vPlan;')
+        .replace('#include <uv_vertex>', '#include <uv_vertex>\n\tvPlan = uv;')
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', `#include <common>
+varying vec2 vPlan;
+uniform vec3 ledA; uniform vec3 ledB;
+uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uniform float shade;`)
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+	{
+		float lit = texture2D( edgeMap, vPlan ).r;
+		float esc = texture2D( escapeMap, vNormalMapUv ).r;
+		vec3 led = mix( ledA, ledB, vPlan.x );
+		// the texture scatters a little room light (silvery) and, with the LED, glows from the edges
+		totalEmissiveRadiance += vec3( 0.82, 0.9, 0.87 ) * esc * 0.018 * shade;
+		totalEmissiveRadiance += led * ledOn * ( lit * ( 0.12 + 3.4 * esc ) + 0.03 );
+	}`)
+        .replace('#include <dithering_fragment>', `gl_FragColor.rgb *= shade;
+	#include <dithering_fragment>`)
+    }
+    m.customProgramCacheKey = () => 'lavabo-clear-1'
+    return capped(m)
+  }
+  // the bowl standing on the slab: clear glass, or painted on the outside
+  const vesselMaterials = (combo, normalMap) => {
+    const v = combo.schale || {}
+    if (v.farbe === 'Klar' || (!v.farbe && combo.farbe === 'Klar')) {
+      // clear: a faint green of its own, so it never turns black in the dark room
+      const glass = () => capped(new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.02, transmission: 1, thickness: 10, ior: 1.5, attenuationColor: '#94d6bf', attenuationDistance: 90, side: THREE.DoubleSide, emissive: '#2b4a42', emissiveIntensity: 0.35 }))
+      return { outer: glass(), inner: glassTop() }
+    }
+    const look = { unterseite: v.unterseite || 'Float', a: v.a || combo.a, b: v.b || v.a || combo.b || combo.a }
+    const outer = paint(look, normalMap, black, black, v.farbe === 'Satiniert' ? 0.75 : 0.4)
+    outer.side = THREE.DoubleSide
+    return { outer, inner: glassTop() }
+  }
+
   // One lavabo per combination, built when it comes near the front and released when far away.
   const panels = combos.map((combo, i) => {
     const m = forms[combo.model]
@@ -163,36 +216,74 @@ vec2 relief = vec2( 0.0 );`)
   const build = async panel => {
     panel.loading = true
     const { combo, m } = panel
+    const clear = combo.farbe === 'Klar'
     const key = combo.unterseite === 'Float' ? 'minimal' : combo.unterseite.toLowerCase()
-    const [normalMap, escape, edges] = await Promise.all([
+    const [normalMap, escape, edges, vesselMap] = await Promise.all([
       texture(`${base}n-${key}.webp`, true),
       combo.unterseite === 'Float' ? black : texture(`${base}s-${key}.webp`, true),
       texture(`${base}e-${slug(combo.model)}.webp`),
+      texture(`${base}n-${(combo.schale?.unterseite || 'Float') === 'Struktur' ? 'struktur' : 'minimal'}.webp`, true),
     ])
     if (!geometries.has(combo.model)) geometries.set(combo.model, lavabo(m))
     const geo = geometries.get(combo.model)
-    const top = glassTop(), under = paint(combo, normalMap, escape, edges), side = capped(edgeMaterial.clone()), rimMat = rimMaterial.clone()
+    const mats = []
+    const own = mat => { mats.push(mat); return mat }
+    const top = own(clear ? clearGlass(combo, normalMap, escape, edges) : glassTop())
+    const under = clear ? null : own(paint(combo, normalMap, escape, edges))
+    const side = own(capped(edgeMaterial.clone())), rimMat = own(rimMaterial.clone())
     const group = new THREE.Group()
     const add = (g, mat, shadow = true) => { const mesh = new THREE.Mesh(g, mat); mesh.castShadow = shadow; group.add(mesh); return mesh }
-    under.shadowSide = THREE.DoubleSide                       // the painted glass throws a full shadow
     add(geo.top, top, false); add(geo.bowl, top, false)
-    add(geo.under, under); add(geo.bowlUnder, under)
-    add(geo.side, side)
+    if (under) {
+      under.shadowSide = THREE.DoubleSide                     // the painted glass throws a full shadow
+      add(geo.under, under); add(geo.bowlUnder, under)
+    }
+    add(geo.side, side, !clear)
     add(geo.rim, rimMat, false)
-    for (const [x, y] of m.taps) { const tap = mixer(chrome); tap.position.set(x - m.L / 2, 0, y); group.add(tap) }
+    // Aufsatzbecken
+    for (const v of geo.vessels) {
+      const vm = vesselMaterials(combo, vesselMap)
+      own(vm.outer); own(vm.inner)
+      add(v.outer, vm.outer); add(v.inner, vm.inner, false); add(v.lip, side, false)
+      const d = drain(chrome); d.position.set(v.drain.x, v.drain.y, v.drain.z); group.add(d)
+    }
+    // glass upstand at the wall
+    if (geo.back) add(geo.back, clear ? top : under)
+    // taps turn towards their basin
+    const targets = [...geo.drains, ...geo.vessels.map(v => v.drain)]
+    for (const [x, y] of m.taps) {
+      const tap = mixer(chrome, m.tap === 'hoch')
+      const X = x - m.L / 2, near = targets.reduce((best, c) => Math.hypot(c.x - X, c.z - y) < Math.hypot(best.x - X, best.z - y) ? c : best, targets[0] || { x: X, z: y + 1 })
+      tap.position.set(X, 0, y)
+      tap.rotation.y = Math.atan2(near.x - X, near.z - y)
+      group.add(tap)
+    }
     for (const c of geo.drains) { const d = drain(chrome); d.position.set(c.x, -DEPTH + 1, c.z); group.add(d) }
+    // a corner lavabo: the second wall on the left
+    if (m.corner && !shot) {
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(m.D + 900, HEIGHT + 1700), room.sideMat)
+      w.rotation.y = Math.PI / 2
+      w.position.set(-m.L / 2 - 1, (1700 - HEIGHT) / 2 - 60, (m.D + 900) / 2 - 1)
+      w.receiveShadow = true
+      group.add(w)
+    }
+    // the cabinet below
+    if (combo.moebel && furniture[combo.moebel]) {
+      const cab = cabinet(m, furniture[combo.moebel])
+      group.add(cab)
+    }
     group.scale.setScalar(panel.s)
     const glow = room.glow(panel.w)
     scene.add(group, glow)
     paintRim(geo.rim, m.L)
-    Object.assign(panel, { group, glow, top, under, side, rimMat, rim: geo.rim, loading: false })
+    Object.assign(panel, { group, glow, top, u: (under || top).userData.uniforms, side, rimMat, rim: geo.rim, mats, loading: false })
     invalidate()
   }
   const release = panel => {
     if (!panel.group) return
     scene.remove(panel.group, panel.glow)
-    panel.top.dispose(); panel.under.dispose(); panel.side.dispose(); panel.rimMat.dispose(); panel.glow.material.dispose()
-    Object.assign(panel, { group: null, glow: null, top: null, under: null, side: null, rimMat: null })
+    panel.mats.forEach(mat => mat.dispose()); panel.glow.material.dispose()
+    Object.assign(panel, { group: null, glow: null, top: null, u: null, side: null, rimMat: null, mats: null })
   }
 
   const paintRim = (geo, L) => {
@@ -242,7 +333,7 @@ vec2 relief = vec2( 0.0 );`)
   }
   const lightPanel = (panel, front) => {
     const f = ledEnabled ? front : 0
-    panel.under.userData.uniforms.ledOn.value = f
+    panel.u.ledOn.value = f
     panel.side.emissive.copy(ledEnabled ? ledMid : edgeMaterial.emissive)
     panel.side.emissiveIntensity = ledEnabled ? 0.1 + 2.2 * f : 0.25
     panel.rimMat.color.setScalar(ledEnabled ? 0.08 + 0.92 * f : 0.5 + 0.5 * front)
@@ -271,8 +362,8 @@ vec2 relief = vec2( 0.0 );`)
       const front = 1 - smoothstep(0.12, 0.8, ad)
       const shade = 1 - Math.min(ad * 0.55, 0.7)
       lightPanel(panel, front)
-      panel.under.userData.uniforms.shade.value = shade
-      panel.top.envMapIntensity = 0.35 + 0.65 * shade
+      panel.u.shade.value = shade
+      panel.top.envMapIntensity = 0.7 * (0.35 + 0.65 * shade)
     })
     const index = Math.round(Math.min(panels.length - 1, Math.max(0, pos)))
     if (index !== shown) { shown = index; onIndex?.(index) }
@@ -537,10 +628,76 @@ export function lavabo(m) {
     pts.forEach((p, i) => path.add(new THREE.LineCurve3(p, pts[(i + 1) % pts.length])))
     return new THREE.TubeGeometry(path, Math.min(2400, Math.ceil(path.getLength() / 5)), 4.5, 6, false)
   }
+  // a glass bowl standing on the slab: the outside drops from the rim to a small foot, the inside
+  // follows one wall thickness in; the rim may rise (leaf tips, boat corners, waves)
+  const bowlOn = v => {
+    const N = v.rim.length, K = 16, [cx, cy] = v.c, wall = v.wall || 8
+    const rings = []
+    for (let k = 0; k <= K; k++) {
+      const t = k / K * Math.PI / 2, s = v.foot + (1 - v.foot) * Math.cos(t)
+      rings.push(v.rim.map(([x, y, h]) => [cx + (x - cx) * s, h * (1 - Math.sin(t)), cy + (y - cy) * s]))
+    }
+    const shell = (pts, apex, inward) => {
+      const pos = [], uv = [], uv1 = [], idx = []
+      pts.flat().forEach(([x, y, z]) => { pos.push(x - L / 2, y, z); const u = uvOf(x, z); uv.push(u[0], u[1]); uv1.push(u[2], u[3]) })
+      const centre = pos.length / 3
+      pos.push(apex[0] - L / 2, apex[1], apex[2]); { const u = uvOf(apex[0], apex[2]); uv.push(u[0], u[1]); uv1.push(u[2], u[3]) }
+      const P = i => new THREE.Vector3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2])
+      const tri = (a, b, d) => {
+        const A = P(a), nrm = P(b).sub(A).cross(P(d).sub(A))
+        const want = new THREE.Vector3(A.x - (cx - L / 2), 0, A.z - cy).normalize().add(new THREE.Vector3(0, -0.6, 0))
+        if (inward) want.negate()
+        idx.push(...(nrm.dot(want) >= 0 ? [a, b, d] : [a, d, b]))
+      }
+      const at = (r, i) => r * N + (i % N)
+      for (let r = 0; r < pts.length - 1; r++) for (let i = 0; i < N; i++) { tri(at(r, i), at(r, i + 1), at(r + 1, i)); tri(at(r, i + 1), at(r + 1, i + 1), at(r + 1, i)) }
+      for (let i = 0; i < N; i++) tri(at(pts.length - 1, i), at(pts.length - 1, i + 1), centre)
+      const g = mesh(pos, uv, uv1, idx)
+      g.computeVertexNormals()
+      return g
+    }
+    const outer = shell(rings, [cx, 0, cy], false)
+    // the inside: the outside moved one wall thickness in, along its normals
+    const n = outer.attributes.normal, p = outer.attributes.position
+    const innerRings = rings.map((ring, r) => ring.map((_, i) => {
+      const j = r * N + i
+      return [p.getX(j) + L / 2 - n.getX(j) * wall, p.getY(j) - n.getY(j) * wall, p.getZ(j) - n.getZ(j) * wall]
+    }))
+    const inner = shell(innerRings, [cx, wall, cy], true)
+    // the polished rim between them
+    const lipPos = [], lipIdx = []
+    for (let i = 0; i < N; i++) { const a = rings[0][i], b = innerRings[0][i]; lipPos.push(a[0] - L / 2, a[1], a[2], b[0] - L / 2, b[1], b[2]) }
+    for (let i = 0; i < N; i++) { const a = 2 * i, b = 2 * ((i + 1) % N); lipIdx.push(a, b, a + 1, b, b + 1, a + 1) }
+    const lip = new THREE.BufferGeometry()
+    lip.setAttribute('position', new THREE.Float32BufferAttribute(lipPos, 3))
+    lip.setIndex(lipIdx)
+    lip.computeVertexNormals()
+    return { outer, inner, lip, drain: { x: cx - L / 2, y: wall + 1, z: cy } }
+  }
+  // the glass upstand at the wall (Rückwand): 10 mm, straight, arched or waved on top
+  const upstand = b => {
+    const H = b.h, s = new THREE.Shape()
+    const topAt = x => b.top === 'welle' ? H - 28 + 28 * Math.cos(2 * Math.PI * x / L * 1.5) : b.top === 'bogen' ? H * (0.62 + 0.38 * Math.sin(Math.PI * x / L)) : H
+    s.moveTo(0, 0); s.lineTo(L, 0)
+    const r = b.top === 'gerade' ? 30 : 0
+    s.lineTo(L, topAt(L) - r)
+    if (r) s.quadraticCurveTo(L, H, L - r, H)
+    for (let i = 1; i < 60; i++) { const x = L - (r || 0) - i / 60 * (L - 2 * r); s.lineTo(x, topAt(x)) }
+    if (r) { s.lineTo(r, H); s.quadraticCurveTo(0, H, 0, H - r) } else s.lineTo(0, topAt(0))
+    s.closePath()
+    const g = new THREE.ExtrudeGeometry(s, { depth: 10, bevelEnabled: false, curveSegments: 12 })
+    g.translate(-L / 2, 0, 0)
+    const p = g.attributes.position, uv = [], uv1 = []
+    for (let i = 0; i < p.count; i++) { const x = p.getX(i) + L / 2; uv.push(x / L, 0.98); uv1.push(x / NX, 1 - p.getY(i) / NY) }
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+    g.setAttribute('uv1', new THREE.Float32BufferAttribute(uv1, 2))
+    return g
+  }
   const top = flat(0), under = flat(-T)
   under.computeVertexNormals()
   const { g: bowlGeo, drains } = bowl()
-  return { top, under, bowl: bowlGeo, bowlUnder: below(bowlGeo), side: side(), rim: rim(), drains }
+  return { top, under, bowl: bowlGeo, bowlUnder: below(bowlGeo), side: side(), rim: rim(), drains,
+    vessels: (m.vessels || []).map(bowlOn), back: m.back ? upstand(m.back) : null }
 }
 
 function mesh(pos, uv, uv1, idx) {
@@ -553,16 +710,62 @@ function mesh(pos, uv, uv1, idx) {
   return g
 }
 
-// a slim single-lever mixer, standing on the glass
-function mixer(material) {
+// a slim single-lever mixer standing on the glass; tall for a bowl on the slab
+function mixer(material, tall = false) {
   const g = new THREE.Group()
   const part = (geo, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.rotation.x = rx; m.castShadow = true; g.add(m) }
+  const H = tall ? 330 : 190, reach = tall ? 190 : 150
   part(new THREE.CylinderGeometry(26, 27, 8, 32), 0, 4, 0)
-  part(new THREE.CylinderGeometry(19, 21, 190, 32), 0, 100, 0)
-  part(new THREE.CylinderGeometry(11, 11, 150, 24), 0, 178, 72, Math.PI / 2)
-  part(new THREE.CylinderGeometry(12, 12, 4, 24), 0, 176, 146)
-  part(new THREE.BoxGeometry(12, 10, 70), 0, 198, -26)
+  part(new THREE.CylinderGeometry(19, 21, H, 32), 0, H / 2 + 5, 0)
+  part(new THREE.CylinderGeometry(11, 11, reach, 24), 0, H - 12, reach / 2 - 3, Math.PI / 2)
+  part(new THREE.CylinderGeometry(12, 12, 4, 24), 0, H - 14, reach - 4)
+  part(new THREE.BoxGeometry(12, 10, 70), 0, H + 8, -26)
   return g
+}
+
+// the cabinet below the lavabo, a little narrower and shallower than the slab; its top has an
+// opening for each basin, which drops into the cabinet
+function cabinet(m, material) {
+  const xs = m.basins.length ? m.basins.flat().map(p => p[0]) : (m.vessels || []).flatMap(v => v.rim.map(p => p[0]))
+  const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : m.L / 2
+  const w = Math.min(m.L - 120, Math.max(700, (Math.max(...xs) - Math.min(...xs)) + 360)), d = Math.round(m.D * 0.82), h = 480
+  const x0 = cx - m.L / 2 - w / 2, y0 = -T - 2
+  const g = new THREE.Group()
+  const hidden = new THREE.MeshBasicMaterial({ visible: false })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [material, material, hidden, material, material, material])
+  body.position.set(x0 + w / 2, y0 - h / 2, d / 2)
+  body.castShadow = body.receiveShadow = true
+  const top = new THREE.Shape([[x0, 0], [x0 + w, 0], [x0 + w, -d], [x0, -d]].map(([x, y]) => new THREE.Vector2(x, y)))
+  for (const B of m.basins) {
+    const P = resample(B, 96), n = outward(P)
+    top.holes.push(new THREE.Path(P.map((p, i) => new THREE.Vector2(p[0] + n[i][0] * 45 - m.L / 2, -(p[1] + n[i][1] * 45)))))
+  }
+  const lid = new THREE.Mesh(new THREE.ShapeGeometry(top, 4), material)
+  lid.rotation.x = -Math.PI / 2
+  lid.position.y = y0
+  lid.receiveShadow = true
+  // the drawer gap
+  const gap = new THREE.Mesh(new THREE.BoxGeometry(w - 30, 5, 2), new THREE.MeshStandardMaterial({ color: '#1c1a18', roughness: 0.9 }))
+  gap.position.set(x0 + w / 2, y0 - h * 0.45, d + 0.8)
+  g.add(body, lid, gap)
+  return g
+}
+function wood() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 512
+  const g = c.getContext('2d')
+  g.fillStyle = '#8a6844'; g.fillRect(0, 0, 512, 512)
+  for (let i = 0; i < 140; i++) {
+    const y = Math.random() * 512, a = 0.05 + Math.random() * 0.12
+    g.strokeStyle = Math.random() < 0.5 ? `rgba(60,38,20,${a})` : `rgba(190,150,105,${a})`
+    g.lineWidth = 0.6 + Math.random() * 2.4
+    g.beginPath(); g.moveTo(0, y)
+    for (let x = 0; x <= 512; x += 32) g.lineTo(x, y + Math.sin(x / 70 + i) * 3 + (Math.random() - 0.5) * 1.5)
+    g.stroke()
+  }
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  return new THREE.MeshStandardMaterial({ map: t, roughness: 0.55 })
 }
 function drain(material) {
   const g = new THREE.Group()
@@ -586,7 +789,7 @@ function bathroom(renderer) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(v, v * 0.99, v * 0.95), side: THREE.DoubleSide }))
     m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m)
   }
-  box(14, 1.1, 0, 7, -10, 3)          // light above the mirror
+  box(10, 0.8, 0, 7.6, -10, 1.1)      // light above the mirror: a calm, narrow band in the glass
   box(16, 12, 0, 19, 0, 0.9)          // ceiling
   box(9, 12, -18, 5, 4, 1.6)          // window on the left
   box(5, 12, 18, 4, -4, 0.5)
@@ -611,6 +814,8 @@ function wallAndFloor() {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
   tex.repeat.set(6, 3)
   const wallMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, color: '#ffffff' })
+  // the side wall of a corner lavabo faces away from the window: a little light of its own
+  const sideMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, color: '#ffffff', emissive: '#56524b', emissiveMap: tex })
   const wall = new THREE.Mesh(new THREE.PlaneGeometry(16000, 5000), wallMat)
   wall.position.set(0, 300, -1)
   wall.receiveShadow = true
@@ -628,8 +833,8 @@ function wallAndFloor() {
   gg.fillStyle = rad; gg.fillRect(0, 0, 128, 128)
   const glowTex = new THREE.CanvasTexture(gc)
   return {
-    group,
-    setLit: lit => { wallMat.color.setScalar(lit ? 0.62 : 0.22); floorMat.color.set(lit ? '#5b5752' : '#2a2826') },
+    group, wallMat, sideMat,
+    setLit: lit => { wallMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.emissiveIntensity = lit ? 0.55 : 0.12; floorMat.color.set(lit ? '#5b5752' : '#2a2826') },
     glow: w => {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.15, 520), new THREE.MeshBasicMaterial({ map: glowTex, color: '#000000', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))
       m.position.set(0, -170, 0)
