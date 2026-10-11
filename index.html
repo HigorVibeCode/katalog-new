@@ -269,10 +269,12 @@ a { color: inherit; }
 .deck-led { position: relative; }
 .deck-led::after { content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .85); opacity: 0; pointer-events: none; }
 .deck-led.is-tap::after { animation: led-tap 1.2s ease-out 3; }
-.deck-led.is-tap i { animation: led-press 1.2s ease-in-out 1; }
+.deck-led.is-press { animation: led-press .6s ease-in-out 1; }
+.deck-led.is-auto i { animation: led-spin 6s linear infinite; }
+@keyframes led-spin { to { transform: rotate(1turn); } }
 @keyframes led-tap { 0% { transform: scale(.5); opacity: .95; } 100% { transform: scale(1.7); opacity: 0; } }
 @keyframes led-press { 0%, 100% { transform: scale(1); } 25% { transform: scale(.78); } }
-@media (prefers-reduced-motion: reduce) { .deck-led.is-tap::after, .deck-led.is-tap i { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .deck-led.is-tap::after, .deck-led.is-press, .deck-led.is-auto i { animation: none; } }
 .deck:not(.is-3d) .deck-led { display: none; }
 .deck-random svg { width: 18px; height: 18px; fill: currentColor; transition: transform .35s; }
 .deck-random:active svg { transform: rotate(90deg); }
@@ -761,11 +763,11 @@ a { color: inherit; }
   // glass once. Any interaction before that cancels it; it never runs again.
   const introBar = deck.querySelector('.deck-intro')
   let introTimer = 0, introState = 'waiting'
-  const endIntro = () => {
+  const endIntro = byLedButton => {
     if (introState === 'done') return
     introState = 'done'
     clearTimeout(introTimer)
-    introDemoEnd?.()
+    introDemoEnd?.(byLedButton === true)
     introBar.classList.remove('is-running')
   }
   const startIntro = () => {
@@ -783,7 +785,7 @@ a { color: inherit; }
   // only a real interaction cancels it: a sideways drag, a button or a key. Scrolling the page
   // with a finger on the deck does not.
   let introX = null
-  deck.addEventListener('pointerdown', e => { introX = e.clientX; if (e.target.closest('button')) endIntro() }, true)
+  deck.addEventListener('pointerdown', e => { introX = e.clientX; if (e.target.closest('button')) endIntro(Boolean(e.target.closest('.deck-led'))) }, true)
   deck.addEventListener('pointermove', e => { if (introX !== null && Math.abs(e.clientX - introX) > 12) endIntro() }, true)
   deck.addEventListener('pointerup', () => { introX = null }, true)
   deck.addEventListener('pointercancel', () => { introX = null }, true)
@@ -827,6 +829,7 @@ a { color: inherit; }
       deckRandom = () => live.random()
       deckStarted = true
       const lights = [
+        { name: 'Automatisch', auto: true, sw: 'conic-gradient(#b24dff, #4d6bff, #18d8f0, #2fe0a0, #ffbe73, #ff5fa8, #b24dff)', glow: 'rgba(150, 120, 255, .7)' },
         { name: 'Violett · Türkis', sw: 'linear-gradient(90deg, #b24dff, #18d8f0)', glow: 'rgba(150, 120, 255, .7)' },
         { name: 'Türkis', sw: '#16d6e0', glow: 'rgba(22, 214, 224, .7)' },
         { name: 'Warmweiss', sw: '#ffbe73', glow: 'rgba(255, 190, 115, .7)' },
@@ -838,6 +841,7 @@ a { color: inherit; }
         live.setLight(light)
         const l = lights[light]
         ledButton.classList.toggle('is-off', Boolean(l.off))
+        ledButton.classList.toggle('is-auto', Boolean(l.auto))
         if (!l.off) { ledButton.style.setProperty('--sw', l.sw); ledButton.style.setProperty('--glow', l.glow) }
         ledButton.title = l.name
         ledButton.setAttribute('aria-label', `LED-Licht wechseln: ${l.name}`)
@@ -845,21 +849,23 @@ a { color: inherit; }
       const OFF = lights.length - 1
       applyLight(OFF)                                         // the deck opens with the LED off
       ledButton.addEventListener('click', () => applyLight((light + 1) % lights.length))
-      // During the intro the LED button is tapped once for show: the light comes on for 3 seconds
-      // and goes off again, so it is clear where to switch it on.
-      let demoTimers = [], demoLit = false
+      // During the intro the LED button is shown being tapped (the glass is still dark), and on the
+      // third tap the automatic light comes on and stays on, so it is clear where it is switched.
+      const AUTO = 0
+      let demoTimers = [], demoDone = false
       introDemo = () => {
         demoTimers = [
-          setTimeout(() => ledButton.classList.add('is-tap'), 350),
-          setTimeout(() => { applyLight(0); demoLit = true }, 600),
-          setTimeout(() => { applyLight(OFF); demoLit = false }, 3600),
-          setTimeout(() => ledButton.classList.remove('is-tap'), 4000),
+          setTimeout(() => ledButton.classList.add('is-tap'), 300),
+          setTimeout(() => { ledButton.classList.add('is-press'); applyLight(AUTO); demoDone = true }, 2700),
+          setTimeout(() => ledButton.classList.remove('is-tap', 'is-press'), 3900),
         ]
       }
-      introDemoEnd = () => {
+      introDemoEnd = byLedButton => {
         demoTimers.forEach(clearTimeout)
-        ledButton.classList.remove('is-tap')
-        if (demoLit) { applyLight(OFF); demoLit = false }
+        ledButton.classList.remove('is-tap', 'is-press')
+        // cut short: the light comes on anyway, unless the LED button itself was pressed
+        if (!demoDone && !byLedButton) applyLight(AUTO)
+        demoDone = true
       }
       randomButton.addEventListener('click', () => live.random())
       prevButton.addEventListener('click', () => live.step(-1))

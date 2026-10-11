@@ -11,6 +11,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 
 const GW = 1050, GH = 2100, T = 10                        // mm
 export const LED = [
+  { name: 'Automatisch', auto: true },                      // the colour changes by itself, slowly
   { name: 'Violett · Türkis', a: '#b24dff', b: '#18d8f0' },
   { name: 'Türkis', a: '#16d6e0', b: '#16d6e0' },
   { name: 'Warmweiss', a: '#ffbe73', b: '#ffbe73' },
@@ -192,13 +193,29 @@ float facing = 0.0;`)
 
   // LED in the edge, switched on only for the glass in front: it lights up as it arrives and the
   // glasses behind stay dark, so nothing competes with it. The room stays dark either way.
-  let led = 0
+  let led = 0, autoLed = false
   const ledMid = new THREE.Color()
+  // Automatic: a slow loop through the colours, the far edge a little ahead of the near one so
+  // the glass always carries a gradient. It runs on the clock, so changing the glass does not
+  // restart it.
+  const AUTO_STOPS = ['#b24dff', '#4d6bff', '#18d8f0', '#2fe0a0', '#ffbe73', '#ff5fa8'].map(c => new THREE.Color(c))
+  const AUTO_STEP = 3500                                      // ms per colour
+  const autoColor = (t, out) => {
+    const n = AUTO_STOPS.length, x = ((t % n) + n) % n, i = Math.floor(x), f = smoothstep(0, 1, x - i)
+    return out.copy(AUTO_STOPS[i]).lerp(AUTO_STOPS[(i + 1) % n], f)
+  }
+  const updateAuto = now => {
+    autoColor(now / AUTO_STEP, ledA); autoColor(now / AUTO_STEP + 0.6, ledB)
+    ledMid.copy(ledA).lerp(ledB, 0.5)
+    rims.forEach(paintRim)
+  }
   const setLight = n => {
     led = (n + LED.length) % LED.length
-    const { a, b } = LED[led]
-    ledEnabled = Boolean(a)
-    if (ledEnabled) { ledA.set(a); ledB.set(b); ledMid.copy(ledA).lerp(ledB, 0.5) }
+    const { a, b, auto } = LED[led]
+    autoLed = Boolean(auto)
+    ledEnabled = Boolean(a) || autoLed
+    if (autoLed) updateAuto(performance.now())
+    else if (ledEnabled) { ledA.set(a); ledB.set(b); ledMid.copy(ledA).lerp(ledB, 0.5) }
     rims.forEach(paintRim)
     room.setLit(false)
     scene.environment = envDark
@@ -266,13 +283,16 @@ float facing = 0.0;`)
     const idle = now - idleSince
     const swaying = !reduced && !moving && idle < 14000
     sway = swaying ? Math.sin(idle / 1600) * 0.132 * Math.min(1, idle / 1200) : sway * 0.9
-    if (moving || swaying || dirty || Math.abs(sway) > 0.001) {
+    const animating = moving || swaying || dirty || Math.abs(sway) > 0.001
+    if (animating || autoLed) {
+      if (autoLed) updateAuto(now)
       scene.updateMatrixWorld()
       place(now)
       scene.updateMatrixWorld()
       composer.render()
       dirty = false
-      if (visible) frame = requestAnimationFrame(tick)
+      // the automatic colour alone needs no more than about 20 frames a second
+      if (visible) frame = animating ? requestAnimationFrame(tick) : setTimeout(() => { frame = requestAnimationFrame(tick) }, 45)
     } else last = 0
   }
   const wake = () => { idleSince = performance.now(); invalidate() }
@@ -360,7 +380,7 @@ float facing = 0.0;`)
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (visible) wake()
-    else if (frame) { cancelAnimationFrame(frame); frame = 0 }
+    else if (frame) { cancelAnimationFrame(frame); clearTimeout(frame); frame = 0 }
   }, { rootMargin: '200px' }).observe(deck)
 
   deck.prepend(canvas)
@@ -368,7 +388,7 @@ float facing = 0.0;`)
   resize()
   // wait for the first glasses before showing the canvas
   await Promise.all(panels.slice(Math.max(0, start - 1), start + 2).map(p => build(p)))
-  setLight(0)
+  setLight(LED.length - 1)                                    // the page switches the light on
   place(performance.now())
   composer.render()
   canvas.classList.add('is-ready')
