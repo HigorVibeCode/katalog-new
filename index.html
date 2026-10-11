@@ -250,7 +250,7 @@ a { color: inherit; }
 .deck-intro { position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; overflow: hidden; border-radius: 2px; opacity: 0; transition: opacity .4s; pointer-events: none; }
 .deck-intro i { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, #b24dff, #18d8f0); transform: scaleX(0); transform-origin: left; }
 .deck-intro.is-running { opacity: .9; }
-.deck-intro.is-running i { animation: intro-fill 3s linear forwards; }
+.deck-intro.is-running i { animation: intro-fill 4.6s linear forwards; }
 @keyframes intro-fill { to { transform: scaleX(1); } }
 .deck-tag-info { display: flex; align-items: stretch; min-width: 0; padding: 9px 0 8px 2px; }
 .deck-tag-info.is-new { animation: tag-in .45s cubic-bezier(.2, .7, .2, 1); }
@@ -268,8 +268,8 @@ a { color: inherit; }
 .deck-led.is-off i { background: linear-gradient(135deg, transparent 44%, rgba(255, 255, 255, .7) 45% 55%, transparent 56%); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .5); }
 .deck-led { position: relative; }
 .deck-led::after { content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .85); opacity: 0; pointer-events: none; }
-.deck-led.is-tap::after { animation: led-tap .9s ease-out 2; }
-.deck-led.is-tap i { animation: led-press .9s ease-in-out 2; }
+.deck-led.is-tap::after { animation: led-tap 1.2s ease-out 3; }
+.deck-led.is-tap i { animation: led-press 1.2s ease-in-out 1; }
 @keyframes led-tap { 0% { transform: scale(.5); opacity: .95; } 100% { transform: scale(1.7); opacity: 0; } }
 @keyframes led-press { 0%, 100% { transform: scale(1); } 25% { transform: scale(.78); } }
 @media (prefers-reduced-motion: reduce) { .deck-led.is-tap::after, .deck-led.is-tap i { animation: none; } }
@@ -757,7 +757,7 @@ a { color: inherit; }
     return options[Math.floor(Math.random() * options.length)]
   }
   let deckRandom = null, introDemo = null, introDemoEnd = null
-  // Intro: once the deck is in view, a discreet bar fills for 3 s, then the deck rolls to a random
+  // Intro: once the deck is in view, a discreet bar fills for 4.6 s (the LED demo runs inside it), then the deck rolls to a random
   // glass once. Any interaction before that cancels it; it never runs again.
   const introBar = deck.querySelector('.deck-intro')
   let introTimer = 0, introState = 'waiting'
@@ -776,7 +776,7 @@ a { color: inherit; }
       introState = 'running'
       introBar.classList.add('is-running')
       introDemo?.()
-      introTimer = setTimeout(() => { if (introState === 'running') { deckRandom?.(); endIntro() } }, reduced ? 1200 : 3000)
+      introTimer = setTimeout(() => { if (introState === 'running') { deckRandom?.(); endIntro() } }, reduced ? 1200 : 4600)
     }, { threshold: 0.45 })
     watch.observe(deck)
   }
@@ -845,15 +845,15 @@ a { color: inherit; }
       const OFF = lights.length - 1
       applyLight(OFF)                                         // the deck opens with the LED off
       ledButton.addEventListener('click', () => applyLight((light + 1) % lights.length))
-      // During the intro the LED button is tapped once for show: the light comes on for a second
+      // During the intro the LED button is tapped once for show: the light comes on for 3 seconds
       // and goes off again, so it is clear where to switch it on.
       let demoTimers = [], demoLit = false
       introDemo = () => {
         demoTimers = [
           setTimeout(() => ledButton.classList.add('is-tap'), 350),
           setTimeout(() => { applyLight(0); demoLit = true }, 600),
-          setTimeout(() => { applyLight(OFF); demoLit = false }, 1600),
-          setTimeout(() => ledButton.classList.remove('is-tap'), 2200),
+          setTimeout(() => { applyLight(OFF); demoLit = false }, 3600),
+          setTimeout(() => ledButton.classList.remove('is-tap'), 4000),
         ]
       }
       introDemoEnd = () => {

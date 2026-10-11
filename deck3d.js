@@ -161,17 +161,18 @@ float facing = 0.0;`)
 		float spark = smoothstep( 0.12, 0.65, crinkleSpark );
 		// sandblasted float: the frost scatters the light softly, paler than the LED colour, with a
 		// fine satin grain, and fades away from the lit edges instead of glowing flat
-		float grain = 0.72 + 0.56 * length( texture2D( crinkleMap, vNormalMapUv * crinkleRepeat * 2.3 ).xy * 2.0 - 1.0 );
-		vec3 ledF = mix( led, vec3( 1.0 ), 0.32 * floatGlass );
-		float escF = esc * mix( 1.5, 0.75 * grain * ( 0.25 + 0.75 * lit ), floatGlass );
-		totalEmissiveRadiance += ledF * ledOn * shade * lit * ( 0.03 + escF + 0.95 * spark * spark );
+		float grain = 0.55 + 0.9 * length( texture2D( crinkleMap, vNormalMapUv * crinkleRepeat * 2.3 ).xy * 2.0 - 1.0 );
+		vec3 ledF = mix( led, vec3( 1.0 ), 0.22 * floatGlass );
+		float escF = esc * mix( 1.5, 3.0 * grain * ( 0.3 + 0.7 * lit ), floatGlass );
+		// clear float glass carries no glow of its own: only the frosted design lights up
+		totalEmissiveRadiance += ledF * ledOn * shade * lit * ( 0.03 * ( 1.0 - floatGlass ) + escF + 0.95 * spark * spark );
 		// room light scattered by the facets and the relief: the silvery look of the glass by day
-		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * roomGlow * shade * ( 0.03 + 0.08 * spark + 0.8 * clamp( facing, 0.0, 1.0 ) + 0.16 * esc * ( 1.0 - floatGlass ) );
+		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * roomGlow * shade * ( ( 0.03 + 0.08 * spark ) * ( 1.0 - floatGlass ) + 0.8 * clamp( facing, 0.0, 1.0 ) + 0.16 * esc * ( 1.0 - floatGlass ) );
 		// sandblasted areas: a soft satin glow, much brighter with the LED
-		totalEmissiveRadiance += vec3( 0.8, 0.85, 0.83 ) * frostAmt * shade * ( 0.04 + roomGlow * 0.5 ) * grain;
+		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * frostAmt * shade * ( 0.07 + roomGlow * 0.7 ) * grain;
 	}`)
     }
-    m.customProgramCacheKey = () => 'kiln-glass-4'
+    m.customProgramCacheKey = () => 'kiln-glass-5'
     return m
   }
 
