@@ -16,7 +16,9 @@ import { LED } from './deck3d.js'
 export { LED }
 const T = 19, DEPTH = 150, LIP = 30                       // mm: glass, basin depth, rounded basin rim
 const NX = 2100, NY = 1050                                // the underside textures cover 2100 × 1050 mm
-const STAGE = 1100, GAP = 420                             // every lavabo shown about 1100 mm wide
+const GAP = 480                                           // mm between the lavabos along the wall
+// the camera shows more wall around a large lavabo, but not in proportion: sizes stay readable
+const viewWidth = L => 900 + 0.75 * L
 const HEIGHT = 850                                        // top of the lavabo above the floor
 const BUMP = { Float: 0, Minimal: 1.6, Struktur: 2.4 }
 const smoothstep = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t) }
@@ -207,8 +209,8 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
   // One lavabo per combination, built when it comes near the front and released when far away.
   const panels = combos.map((combo, i) => {
     const m = forms[combo.model]
-    const s = Math.max(0.62, Math.min(1.3, STAGE / m.L))
-    return { combo, i, m, s, w: m.L * s, group: null, loading: false }
+    // true size: a small lavabo looks small next to its tap and its neighbours
+    return { combo, i, m, s: 1, w: m.L, group: null, loading: false }
   })
   const xs = [0]
   for (let i = 1; i < panels.length; i++) xs.push(xs[i - 1] + (panels[i - 1].w + panels[i].w) / 2 + GAP)
@@ -258,7 +260,7 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
       tap.rotation.y = Math.atan2(near.x - X, near.z - y)
       group.add(tap)
     }
-    for (const c of geo.drains) { const d = drain(chrome); d.position.set(c.x, -DEPTH + 1, c.z); group.add(d) }
+    for (const c of geo.drains) { const d = drain(chrome); d.position.set(c.x, c.y + 1, c.z); group.add(d) }
     // a corner lavabo: the second wall on the left
     if (m.corner && !shot) {
       const w = new THREE.Mesh(new THREE.PlaneGeometry(m.D + 900, HEIGHT + 1700), room.sideMat)
@@ -369,8 +371,19 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
     if (index !== shown) { shown = index; onIndex?.(index) }
   }
   // camera: from the front and above, so the outline, the basin and the colour all show
+  // the distance that frames the lavabo at position p (between two lavabos: in between)
+  const fit = p => {
+    const i = Math.max(0, Math.min(panels.length - 1, Math.floor(p))), j = Math.min(panels.length - 1, i + 1), f = Math.max(0, Math.min(1, p - i))
+    const at = k => {
+      const m = panels[k].m, half = THREE.MathUtils.degToRad(camera.fov / 2)
+      return Math.max(viewWidth(m.L) / 2 / (Math.tan(half) * camera.aspect), (m.D * 0.55 + 300) / Math.tan(half))
+    }
+    return at(i) + (at(j) - at(i)) * smoothstep(0, 1, f)
+  }
   let fitDistance = 3000
   const aimCamera = () => {
+    fitDistance = fit(shot ? start : pos)
+    target.z = shot ? panels[start].m.D * 0.5 : 310
     const a = sway, el = THREE.MathUtils.degToRad(36)
     camera.position.set(target.x + Math.sin(a) * Math.cos(el) * fitDistance, target.y + Math.sin(el) * fitDistance, target.z + Math.cos(a) * Math.cos(el) * fitDistance)
     camera.lookAt(target)
@@ -473,10 +486,6 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
     camera.aspect = w / h
     camera.updateProjectionMatrix()
     // frame the lavabo on stage with a little of its neighbours, on phones and desktops alike
-    const half = THREE.MathUtils.degToRad(camera.fov / 2)
-    const byWidth = 790 / (Math.tan(half) * camera.aspect), byHeight = 560 / Math.tan(half)
-    fitDistance = Math.max(byWidth, byHeight)
-    if (shot) { const p = panels[start]; fitDistance = Math.max(p.w * 0.54 / (Math.tan(half) * camera.aspect), (p.m.D * p.s * 0.62 + 160) / Math.tan(half)) }
     invalidate()
   }
   new ResizeObserver(resize).observe(deck)
@@ -567,15 +576,22 @@ export function lavabo(m) {
         const f = j / 6 * Math.PI / 2, o = LIP * (1 - Math.sin(f)), y = -LIP + LIP * Math.cos(f)
         rings.push(B.map((p, i) => [p[0] + n[i][0] * o, p[1] + n[i][1] * o, y]))
       }
-      for (let k = 1; k <= 16; k++) {
-        const t = k / 16 * Math.PI / 2, s = 1 - 0.46 * (1 - Math.cos(t)), y = -LIP - (DEPTH - LIP) * Math.sin(t)
-        rings.push(B.map(p => [c[0] + (p[0] - c[0]) * s, c[1] + (p[1] - c[1]) * s, y]))
+      // a concave bowl down to the drain, no flat floor: steep under the rim, then a gentle funnel
+      // to the drain; at most 150 mm deep, shallower for a small basin
+      const span = (k2) => Math.max(...B.map(p => p[k2])) - Math.min(...B.map(p => p[k2]))
+      const dep = Math.min(DEPTH, 0.42 * Math.min(span(0), span(1)))
+      const rd = Math.min(0.2, 38 / (0.5 * Math.min(span(0), span(1))))   // the drain, about 38 mm
+      const depthAt = r => LIP + (dep - LIP) * (0.7 * Math.sqrt(Math.max(0, 1 - r * r)) + 0.3 * (1 - r))
+      for (let k = 1; k <= 18; k++) {
+        const r = 1 - (1 - rd) * Math.pow(k / 18, 0.85)
+        rings.push(B.map(p => [c[0] + (p[0] - c[0]) * r, c[1] + (p[1] - c[1]) * r, -depthAt(r)]))
       }
+      const bottom = -depthAt(rd)
       const first = pos.length / 3
       rings.flat().forEach(([x, z, y]) => { pos.push(x - L / 2, y, z); const u = uvOf(x, z); uv.push(u[0], u[1]); uv1.push(u[2], u[3]) })
       const centre = pos.length / 3
-      pos.push(c[0] - L / 2, -DEPTH, c[1]); { const u = uvOf(c[0], c[1]); uv.push(u[0], u[1]); uv1.push(u[2], u[3]) }
-      drains.push({ x: c[0] - L / 2, z: c[1] })
+      pos.push(c[0] - L / 2, bottom - 2, c[1]); { const u = uvOf(c[0], c[1]); uv.push(u[0], u[1]); uv1.push(u[2], u[3]) }
+      drains.push({ x: c[0] - L / 2, y: bottom - 2, z: c[1] })
       const v = (r, i) => first + r * N + (i % N)
       const P = i => new THREE.Vector3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2])
       // faces turn up and towards the middle of the basin, where the viewer looks from
@@ -657,13 +673,17 @@ export function lavabo(m) {
       return g
     }
     const outer = shell(rings, [cx, 0, cy], false)
-    // the inside: the outside moved one wall thickness in, along its normals
-    const n = outer.attributes.normal, p = outer.attributes.position
-    const innerRings = rings.map((ring, r) => ring.map((_, i) => {
-      const j = r * N + i
-      return [p.getX(j) + L / 2 - n.getX(j) * wall, p.getY(j) - n.getY(j) * wall, p.getZ(j) - n.getZ(j) * wall]
-    }))
-    const inner = shell(innerRings, [cx, wall, cy], true)
+    // the inside: concave down to the drain, no flat floor, the rim one wall thickness in
+    const innerRings = []
+    for (let k = 0; k <= K; k++) {
+      const r = 1 - 0.9 * Math.pow(k / K, 0.85)
+      const f = 0.7 * Math.sqrt(Math.max(0, 1 - r * r)) + 0.3 * (1 - r)
+      innerRings.push(v.rim.map(([x, y, h]) => {
+        const d = Math.hypot(x - cx, y - cy) || 1, sIn = (1 - wall / d) * r
+        return [cx + (x - cx) * sIn, h - (h - wall - 3) * f, cy + (y - cy) * sIn]
+      }))
+    }
+    const inner = shell(innerRings, [cx, wall + 1, cy], true)
     // the polished rim between them
     const lipPos = [], lipIdx = []
     for (let i = 0; i < N; i++) { const a = rings[0][i], b = innerRings[0][i]; lipPos.push(a[0] - L / 2, a[1], a[2], b[0] - L / 2, b[1], b[2]) }
@@ -672,7 +692,7 @@ export function lavabo(m) {
     lip.setAttribute('position', new THREE.Float32BufferAttribute(lipPos, 3))
     lip.setIndex(lipIdx)
     lip.computeVertexNormals()
-    return { outer, inner, lip, drain: { x: cx - L / 2, y: wall + 1, z: cy } }
+    return { outer, inner, lip, drain: { x: cx - L / 2, y: wall + 2, z: cy } }
   }
   // the glass upstand at the wall (Rückwand): 10 mm, straight, arched or waved on top
   const upstand = b => {

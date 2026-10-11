@@ -32,12 +32,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #101412; --surface: #171d1b; --fg: #e6ebe8; --muted: #97a39e; --line: #2a3330; --accent: #7cc3b2; --panel: #1a211e;
-  --room2-bg: #e9ece7; --room2-fg: #1c2622; --room2-muted: #5f6c66; --room2-line: #cdd5d0; --room2-panel: #dde2dd;
+  --room2-bg: #141a18; --room2-fg: #e6ebe8; --room2-muted: #97a39e; --room2-line: #2c3532; --room2-panel: #1d2522;
   --room3-bg: #1e1913; --room3-fg: #efe6da; --room3-muted: #ab9d8b; --room3-line: #3a3128; --room3-panel: #2a231b;
   color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #101412; --surface: #171d1b; --fg: #e6ebe8; --muted: #97a39e; --line: #2a3330; --accent: #7cc3b2; --panel: #1a211e;
-  --room2-bg: #e9ece7; --room2-fg: #1c2622; --room2-muted: #5f6c66; --room2-line: #cdd5d0; --room2-panel: #dde2dd;
+  --room2-bg: #141a18; --room2-fg: #e6ebe8; --room2-muted: #97a39e; --room2-line: #2c3532; --room2-panel: #1d2522;
   --room3-bg: #1e1913; --room3-fg: #efe6da; --room3-muted: #ab9d8b; --room3-line: #3a3128; --room3-panel: #2a231b;
   color-scheme: dark }
 
@@ -481,66 +481,39 @@ a { color: inherit; }
       </div>
 
       <div class="part" data-part="Projekte">
-        <div class="row-head"><div><h3>Projekte</h3><span>Originalfotos · 6 →</span></div><p>Realisierte Lavabos aus Glas.</p></div>
-        <div class="swipe" aria-label="Realisierte Lavabos">
-          <figure class="card wide"><div class="media"><img src="img/wt-p1.jpg" alt="Wasser läuft in ein Glasbecken vor rotem Hintergrund" loading="lazy"></div><figcaption>Detail</figcaption></figure>
-          <figure class="card wide"><div class="media"><img src="img/wt-p2.jpg" alt="Doppellavabo aus Glas mit Licht auf Holzmöbel" loading="lazy"></div><figcaption>Doppellavabo mit Licht</figcaption></figure>
-          <figure class="card wide"><div class="media"><img src="img/wt-p4.jpg" alt="Breites Glaslavabo auf Holzmöbel unter Spiegelschrank" loading="lazy"></div><figcaption>Für zwei</figcaption></figure>
-          <figure class="card wide"><div class="media"><img src="img/wt-p3.jpg" alt="Orangefarbenes Glaslavabo auf dunklem Möbel" loading="lazy"></div><figcaption>In Farbe</figcaption></figure>
-          <figure class="card wide"><div class="media"><img src="img/wt-p5.jpg" alt="Glaslavabo auf Holzunterschrank im Dachbad" loading="lazy"></div><figcaption>Schwebend</figcaption></figure>
-          <figure class="card wide"><div class="media"><img src="img/foto-washbasin.jpg" alt="Geschwungenes Glaslavabo mit Struktur und Licht" loading="lazy"></div><figcaption>Geschwungen</figcaption></figure>
+        <div class="row-head"><div><h3>Projekte</h3><span>Originalfotos · 29</span></div><p>Realisierte Lavabos aus Glas: mit Licht, in Farbe, mit Aufsatzbecken, in der Ecke.</p></div>
+        <div class="mosaic" data-gallery>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Doppellavabo mit türkisem Licht"><img src="img/lav-01-t.jpg" data-full="img/lav-01.jpg" alt="Doppellavabo mit türkisem Licht" width="1600" height="1067" loading="lazy"></button><figcaption>Doppellavabo mit türkisem Licht</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Ecklavabo mit Struktur"><img src="img/lav-02-t.jpg" data-full="img/lav-02.jpg" alt="Ecklavabo mit Struktur" width="911" height="1600" loading="lazy"></button><figcaption>Ecklavabo mit Struktur</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Aufsatzbecken in Rot und Schwarz"><img src="img/lav-03-t.jpg" data-full="img/lav-03.jpg" alt="Aufsatzbecken in Rot und Schwarz" width="1200" height="1600" loading="lazy"></button><figcaption>Aufsatzbecken in Rot und Schwarz</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: In Violett unter der Dachschräge"><img src="img/lav-04-t.jpg" data-full="img/lav-04.jpg" alt="In Violett unter der Dachschräge" width="1200" height="1600" loading="lazy"></button><figcaption>In Violett unter der Dachschräge</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Doppellavabo in Grün"><img src="img/lav-05-t.jpg" data-full="img/lav-05.jpg" alt="Doppellavabo in Grün" width="1600" height="1200" loading="lazy"></button><figcaption>Doppellavabo in Grün</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Detail"><img src="img/lav-06-t.jpg" data-full="img/lav-06.jpg" alt="Detail" width="1111" height="1400" loading="lazy"></button><figcaption>Detail</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Geschwungen"><img src="img/lav-07-t.jpg" data-full="img/lav-07.jpg" alt="Geschwungen" width="1200" height="733" loading="lazy"></button><figcaption>Geschwungen</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Klar, mit Licht"><img src="img/lav-08-t.jpg" data-full="img/lav-08.jpg" alt="Klar, mit Licht" width="1096" height="960" loading="lazy"></button><figcaption>Klar, mit Licht</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Mit Rückwand in Welle"><img src="img/lav-09-t.jpg" data-full="img/lav-09.jpg" alt="Mit Rückwand in Welle" width="756" height="746" loading="lazy"></button><figcaption>Mit Rückwand in Welle</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Zwei Aufsatzbecken"><img src="img/lav-10-t.jpg" data-full="img/lav-10.jpg" alt="Zwei Aufsatzbecken" width="830" height="746" loading="lazy"></button><figcaption>Zwei Aufsatzbecken</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Geschwungenes Doppellavabo"><img src="img/lav-11-t.jpg" data-full="img/lav-11.jpg" alt="Geschwungenes Doppellavabo" width="1600" height="1001" loading="lazy"></button><figcaption>Geschwungenes Doppellavabo</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Doppellavabo mit Rückwand"><img src="img/lav-12-t.jpg" data-full="img/lav-12.jpg" alt="Doppellavabo mit Rückwand" width="1600" height="976" loading="lazy"></button><figcaption>Doppellavabo mit Rückwand</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: In Farbe"><img src="img/lav-13-t.jpg" data-full="img/lav-13.jpg" alt="In Farbe" width="1400" height="788" loading="lazy"></button><figcaption>In Farbe</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Neben der Dusche"><img src="img/lav-14-t.jpg" data-full="img/lav-14.jpg" alt="Neben der Dusche" width="1600" height="1063" loading="lazy"></button><figcaption>Neben der Dusche</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Freie Form an der Wand"><img src="img/lav-15-t.jpg" data-full="img/lav-15.jpg" alt="Freie Form an der Wand" width="1070" height="1600" loading="lazy"></button><figcaption>Freie Form an der Wand</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Klein, mit Licht"><img src="img/lav-16-t.jpg" data-full="img/lav-16.jpg" alt="Klein, mit Licht" width="1052" height="1600" loading="lazy"></button><figcaption>Klein, mit Licht</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Lang, mit grüner Kante"><img src="img/lav-17-t.jpg" data-full="img/lav-17.jpg" alt="Lang, mit grüner Kante" width="1600" height="1200" loading="lazy"></button><figcaption>Lang, mit grüner Kante</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Vor der grünen Wand"><img src="img/lav-18-t.jpg" data-full="img/lav-18.jpg" alt="Vor der grünen Wand" width="1088" height="1600" loading="lazy"></button><figcaption>Vor der grünen Wand</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Glasschale auf Holz"><img src="img/lav-19-t.jpg" data-full="img/lav-19.jpg" alt="Glasschale auf Holz" width="1200" height="1600" loading="lazy"></button><figcaption>Glasschale auf Holz</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Doppellavabo mit Licht"><img src="img/lav-20-t.jpg" data-full="img/lav-20.jpg" alt="Doppellavabo mit Licht" width="1400" height="1050" loading="lazy"></button><figcaption>Doppellavabo mit Licht</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Zwischen Hochschränken"><img src="img/lav-21-t.jpg" data-full="img/lav-21.jpg" alt="Zwischen Hochschränken" width="1212" height="557" loading="lazy"></button><figcaption>Zwischen Hochschränken</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Neben der Glasdusche"><img src="img/lav-22-t.jpg" data-full="img/lav-22.jpg" alt="Neben der Glasdusche" width="1200" height="1600" loading="lazy"></button><figcaption>Neben der Glasdusche</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Unter dem Spiegelschrank"><img src="img/lav-23-t.jpg" data-full="img/lav-23.jpg" alt="Unter dem Spiegelschrank" width="1600" height="1200" loading="lazy"></button><figcaption>Unter dem Spiegelschrank</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Unter der Dachschräge"><img src="img/lav-24-t.jpg" data-full="img/lav-24.jpg" alt="Unter der Dachschräge" width="1200" height="1600" loading="lazy"></button><figcaption>Unter der Dachschräge</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Für zwei"><img src="img/lav-25-t.jpg" data-full="img/lav-25.jpg" alt="Für zwei" width="1050" height="1400" loading="lazy"></button><figcaption>Für zwei</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Mit Licht in Türkis"><img src="img/lav-26-t.jpg" data-full="img/lav-26.jpg" alt="Mit Licht in Türkis" width="1067" height="1600" loading="lazy"></button><figcaption>Mit Licht in Türkis</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Neben dem Glasbild"><img src="img/lav-27-t.jpg" data-full="img/lav-27.jpg" alt="Neben dem Glasbild" width="1600" height="993" loading="lazy"></button><figcaption>Neben dem Glasbild</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Rund, mit Licht"><img src="img/lav-28-t.jpg" data-full="img/lav-28.jpg" alt="Rund, mit Licht" width="649" height="1024" loading="lazy"></button><figcaption>Rund, mit Licht</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Schwebend"><img src="img/lav-29-t.jpg" data-full="img/lav-29.jpg" alt="Schwebend" width="1400" height="1050" loading="lazy"></button><figcaption>Schwebend</figcaption></figure>
         </div>
-      </div>
-
-      <div class="part" data-part="Modelle">
-        <div class="row-head"><div><h3>Modelle</h3><span>Zeichnungen · 19 →</span></div><p>Der Umriss ist frei wählbar, die Beckenform fix.</p></div>
-        <div class="swipe" aria-label="Lavabo-Modelle">
-          <figure class="card model"><div class="media"><img src="img/la-1000.png" alt="Zeichnung LA-1000, Becken 50 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1000</b><small>Becken 50 × 35 cm · L 80–120 · T 50–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1025.png" alt="Zeichnung LA-1025, Becken 52 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1025</b><small>Becken 52 × 34 cm · L 80–100 · T 50–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1027.png" alt="Zeichnung LA-1027, Becken 54 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1027</b><small>Becken 54 × 34 cm · L 85–140 · T 50–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1015.png" alt="Zeichnung LA-1015, Becken 60 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1015</b><small>Becken 60 × 34 cm · L 90–140 · T 50–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1026.png" alt="Zeichnung LA-1026, Becken 60 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1026</b><small>Becken 60 × 34 cm · L 90–180 · T 50–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1017.png" alt="Zeichnung LA-1017, Becken 60 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1017</b><small>Becken 60 × 35 cm · Masse nach Mass</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1018.png" alt="Zeichnung LA-1018, Becken 60 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1018</b><small>Becken 60 × 35 cm · Masse nach Mass</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1001.png" alt="Zeichnung LA-1001, Becken 67 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1001</b><small>Becken 67 × 34 cm · L 95–150 · T 50–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1016.png" alt="Zeichnung LA-1016, Becken 74 × 43/34 cm" loading="lazy"></div><figcaption><span><b>LA-1016</b><small>Becken 74 × 43/34 cm · L 100–170 · T 60–65 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1002.png" alt="Zeichnung LA-1002, Becken 94 × 34 cm" loading="lazy"></div><figcaption><span><b>LA-1002</b><small>Becken 94 × 34 cm · L 120–190 · T 50–65 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1062.png" alt="Zeichnung LA-1062, Becken 100 × 35 cm" loading="lazy"></div><figcaption><span><b>LA-1062</b><small>Becken 100 × 35 cm · L 128–190 · T 50–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1060.png" alt="Zeichnung LA-1060, Becken 120 × 43 cm" loading="lazy"></div><figcaption><span><b>LA-1060</b><small>Becken 120 × 43 cm · L 150–210 · T 60–65 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1063.png" alt="Zeichnung LA-1063, Becken 120 × 40 cm" loading="lazy"></div><figcaption><span><b>LA-1063</b><small>Becken 120 × 40 cm · Masse nach Mass</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1064.png" alt="Zeichnung LA-1064, Becken 120 × 40 cm" loading="lazy"></div><figcaption><span><b>LA-1064</b><small>Becken 120 × 40 cm · Masse nach Mass</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1061.png" alt="Zeichnung LA-1061, Becken 128 × 41 cm" loading="lazy"></div><figcaption><span><b>LA-1061</b><small>Becken 128 × 41 cm · L 160–210 · T 60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1050.png" alt="Zeichnung LA-1050 Piccolo, Becken 42 × 28 cm" loading="lazy"></div><figcaption><span><b>LA-1050 Piccolo</b><small>Becken 42 × 28 cm · L 65–120 · T 35–60 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1065.png" alt="Zeichnung LA-1065 Duo, Becken 2 × 52 × 40 cm" loading="lazy"></div><figcaption><span><b>LA-1065 Duo</b><small>Becken 2 × 52 × 40 cm · L 148 · T 60–70 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1066.png" alt="Zeichnung LA-1066 Duo, Becken 2 × 50 × 37 cm" loading="lazy"></div><figcaption><span><b>LA-1066 Duo</b><small>Becken 2 × 50 × 37 cm · L 160–200 · T 60–65 cm</small></span></figcaption></figure>
-          <figure class="card model"><div class="media"><img src="img/la-1067.png" alt="Zeichnung LA-1067 Duo, Becken 2 × 61,5 × 43 cm" loading="lazy"></div><figcaption><span><b>LA-1067 Duo</b><small>Becken 2 × 61,5 × 43 cm · L 185–200 · T 60–65 cm</small></span></figcaption></figure>
-        </div>
-      </div>
-
-      <div class="part" data-part="Oberflächen">
-        <div class="row-head"><h3>Oberflächen</h3><p>Oben immer glatt. Die Unterseite: Float, Minimal oder Struktur.</p></div>
-        <div class="plates">
-          <figure><img src="img/platte-float.jpg" alt="" loading="lazy">Float</figure>
-          <figure><img src="img/platte-minimal.jpg" alt="" loading="lazy">Minimal</figure>
-          <figure><img src="img/platte-lateral-sweep.jpg" alt="" loading="lazy">Struktur</figure>
-        </div>
-      </div>
-
-      <div class="part" data-part="Farben">
-        <div class="row-head"><h3>Farben</h3><p>Auf die Unterseite gemalt, durch das Glas gesehen. Einfarbig, als Verlauf – oder klar, ohne Farbe.</p></div>
-        <div class="plates">
-          <figure><i class="sw" style="background:#f2f1ec"></i>Weiss</figure>
-          <figure><i class="sw" style="background:#cdb894"></i>Sand</figure>
-          <figure><i class="sw" style="background:#e2701f"></i>Orange</figure>
-          <figure><i class="sw" style="background:#b3241e"></i>Rot</figure>
-          <figure><i class="sw" style="background:#19a8b4"></i>Türkis</figure>
-          <figure><i class="sw" style="background:#0f4650"></i>Petrol</figure>
-          <figure><i class="sw" style="background:#3a3d40"></i>Anthrazit</figure>
-          <figure><i class="sw" style="background:#121314"></i>Schwarz</figure>
-          <figure><i class="sw" style="background:linear-gradient(90deg,#19a8b4,#1f4fa8)"></i>Verlauf</figure>
-          <figure><i class="sw sw-clear"></i>Klar</figure>
-          <figure><i class="sw sw-any" style="background:conic-gradient(#e2701f,#b3241e,#b24dff,#1f4fa8,#19a8b4,#2fe0a0,#cdb894,#e2701f)"></i>Jede Farbe</figure>
-        </div>
+        <button class="mosaic-all" type="button">Alle 29 Fotos ansehen <span aria-hidden="true">→</span></button>
       </div>
 
       <div class="part tech" data-part="Gut zu wissen">
