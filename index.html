@@ -1,4 +1,4 @@
-<!doctype html><html lang="de-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><title>Glas im Bad – Büchler Glas</title><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="de-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><title>Glas für Bad und Küche – Büchler Glas</title><meta name="description" content="Trennwand, Lavabo und Küchenrückwand aus Glas: Ideen, realisierte Projekte und technische Daten von Büchler Glas."><meta property="og:type" content="website"><meta property="og:locale" content="de_CH"><meta property="og:site_name" content="Büchler Glas"><meta property="og:title" content="Glas für Bad und Küche – Büchler Glas"><meta property="og:description" content="Trennwand, Lavabo und Küchenrückwand aus Glas: Ideen, realisierte Projekte und technische Daten von Büchler Glas."><meta property="og:image" content="img/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Manrope:wght@400;500;600&display=swap">
@@ -69,7 +69,7 @@ a { color: inherit; }
 @keyframes drift { to { transform: scale(1.1); } }
 .hero-top, .hero-body { position: relative; z-index: 2; }
 .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px var(--edge); }
-.brand-logo { display: block; height: 22px; width: auto; filter: drop-shadow(0 1px 8px rgba(0,0,0,.5)); }
+.brand-logo { display: block; height: 22px; width: auto; filter: brightness(0) invert(1) drop-shadow(0 1px 6px rgba(0,0,0,.45)); }
 .logo-slot { padding: 6px 12px; border: 1px dashed rgba(255,255,255,.6); border-radius: 999px; font-size: 12px; color: rgba(255,255,255,.85); white-space: nowrap; }
 .hero-edition { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.75); white-space: nowrap; }
 .hero-body { display: grid; gap: 12px; width: 100%; max-width: calc(var(--col) + 2 * var(--gutter)); margin-inline: auto; padding: 0 var(--gutter) max(24px, env(safe-area-inset-bottom)); }
@@ -117,6 +117,8 @@ a { color: inherit; }
 .chapterbar[data-chapter="rueckwand"] { --cb-bg: var(--room2-bg); --cb-fg: var(--room2-fg); --cb-line: var(--room2-line); }
 /* the bar of the next chapter rides in on top of its cover; the sticky bar takes over once it reaches the top */
 .cb-inline { position: relative; top: auto; z-index: 3; }
+#chapterbar.is-away { transform: translateY(-100%); }
+#chapterbar { transition: background .45s, color .45s, border-color .45s, transform .3s ease; }
 .cb-inline[data-cb="lavabo"] { --cb-bg: var(--room2-bg); --cb-fg: var(--room2-fg); --cb-line: var(--room2-line); }
 .cb-inline[data-cb="rueckwand"] { --cb-bg: var(--room2-bg); --cb-fg: var(--room2-fg); --cb-line: var(--room2-line); }
 .cb-inline .cb-steps i { display: block; width: 20px; height: 4px; border-radius: 2px; background: currentColor; opacity: .22; }
@@ -140,6 +142,8 @@ a { color: inherit; }
 
 /* Rooms. */
 .room { display: grid; gap: var(--space); padding-block: clamp(56px, 13vw, 96px) calc(var(--space) + 8svh); }
+/* the Beratung rises over the last room and stays there: keep its end clear of the card (--tail = its height) */
+.room-kitchen .room { padding-bottom: max(calc(var(--space) + 8svh), calc(var(--tail, 0px) + 40px)); }
 /* the glass wall and the lavabo share one dark room tone, in light and dark mode alike */
 .room-shower { --fg: var(--room2-fg); --muted: var(--room2-muted); --line: var(--room2-line); --panel: var(--room2-panel); background: var(--room2-bg); color: var(--fg); }
 .room-basin { --fg: var(--room2-fg); --muted: var(--room2-muted); --line: var(--room2-line); --panel: var(--room2-panel); background: var(--room2-bg); color: var(--fg); }
@@ -158,21 +162,13 @@ a { color: inherit; }
 .ba-switch button[aria-pressed="true"] { background: #fff; color: #1c2622; }
 @media (prefers-reduced-motion: reduce) { .ba img { transition: none; } }
 
-/* Benefits: one at a time, story-style bars; tap or arrow keys to move on. */
-.benefits { --dur: 2s; display: grid; gap: 20px; padding: 24px 22px 28px; border-radius: var(--r); background: var(--panel); cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-.benefit-bars { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; }
-.benefit-bars span { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
-.benefit-bars i { display: block; height: 100%; width: 0; background: var(--fg); }
-.benefit-bars span.done i { width: 100%; }
-.benefit-bars span.now i { animation: fill var(--dur) linear forwards; }
-.benefits.paused .benefit-bars span.now i { animation-play-state: paused; }
-@keyframes fill { to { width: 100%; } }
-.benefit-stage { display: grid; }
-.benefit { grid-area: 1 / 1; display: grid; gap: 6px; align-content: start; opacity: 0; transform: translateY(6px); transition: opacity .5s ease, transform .5s ease; }
-.benefit.now { opacity: 1; transform: none; }
-.benefit strong { font: 500 clamp(28px, 8vw, 40px)/1.05 var(--display); letter-spacing: -.03em; }
-.benefit span { font-size: 17px; color: var(--muted); }
-@media (prefers-reduced-motion: reduce) { .benefit { transition: none; transform: none; } .benefit-bars span.now i { animation: none; width: 100%; } }
+/* Benefits: six short reasons, a quiet grid with hairlines. */
+.benefits { display: grid; grid-template-columns: 1fr; column-gap: 32px; margin: 0; padding: 0; list-style: none; }
+.benefits li { display: grid; gap: 4px; align-content: start; padding: 16px 0 18px; border-top: 1px solid var(--line); }
+.benefits strong { font: 500 19px/1.2 var(--display); letter-spacing: -.01em; }
+.benefits span { font-size: 15px; line-height: 1.45; color: var(--muted); }
+@media (min-width: 560px) { .benefits { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .benefits { grid-template-columns: repeat(3, 1fr); } }
 
 /* Swipe rows: full-bleed, snapping. */
 .row-head { display: grid; gap: 10px; padding-top: 20px; border-top: 1px solid var(--line); }
@@ -320,6 +316,19 @@ a { color: inherit; }
 .card.model figcaption span { display: grid; gap: 2px; }
 .card.model figcaption small { font: 400 12.5px/1.35 var(--text); color: var(--muted); }
 
+/* One call to action: a pill at the lower right on wide screens, a bar along the bottom on the phone.
+   It comes in once the cover is gone and steps aside when the Beratung is on screen. */
+.cta-bar { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; padding: 10px var(--gutter) max(10px, env(safe-area-inset-bottom)); background: rgba(12, 16, 15, .84); border-top: 1px solid rgba(255, 255, 255, .08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transform: translateY(110%); transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.cta-bar.is-on { transform: none; }
+.cta { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 24px; border-radius: 999px; background: #fff; color: #1c2622; font: 600 15px/1 var(--text); text-decoration: none; }
+.cta:focus-visible { outline: 2px solid #8fd6bd; outline-offset: 3px; }
+@media (min-width: 760px) {
+  .cta-bar { left: auto; right: 24px; bottom: 24px; padding: 0; background: none; border: 0; backdrop-filter: none; -webkit-backdrop-filter: none; transform: translateY(calc(100% + 40px)); }
+  .cta { box-shadow: 0 10px 30px rgba(0, 0, 0, .35); transition: transform .25s; }
+  .cta:hover { transform: translateY(-2px); }
+}
+@media (prefers-reduced-motion: reduce) { .cta-bar, .cta { transition: none; } }
+
 /* Contact. */
 .contact { display: grid; gap: 12px; padding-block: var(--space) calc(var(--space) * .8); background: var(--surface); border-top: 1px solid var(--line); }
 .contact h2 { font-size: clamp(32px, 8vw, 56px); line-height: 1.02; }
@@ -330,7 +339,7 @@ a { color: inherit; }
 .footer .wrap { display: grid; gap: 4px; padding-block: 28px 36px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
-@media (prefers-reduced-motion: reduce) { .chapterbar, .cb-steps a { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .chapterbar, #chapterbar, .cb-steps a { transition: none; } }
 </style>
 
 <section class="hero stack" id="start" aria-labelledby="cover-title">
@@ -389,10 +398,7 @@ a { color: inherit; }
 
       <div class="part" data-part="Warum Glas">
         <div class="row-head"><div><h3>Warum Glas</h3><span>6 Gründe</span></div></div>
-        <div class="benefits" tabindex="0" aria-label="Vorteile, antippen für den nächsten">
-        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Hygiene</strong><span>Kein Stoff, kein Schimmel.</span></div><div class="benefit"><strong>Trocken</strong><span>Das Wasser bleibt in der Dusche.</span></div><div class="benefit"><strong>Mehr Licht</strong><span>Der Blick geht durch. Das Bad wirkt grösser.</span></div><div class="benefit"><strong>Sichtschutz</strong><span>Blicke bleiben draussen, Licht kommt herein.</span></div><div class="benefit"><strong>Komfort</strong><span>Offen und hell. Nichts klebt am Körper.</span></div><div class="benefit"><strong>Zeitlos</strong><span>Glas kommt nicht aus der Mode.</span></div></div>
-        </div>
+        <ul class="benefits"><li><strong>Hygiene</strong><span>Kein Stoff, kein Schimmel.</span></li><li><strong>Trocken</strong><span>Das Wasser bleibt in der Dusche.</span></li><li><strong>Mehr Licht</strong><span>Der Blick geht durch. Das Bad wirkt grösser.</span></li><li><strong>Sichtschutz</strong><span>Blicke bleiben draussen, Licht kommt herein.</span></li><li><strong>Komfort</strong><span>Offen und hell. Nichts klebt am Körper.</span></li><li><strong>Zeitlos</strong><span>Glas kommt nicht aus der Mode.</span></li></ul>
       </div>
 
       <div class="part kombi" data-part="Inspiration für Kombinationen">
@@ -402,7 +408,7 @@ a { color: inherit; }
           <button class="deck-arrow deck-prev" type="button" aria-label="Vorheriges Glas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
           <button class="deck-arrow deck-next" type="button" aria-label="Nächstes Glas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
           <div class="deck-tag"><span class="deck-intro" aria-hidden="true"><i></i></span>
-            <div class="deck-tag-info" aria-live="polite"><span class="deck-tag-n">Nº <b>01</b><i> / 50</i></span><dl><div><dt>Form</dt><dd id="tag-form">Rundbogen</dd></div><div><dt>Struktur</dt><dd id="tag-structure">Float</dd></div><div><dt id="tag-relief-label">Sandstrahl</dt><dd id="tag-relief">Ihr Motiv</dd></div></dl></div>
+            <div class="deck-tag-info" aria-live="polite"><span class="deck-tag-n">Nº <b>01</b><i> / 50</i></span><dl><div><dt>Form</dt><dd id="tag-form">Rundbogen</dd></div><div><dt>Struktur</dt><dd id="tag-structure">Arc Sweep</dd></div><div><dt id="tag-relief-label">Relief</dt><dd id="tag-relief">Palme</dd></div></dl></div>
             <div class="deck-tag-ctrl">
               <button class="deck-led is-off" type="button" aria-label="LED-Licht wechseln: Ohne Licht" title="Ohne Licht" style="--sw: linear-gradient(90deg, #b24dff, #18d8f0)"><i></i></button>
               <button class="deck-random" type="button" aria-label="Zufällige Kombination zeigen" title="Zufällige Kombination"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="7" r="1.4"/><circle cx="13" cy="13" r="1.4"/><circle cx="13" cy="7" r="1.4"/><circle cx="7" cy="13" r="1.4"/><circle cx="10" cy="10" r="1.4"/></svg></button>
@@ -412,14 +418,14 @@ a { color: inherit; }
         <div class="deck-foot">
           <span class="deck-spec">1050 × 2100 mm · 10 mm</span>
         </div>
-        <script type="application/json" class="deck-data">[{"file": "kombi-01.jpg", "name": "Rundbogen + Float + Ihr Motiv: „Seien Sie kreativ“, mit Ihrem Bild oder Text", "form": "Rundbogen", "structure": "Float", "relief": "Ihr Motiv", "maps": "float-kreativ", "float": true}, {"file": "kombi-02.jpg", "name": "Rundbogen + Arc Sweep + Palme", "form": "Rundbogen", "structure": "Arc Sweep", "relief": "Palme", "maps": "arc-sweep-palme"}, {"file": "kombi-03.jpg", "name": "Welle + Rake Fan", "form": "Welle", "structure": "Rake Fan", "relief": "Ohne", "maps": "rake-fan-ohne"}, {"file": "kombi-04.jpg", "name": "Entwurf 06 + Abstract + Delfine", "form": "Entwurf 06", "structure": "Abstract", "relief": "Delfine", "maps": "abstract-delfine"}, {"file": "kombi-05.jpg", "name": "Rechteck + Float + Streifen (sandgestrahlt)", "form": "Rechteck", "structure": "Float", "relief": "Streifen", "maps": "float-streifen", "float": true}, {"file": "kombi-06.jpg", "name": "Facette + Linear + Leuchtturm", "form": "Facette", "structure": "Linear", "relief": "Leuchtturm", "maps": "linear-leuchtturm"}, {"file": "kombi-07.jpg", "name": "Entwurf 07 + Linear + Libelle", "form": "Entwurf 07", "structure": "Linear", "relief": "Libelle", "maps": "linear-libelle"}, {"file": "kombi-08.jpg", "name": "Rechteck + Lateral Sweep + Welle", "form": "Rechteck", "structure": "Lateral Sweep", "relief": "Welle", "maps": "lateral-sweep-wave"}, {"file": "kombi-09.jpg", "name": "Schräg + Flow Scape + Segelboot", "form": "Schräg", "structure": "Flow Scape", "relief": "Segelboot", "maps": "flow-scape-segelboot"}, {"file": "kombi-10.jpg", "name": "Welle + Minimal + Edelweiss", "form": "Welle", "structure": "Minimal", "relief": "Edelweiss", "maps": "minimal-edelweiss"}, {"file": "kombi-11.jpg", "name": "Gebogen J + Flow Scape + Bambus", "form": "Gebogen J", "structure": "Flow Scape", "relief": "Bambus", "maps": "flow-scape-bambus"}, {"file": "kombi-12.jpg", "name": "Rundbogen + Minimal + Noten", "form": "Rundbogen", "structure": "Minimal", "relief": "Noten", "maps": "minimal-noten"}, {"file": "kombi-13.jpg", "name": "Segmentbogen + Arc Sweep + Zwei Palmen", "form": "Segmentbogen", "structure": "Arc Sweep", "relief": "Zwei Palmen", "maps": "arc-sweep-palmen"}, {"file": "kombi-14.jpg", "name": "Entwurf 06 + Rake Fan + Palme", "form": "Entwurf 06", "structure": "Rake Fan", "relief": "Palme", "maps": "rake-fan-palme"}, {"file": "kombi-15.jpg", "name": "Facette + Abstract", "form": "Facette", "structure": "Abstract", "relief": "Ohne", "maps": "abstract-ohne"}, {"file": "kombi-16.jpg", "name": "Rechteck + Linear + Koi", "form": "Rechteck", "structure": "Linear", "relief": "Koi", "maps": "linear-koi"}, {"file": "kombi-17.jpg", "name": "Segmentbogen + Lateral Sweep + Leuchtturm", "form": "Segmentbogen", "structure": "Lateral Sweep", "relief": "Leuchtturm", "maps": "lateral-sweep-leuchtturm"}, {"file": "kombi-18.jpg", "name": "Facette + Float, vollflächig sandgestrahlt", "form": "Facette", "structure": "Float", "relief": "Vollflächig", "maps": "float-voll", "float": true}, {"file": "kombi-19.jpg", "name": "Abgerundet + Linear + Welle", "form": "Abgerundet", "structure": "Linear", "relief": "Welle", "maps": "linear-wave"}, {"file": "kombi-20.jpg", "name": "Entwurf 07 + Float, sandgestrahlt mit klarem Wassersplash", "form": "Entwurf 07", "structure": "Float", "relief": "Wassersplash", "maps": "float-splash", "float": true}, {"file": "kombi-21.jpg", "name": "Gebogen J + Lateral Sweep + Segelboot", "form": "Gebogen J", "structure": "Lateral Sweep", "relief": "Segelboot", "maps": "lateral-sweep-segelboot"}, {"file": "kombi-22.jpg", "name": "Rundbogen + Flow Scape + Vögel", "form": "Rundbogen", "structure": "Flow Scape", "relief": "Vögel", "maps": "flow-scape-voegel"}, {"file": "kombi-23.jpg", "name": "Gebogen C + Minimal + Bambus", "form": "Gebogen C", "structure": "Minimal", "relief": "Bambus", "maps": "minimal-bambus"}, {"file": "kombi-24.jpg", "name": "Entwurf 06 + Arc Sweep + Noten", "form": "Entwurf 06", "structure": "Arc Sweep", "relief": "Noten", "maps": "arc-sweep-noten"}, {"file": "kombi-25.jpg", "name": "Facette + Rake Fan + Lotus", "form": "Facette", "structure": "Rake Fan", "relief": "Lotus", "maps": "rake-fan-lotus"}, {"file": "kombi-26.jpg", "name": "Spitzbogen + Abstract + Muscheln", "form": "Spitzbogen", "structure": "Abstract", "relief": "Muscheln", "maps": "abstract-muscheln"}, {"file": "kombi-27.jpg", "name": "Schräg + Float + Palme (sandgestrahlt)", "form": "Schräg", "structure": "Float", "relief": "Palme", "maps": "float-palme-sand", "float": true}, {"file": "kombi-28.jpg", "name": "Schräg + Rake Fan", "form": "Schräg", "structure": "Rake Fan", "relief": "Ohne", "maps": "rake-fan-ohne"}, {"file": "kombi-29.jpg", "name": "Viertelbogen + Abstract + Delfine", "form": "Viertelbogen", "structure": "Abstract", "relief": "Delfine", "maps": "abstract-delfine"}, {"file": "kombi-30.jpg", "name": "Gebogen J + Linear + Leuchtturm", "form": "Gebogen J", "structure": "Linear", "relief": "Leuchtturm", "maps": "linear-leuchtturm"}, {"file": "kombi-31.jpg", "name": "Viertelbogen + Lateral Sweep + Welle", "form": "Viertelbogen", "structure": "Lateral Sweep", "relief": "Welle", "maps": "lateral-sweep-wave"}, {"file": "kombi-32.jpg", "name": "Entwurf 07 + Flow Scape + Lotus", "form": "Entwurf 07", "structure": "Flow Scape", "relief": "Lotus", "maps": "flow-scape-lotus"}, {"file": "kombi-33.jpg", "name": "Gebogen C + Flow Scape + Segelboot", "form": "Gebogen C", "structure": "Flow Scape", "relief": "Segelboot", "maps": "flow-scape-segelboot"}, {"file": "kombi-34.jpg", "name": "Spitzbogen + Minimal + Edelweiss", "form": "Spitzbogen", "structure": "Minimal", "relief": "Edelweiss", "maps": "minimal-edelweiss"}, {"file": "kombi-35.jpg", "name": "Segmentbogen + Arc Sweep + Bambus", "form": "Segmentbogen", "structure": "Arc Sweep", "relief": "Bambus", "maps": "arc-sweep-bambus"}, {"file": "kombi-36.jpg", "name": "Rechteck + Minimal + Noten", "form": "Rechteck", "structure": "Minimal", "relief": "Noten", "maps": "minimal-noten"}, {"file": "kombi-37.jpg", "name": "Gebogen C + Float + Delfine (sandgestrahlt)", "form": "Gebogen C", "structure": "Float", "relief": "Delfine", "maps": "float-delfine-sand", "float": true}, {"file": "kombi-38.jpg", "name": "Schräg + Arc Sweep + Zwei Palmen", "form": "Schräg", "structure": "Arc Sweep", "relief": "Zwei Palmen", "maps": "arc-sweep-palmen"}, {"file": "kombi-39.jpg", "name": "Abgerundet + Rake Fan + Vögel", "form": "Abgerundet", "structure": "Rake Fan", "relief": "Vögel", "maps": "rake-fan-voegel"}, {"file": "kombi-40.jpg", "name": "Viertelbogen + Abstract", "form": "Viertelbogen", "structure": "Abstract", "relief": "Ohne", "maps": "abstract-ohne"}, {"file": "kombi-41.jpg", "name": "Rundbogen + Linear + Delfine", "form": "Rundbogen", "structure": "Linear", "relief": "Delfine", "maps": "linear-delfine"}, {"file": "kombi-42.jpg", "name": "Gebogen C + Lateral Sweep + Koi", "form": "Gebogen C", "structure": "Lateral Sweep", "relief": "Koi", "maps": "lateral-sweep-koi"}, {"file": "kombi-43.jpg", "name": "Entwurf 06 + Flow Scape + Muscheln", "form": "Entwurf 06", "structure": "Flow Scape", "relief": "Muscheln", "maps": "flow-scape-muscheln"}, {"file": "kombi-44.jpg", "name": "Spitzbogen + Lateral Sweep + Katze", "form": "Spitzbogen", "structure": "Lateral Sweep", "relief": "Katze", "maps": "lateral-sweep-katze"}, {"file": "kombi-45.jpg", "name": "Abgerundet + Float + Edelweiss (sandgestrahlt)", "form": "Abgerundet", "structure": "Float", "relief": "Edelweiss", "maps": "float-edelweiss-sand", "float": true}, {"file": "kombi-46.jpg", "name": "Entwurf 07 + Abstract + Katze", "form": "Entwurf 07", "structure": "Abstract", "relief": "Katze", "maps": "abstract-katze"}, {"file": "kombi-47.jpg", "name": "Rechteck + Flow Scape + Libelle", "form": "Rechteck", "structure": "Flow Scape", "relief": "Libelle", "maps": "flow-scape-libelle"}, {"file": "kombi-48.jpg", "name": "Welle + Minimal + Hund", "form": "Welle", "structure": "Minimal", "relief": "Hund", "maps": "minimal-hund"}, {"file": "kombi-49.jpg", "name": "Abgerundet + Arc Sweep + Schweiz", "form": "Abgerundet", "structure": "Arc Sweep", "relief": "Schweiz", "maps": "arc-sweep-schweiz"}, {"file": "kombi-50.jpg", "name": "Gebogen J + Rake Fan + Besteck", "form": "Gebogen J", "structure": "Rake Fan", "relief": "Besteck", "maps": "rake-fan-besteck"}]</script>
+        <script type="application/json" class="deck-data">[{"file": "kombi-02.jpg", "name": "Rundbogen + Arc Sweep + Palme", "form": "Rundbogen", "structure": "Arc Sweep", "relief": "Palme", "maps": "arc-sweep-palme"}, {"file": "kombi-03.jpg", "name": "Welle + Rake Fan", "form": "Welle", "structure": "Rake Fan", "relief": "Ohne", "maps": "rake-fan-ohne"}, {"file": "kombi-04.jpg", "name": "Entwurf 06 + Abstract + Delfine", "form": "Entwurf 06", "structure": "Abstract", "relief": "Delfine", "maps": "abstract-delfine"}, {"file": "kombi-05.jpg", "name": "Rechteck + Float + Streifen (sandgestrahlt)", "form": "Rechteck", "structure": "Float", "relief": "Streifen", "maps": "float-streifen", "float": true}, {"file": "kombi-06.jpg", "name": "Facette + Linear + Leuchtturm", "form": "Facette", "structure": "Linear", "relief": "Leuchtturm", "maps": "linear-leuchtturm"}, {"file": "kombi-07.jpg", "name": "Entwurf 07 + Linear + Libelle", "form": "Entwurf 07", "structure": "Linear", "relief": "Libelle", "maps": "linear-libelle"}, {"file": "kombi-08.jpg", "name": "Rechteck + Lateral Sweep + Welle", "form": "Rechteck", "structure": "Lateral Sweep", "relief": "Welle", "maps": "lateral-sweep-wave"}, {"file": "kombi-09.jpg", "name": "Schräg + Flow Scape + Segelboot", "form": "Schräg", "structure": "Flow Scape", "relief": "Segelboot", "maps": "flow-scape-segelboot"}, {"file": "kombi-10.jpg", "name": "Welle + Minimal + Edelweiss", "form": "Welle", "structure": "Minimal", "relief": "Edelweiss", "maps": "minimal-edelweiss"}, {"file": "kombi-11.jpg", "name": "Gebogen J + Flow Scape + Bambus", "form": "Gebogen J", "structure": "Flow Scape", "relief": "Bambus", "maps": "flow-scape-bambus"}, {"file": "kombi-12.jpg", "name": "Rundbogen + Minimal + Noten", "form": "Rundbogen", "structure": "Minimal", "relief": "Noten", "maps": "minimal-noten"}, {"file": "kombi-13.jpg", "name": "Segmentbogen + Arc Sweep + Zwei Palmen", "form": "Segmentbogen", "structure": "Arc Sweep", "relief": "Zwei Palmen", "maps": "arc-sweep-palmen"}, {"file": "kombi-14.jpg", "name": "Entwurf 06 + Rake Fan + Palme", "form": "Entwurf 06", "structure": "Rake Fan", "relief": "Palme", "maps": "rake-fan-palme"}, {"file": "kombi-15.jpg", "name": "Facette + Abstract", "form": "Facette", "structure": "Abstract", "relief": "Ohne", "maps": "abstract-ohne"}, {"file": "kombi-16.jpg", "name": "Rechteck + Linear + Koi", "form": "Rechteck", "structure": "Linear", "relief": "Koi", "maps": "linear-koi"}, {"file": "kombi-17.jpg", "name": "Segmentbogen + Lateral Sweep + Leuchtturm", "form": "Segmentbogen", "structure": "Lateral Sweep", "relief": "Leuchtturm", "maps": "lateral-sweep-leuchtturm"}, {"file": "kombi-18.jpg", "name": "Facette + Float, vollflächig sandgestrahlt", "form": "Facette", "structure": "Float", "relief": "Vollflächig", "maps": "float-voll", "float": true}, {"file": "kombi-19.jpg", "name": "Abgerundet + Linear + Welle", "form": "Abgerundet", "structure": "Linear", "relief": "Welle", "maps": "linear-wave"}, {"file": "kombi-20.jpg", "name": "Entwurf 07 + Float, sandgestrahlt mit klarem Wassersplash", "form": "Entwurf 07", "structure": "Float", "relief": "Wassersplash", "maps": "float-splash", "float": true}, {"file": "kombi-21.jpg", "name": "Gebogen J + Lateral Sweep + Segelboot", "form": "Gebogen J", "structure": "Lateral Sweep", "relief": "Segelboot", "maps": "lateral-sweep-segelboot"}, {"file": "kombi-22.jpg", "name": "Rundbogen + Flow Scape + Vögel", "form": "Rundbogen", "structure": "Flow Scape", "relief": "Vögel", "maps": "flow-scape-voegel"}, {"file": "kombi-23.jpg", "name": "Gebogen C + Minimal + Bambus", "form": "Gebogen C", "structure": "Minimal", "relief": "Bambus", "maps": "minimal-bambus"}, {"file": "kombi-24.jpg", "name": "Entwurf 06 + Arc Sweep + Noten", "form": "Entwurf 06", "structure": "Arc Sweep", "relief": "Noten", "maps": "arc-sweep-noten"}, {"file": "kombi-25.jpg", "name": "Facette + Rake Fan + Lotus", "form": "Facette", "structure": "Rake Fan", "relief": "Lotus", "maps": "rake-fan-lotus"}, {"file": "kombi-26.jpg", "name": "Spitzbogen + Abstract + Muscheln", "form": "Spitzbogen", "structure": "Abstract", "relief": "Muscheln", "maps": "abstract-muscheln"}, {"file": "kombi-27.jpg", "name": "Schräg + Float + Palme (sandgestrahlt)", "form": "Schräg", "structure": "Float", "relief": "Palme", "maps": "float-palme-sand", "float": true}, {"file": "kombi-28.jpg", "name": "Schräg + Rake Fan", "form": "Schräg", "structure": "Rake Fan", "relief": "Ohne", "maps": "rake-fan-ohne"}, {"file": "kombi-29.jpg", "name": "Viertelbogen + Abstract + Delfine", "form": "Viertelbogen", "structure": "Abstract", "relief": "Delfine", "maps": "abstract-delfine"}, {"file": "kombi-30.jpg", "name": "Gebogen J + Linear + Leuchtturm", "form": "Gebogen J", "structure": "Linear", "relief": "Leuchtturm", "maps": "linear-leuchtturm"}, {"file": "kombi-31.jpg", "name": "Viertelbogen + Lateral Sweep + Welle", "form": "Viertelbogen", "structure": "Lateral Sweep", "relief": "Welle", "maps": "lateral-sweep-wave"}, {"file": "kombi-32.jpg", "name": "Entwurf 07 + Flow Scape + Lotus", "form": "Entwurf 07", "structure": "Flow Scape", "relief": "Lotus", "maps": "flow-scape-lotus"}, {"file": "kombi-33.jpg", "name": "Gebogen C + Flow Scape + Segelboot", "form": "Gebogen C", "structure": "Flow Scape", "relief": "Segelboot", "maps": "flow-scape-segelboot"}, {"file": "kombi-34.jpg", "name": "Spitzbogen + Minimal + Edelweiss", "form": "Spitzbogen", "structure": "Minimal", "relief": "Edelweiss", "maps": "minimal-edelweiss"}, {"file": "kombi-35.jpg", "name": "Segmentbogen + Arc Sweep + Bambus", "form": "Segmentbogen", "structure": "Arc Sweep", "relief": "Bambus", "maps": "arc-sweep-bambus"}, {"file": "kombi-36.jpg", "name": "Rechteck + Minimal + Noten", "form": "Rechteck", "structure": "Minimal", "relief": "Noten", "maps": "minimal-noten"}, {"file": "kombi-37.jpg", "name": "Gebogen C + Float + Delfine (sandgestrahlt)", "form": "Gebogen C", "structure": "Float", "relief": "Delfine", "maps": "float-delfine-sand", "float": true}, {"file": "kombi-38.jpg", "name": "Schräg + Arc Sweep + Zwei Palmen", "form": "Schräg", "structure": "Arc Sweep", "relief": "Zwei Palmen", "maps": "arc-sweep-palmen"}, {"file": "kombi-39.jpg", "name": "Abgerundet + Rake Fan + Vögel", "form": "Abgerundet", "structure": "Rake Fan", "relief": "Vögel", "maps": "rake-fan-voegel"}, {"file": "kombi-40.jpg", "name": "Viertelbogen + Abstract", "form": "Viertelbogen", "structure": "Abstract", "relief": "Ohne", "maps": "abstract-ohne"}, {"file": "kombi-41.jpg", "name": "Rundbogen + Linear + Delfine", "form": "Rundbogen", "structure": "Linear", "relief": "Delfine", "maps": "linear-delfine"}, {"file": "kombi-42.jpg", "name": "Gebogen C + Lateral Sweep + Koi", "form": "Gebogen C", "structure": "Lateral Sweep", "relief": "Koi", "maps": "lateral-sweep-koi"}, {"file": "kombi-43.jpg", "name": "Entwurf 06 + Flow Scape + Muscheln", "form": "Entwurf 06", "structure": "Flow Scape", "relief": "Muscheln", "maps": "flow-scape-muscheln"}, {"file": "kombi-44.jpg", "name": "Spitzbogen + Lateral Sweep + Katze", "form": "Spitzbogen", "structure": "Lateral Sweep", "relief": "Katze", "maps": "lateral-sweep-katze"}, {"file": "kombi-45.jpg", "name": "Abgerundet + Float + Edelweiss (sandgestrahlt)", "form": "Abgerundet", "structure": "Float", "relief": "Edelweiss", "maps": "float-edelweiss-sand", "float": true}, {"file": "kombi-46.jpg", "name": "Entwurf 07 + Abstract + Katze", "form": "Entwurf 07", "structure": "Abstract", "relief": "Katze", "maps": "abstract-katze"}, {"file": "kombi-47.jpg", "name": "Rechteck + Flow Scape + Libelle", "form": "Rechteck", "structure": "Flow Scape", "relief": "Libelle", "maps": "flow-scape-libelle"}, {"file": "kombi-48.jpg", "name": "Welle + Minimal + Hund", "form": "Welle", "structure": "Minimal", "relief": "Hund", "maps": "minimal-hund"}, {"file": "kombi-49.jpg", "name": "Abgerundet + Arc Sweep + Schweiz", "form": "Abgerundet", "structure": "Arc Sweep", "relief": "Schweiz", "maps": "arc-sweep-schweiz"}, {"file": "kombi-50.jpg", "name": "Gebogen J + Rake Fan + Besteck", "form": "Gebogen J", "structure": "Rake Fan", "relief": "Besteck", "maps": "rake-fan-besteck"}, {"file": "kombi-01.jpg", "name": "Rundbogen + Float + Ihr Motiv: „Seien Sie kreativ“, mit Ihrem Bild oder Text", "form": "Rundbogen", "structure": "Float", "relief": "Ihr Motiv", "maps": "float-kreativ", "float": true}]</script>
       </div>
 
       <div class="part" data-part="Projekte">
         <div class="row-head"><div><h3>Projekte</h3><span>Originalfotos · 13</span></div><p>Realisierte Trennwände und Raumteiler, mit Licht, Relief und freier Form.</p></div>
         <div class="mosaic" data-gallery>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Noten mit LED-Kante"><img src="img/tw-01-t.jpg" data-full="img/tw-01.jpg" alt="Noten mit LED-Kante" width="1200" height="1600" loading="lazy"></button><figcaption>Noten mit LED-Kante</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Welle in Violett"><img src="img/tw-02-t.jpg" data-full="img/tw-02.jpg" alt="Welle in Violett" width="480" height="640" loading="lazy"></button><figcaption>Welle in Violett</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Kreiswelle mit violettem Licht"><img src="img/tw-02-t.jpg" data-full="img/tw-02.jpg" alt="Kreiswelle mit violettem Licht" width="480" height="640" loading="lazy"></button><figcaption>Kreiswelle mit violettem Licht</figcaption></figure>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Delfin an der Badewanne"><img src="img/tw-03-t.jpg" data-full="img/tw-03.jpg" alt="Delfin an der Badewanne" width="1064" height="1600" loading="lazy"></button><figcaption>Delfin an der Badewanne</figcaption></figure>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Zwei Trennwände im Altbau"><img src="img/tw-04-t.jpg" data-full="img/tw-04.jpg" alt="Zwei Trennwände im Altbau" width="1600" height="822" loading="lazy"></button><figcaption>Zwei Trennwände im Altbau</figcaption></figure>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Treppenhaus mit eigenen Motiven"><img src="img/tw-05-t.jpg" data-full="img/tw-05.jpg" alt="Treppenhaus mit eigenen Motiven" width="1465" height="1172" loading="lazy"></button><figcaption>Treppenhaus mit eigenen Motiven</figcaption></figure>
@@ -468,10 +474,7 @@ a { color: inherit; }
 
       <div class="part" data-part="Warum Glas">
         <div class="row-head"><div><h3>Warum Glas</h3><span>6 Gründe</span></div></div>
-        <div class="benefits" tabindex="0" aria-label="Vorteile, antippen für den nächsten">
-        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Aus einem Stück</strong><span>Keine Fuge, kein Silikon.</span></div><div class="benefit"><strong>Nach Mass</strong><span>Passend zu Raum und Wand, auch in der Ecke.</span></div><div class="benefit"><strong>Pflegeleicht</strong><span>Glatt und dicht. Ein Tuch genügt.</span></div><div class="benefit"><strong>Licht für die Nacht</strong><span>Sanftes Leuchten statt Deckenlampe.</span></div><div class="benefit"><strong>Ein Unikat</strong><span>Kein Stück gleicht dem anderen.</span></div><div class="benefit"><strong>Zeitlos</strong><span>Glas kommt nicht aus der Mode.</span></div></div>
-        </div>
+        <ul class="benefits"><li><strong>Aus einem Stück</strong><span>Keine Fuge, kein Silikon.</span></li><li><strong>Nach Mass</strong><span>Passend zu Raum und Wand, auch in der Ecke.</span></li><li><strong>Pflegeleicht</strong><span>Glatt und dicht. Ein Tuch genügt.</span></li><li><strong>Licht für die Nacht</strong><span>Sanftes Leuchten statt Deckenlampe.</span></li><li><strong>Ein Unikat</strong><span>Kein Stück gleicht dem anderen.</span></li><li><strong>Zeitlos</strong><span>Glas kommt nicht aus der Mode.</span></li></ul>
       </div>
 
       <div class="part kombi" data-part="Inspiration für Kombinationen">
@@ -563,10 +566,7 @@ a { color: inherit; }
 
       <div class="part" data-part="Warum Glas">
         <div class="row-head"><div><h3>Warum Glas</h3><span>6 Gründe</span></div></div>
-        <div class="benefits" tabindex="0" aria-label="Vorteile, antippen für den nächsten">
-        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Fugenlos</strong><span>Keine Fuge, in der sich Fett sammelt.</span></div><div class="benefit"><strong>Pflegeleicht</strong><span>Glatt und dicht. Ein feuchtes Tuch genügt.</span></div><div class="benefit"><strong>Nach Mass</strong><span>Bis 3 × 2 m aus einem Stück, mit Ausschnitten für Steckdosen.</span></div><div class="benefit"><strong>Jede Farbe</strong><span>Einfarbig, als Verlauf, das Relief auf Wunsch im Akzent.</span></div><div class="benefit"><strong>Licht von oben</strong><span>Unterbauleuchten lassen Struktur und Relief leuchten.</span></div><div class="benefit"><strong>Ein Unikat</strong><span>Kein Stück gleicht dem anderen.</span></div></div>
-        </div>
+        <ul class="benefits"><li><strong>Fugenlos</strong><span>Keine Fuge, in der sich Fett sammelt.</span></li><li><strong>Pflegeleicht</strong><span>Glatt und dicht. Ein feuchtes Tuch genügt.</span></li><li><strong>Nach Mass</strong><span>Bis 3 × 2 m aus einem Stück, mit Ausschnitten für Steckdosen.</span></li><li><strong>Jede Farbe</strong><span>Einfarbig, als Verlauf, das Relief auf Wunsch im Akzent.</span></li><li><strong>Licht von oben</strong><span>Unterbauleuchten lassen Struktur und Relief leuchten.</span></li><li><strong>Ein Unikat</strong><span>Kein Stück gleicht dem anderen.</span></li></ul>
       </div>
 
       <div class="part kombi" data-part="Inspiration für Kombinationen">
@@ -594,7 +594,7 @@ a { color: inherit; }
         <div class="mosaic" data-gallery>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Welle in Rot, oben frei geformt"><img src="img/rk-22-t.jpg" data-full="img/rk-22.jpg" alt="Welle in Rot, oben frei geformt" width="1600" height="987" loading="lazy"></button><figcaption>Welle in Rot, oben frei geformt</figcaption></figure>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Geschwungen um den Dampfabzug"><img src="img/rk-23-t.jpg" data-full="img/rk-23.jpg" alt="Geschwungen um den Dampfabzug" width="1600" height="936" loading="lazy"></button><figcaption>Geschwungen um den Dampfabzug</figcaption></figure>
-          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Bogen in Klarglas mit Struktur"><img src="img/rk-24-t.jpg" data-full="img/rk-24.jpg" alt="Bogen in Klarglas mit Struktur" width="720" height="1080" loading="lazy"></button><figcaption>Bogen in Klarglas mit Struktur</figcaption></figure>
+          <figure class="tile"><button type="button" aria-label="Foto vergrössern: Bogen in Kupfer, oben klar mit Struktur"><img src="img/rk-24-t.jpg" data-full="img/rk-24.jpg" alt="Bogen in Kupfer, oben klar mit Struktur" width="720" height="1080" loading="lazy"></button><figcaption>Bogen in Kupfer, oben klar mit Struktur</figcaption></figure>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Zweig in Rot, mit Licht"><img src="img/rk-01-t.jpg" data-full="img/rk-01.jpg" alt="Zweig in Rot, mit Licht" width="1600" height="1051" loading="lazy"></button><figcaption>Zweig in Rot, mit Licht</figcaption></figure>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Alpenpanorama mit Tannen"><img src="img/rk-02-t.jpg" data-full="img/rk-02.jpg" alt="Alpenpanorama mit Tannen" width="1600" height="1200" loading="lazy"></button><figcaption>Alpenpanorama mit Tannen</figcaption></figure>
           <figure class="tile"><button type="button" aria-label="Foto vergrössern: Verlauf Gelb–Rot"><img src="img/rk-03-t.jpg" data-full="img/rk-03.jpg" alt="Verlauf Gelb–Rot" width="1600" height="1200" loading="lazy"></button><figcaption>Verlauf Gelb–Rot</figcaption></figure>
@@ -628,7 +628,7 @@ a { color: inherit; }
     </div>
   </section>
 
-  <section class="contact" data-chapter="kontakt" aria-labelledby="contact-title">
+  <section class="contact" id="kontakt" data-chapter="kontakt" aria-labelledby="contact-title">
     <div class="wrap" style="display: grid; gap: 12px; width: 100%" data-part="Beratung">
       <span class="label">Beratung</span>
       <h2 id="contact-title">Welches Element zuerst?</h2>
@@ -636,10 +636,13 @@ a { color: inherit; }
       <dl>
         <dt>Telefon</dt><dd><a href="tel:+41323222844">+41 32 322 28 44</a></dd>
         <dt>E-Mail</dt><dd><a href="mailto:info@buechlerglas.ch">info@buechlerglas.ch</a></dd>
+        <dt>Ausstellung</dt><dd>Sonnenstrasse 24, 2504 Biel/Bienne</dd>
       </dl>
     </div>
   </section>
 </main>
+
+<div class="cta-bar" id="cta-bar" aria-hidden="true"><a class="cta" id="cta" href="mailto:info@buechlerglas.ch?subject=Anfrage" data-mail="info@buechlerglas.ch" tabindex="-1">Beratung anfragen</a></div>
 
 <dialog class="lightbox" id="lightbox" aria-label="Foto">
   <div class="lb-top"><span class="lb-count"></span><button class="lb-close" type="button" aria-label="Schliessen">×</button></div>
@@ -717,34 +720,6 @@ a { color: inherit; }
       }, { threshold: 0.6 })
       io.observe(box)
     }
-  })
-
-  /* Benefits: auto-advance while visible; tap or arrow keys to move. */
-  document.querySelectorAll('.benefits').forEach(box => {
-    const bars = [...box.querySelectorAll('.benefit-bars span')]
-    const items = [...box.querySelectorAll('.benefit')]
-    let index = 0
-    const go = next => {
-      index = (next + items.length) % items.length
-      items.forEach((item, i) => item.classList.toggle('now', i === index))
-      bars.forEach((bar, i) => {
-        bar.classList.toggle('done', i < index)
-        bar.classList.remove('now')
-        if (i === index) { void bar.offsetWidth; bar.classList.add('now') }
-      })
-    }
-    if (!reduced) bars.forEach(bar => bar.querySelector('i').addEventListener('animationend', () => go(index + 1)))
-    box.addEventListener('click', event => {
-      const rect = box.getBoundingClientRect()
-      go(event.clientX - rect.left < rect.width * 0.3 ? index - 1 : index + 1)
-    })
-    box.addEventListener('keydown', event => {
-      if (event.key === 'ArrowRight') { event.preventDefault(); go(index + 1) }
-      if (event.key === 'ArrowLeft') { event.preventDefault(); go(index - 1) }
-    })
-    new IntersectionObserver(([entry]) => box.classList.toggle('paused', !entry.isIntersecting), { threshold: 0.6 }).observe(box)
-    box.classList.add('paused')
-    go(0)
   })
 
   /* Lightbox: tap any project photo to see it large; swipe, arrows or keys to move through the set. */
@@ -863,14 +838,15 @@ a { color: inherit; }
       }, { threshold: 0.45 })
       watch.observe(deck)
     }
-    // only a real interaction cancels it: a sideways drag, a button or a key. Scrolling the page
-    // with a finger on the deck does not.
+    // only a real interaction cancels it: a tap, a sideways drag, a button or a key. Scrolling the
+    // page with a finger on the deck does not.
     let introX = null
     deck.addEventListener('pointerdown', e => { introX = e.clientX; if (e.target.closest('button')) endIntro(Boolean(e.target.closest('.deck-led'))) }, true)
     deck.addEventListener('pointermove', e => { if (introX !== null && Math.abs(e.clientX - introX) > 12) endIntro() }, true)
     deck.addEventListener('pointerup', () => { introX = null }, true)
     deck.addEventListener('pointercancel', () => { introX = null }, true)
     deck.addEventListener('keydown', endIntro, true)
+    deck.addEventListener('click', () => endIntro(), true)          // the first tap pauses it
     const startImageDeck = () => {
       if (deckStarted) return
       deckStarted = true
@@ -956,7 +932,7 @@ a { color: inherit; }
       startDeck()
     }, { rootMargin: '900px 0px' }).observe(deck)
   }
-  // Trennwand: opens on „Seien Sie kreativ“
+  // Trennwand: opens on a real example; „Seien Sie kreativ“ (Ihr Motiv) closes the set
   setupDeck(document.getElementById('deck'), {
     label: 'Kombination',
     fill: (c, dts, dds) => { dds[0].textContent = c.form; dds[1].textContent = c.structure; dds[2].textContent = c.relief; dts[2].textContent = c.float ? 'Sandstrahl' : 'Relief' },
@@ -987,19 +963,38 @@ a { color: inherit; }
   // values are only written when they change, so a still layer costs nothing while scrolling
   const dims = layers.map(layer => layer.appendChild(Object.assign(document.createElement('div'), { className: 'stack-dim' })))
   const written = layers.map(() => -1)
-  const measure = () => layers.forEach(layer => layer.style.setProperty('--h', layer.offsetHeight + 'px'))
+  const tail = above[above.length - 1]
+  const measure = () => {
+    document.documentElement.style.setProperty('--tail', tail.offsetHeight + 'px')
+    layers.forEach(layer => layer.style.setProperty('--h', layer.offsetHeight + 'px'))
+  }
   const sizes = new ResizeObserver(measure)
-  layers.forEach(layer => sizes.observe(layer))
+  ;[...layers, tail].forEach(layer => sizes.observe(layer))
 
   /* Chapter bar: the chapter whose top has passed the middle of the screen, and its current part. */
   const bar = document.getElementById('chapterbar')
   const chapterName = document.getElementById('cb-chapter')
   const partName = document.getElementById('cb-part')
   const steps = [...bar.querySelectorAll('.cb-steps a')]
+  const riders = [...document.querySelectorAll('.cb-inline')]
+  let away = false
   const chapters = [...document.querySelectorAll('main [data-chapter]')]
   const partsOf = new Map(chapters.map(c => [c, [...c.querySelectorAll('[data-part]')]]))
   const names = { trennwand: '01 Trennwand', lavabo: '02 Lavabo', rueckwand: '03 Rückwand', kontakt: 'Beratung' }
   let shown = ''
+
+  /* Call to action: an e-mail with the visible chapter in the subject where an address is set
+     (data-mail), otherwise a jump to the Beratung. */
+  const ctaBar = document.getElementById('cta-bar'), cta = document.getElementById('cta')
+  const contact = document.getElementById('kontakt')
+  const controls = [...document.querySelectorAll('.ba-switch, .deck-tag, .deck-arrow, .tech-open, .mosaic-all')]
+  const subjects = { trennwand: 'Trennwand', lavabo: 'Lavabo', rueckwand: 'Rückwand' }
+  let ctaShown = null
+  cta.addEventListener('click', () => {
+    if (!cta.dataset.mail) return
+    const subject = `Anfrage – ${subjects[bar.dataset.chapter] ?? 'Glas für Bad und Küche'}`
+    cta.href = `mailto:${cta.dataset.mail}?subject=${encodeURIComponent(subject)}`
+  })
 
   let queued = false
   const update = () => {
@@ -1016,10 +1011,22 @@ a { color: inherit; }
       if (layer === hero) hero.classList.toggle('paused', progress > 0.6 || document.hidden)
     })
     const middle = vh * 0.5
-    // a chapter takes over the bar when its cover (with its own bar on top) reaches the top
-    const chapter = chapters.filter(c => c.getBoundingClientRect().top <= 1).pop() ?? chapters[0]
+    // a chapter takes over the bar as soon as its cover fills half the screen
+    const chapter = chapters.filter(c => c.getBoundingClientRect().top <= middle).pop() ?? chapters[0]
     const parts = partsOf.get(chapter)
     const part = parts.filter(p => p.getBoundingClientRect().top <= middle).pop() ?? parts[0]
+    // the call to action: after the cover, until the Beratung comes on screen; it steps aside
+    // while a control (Vorher/Nachher, deck, buttons) passes under its place
+    const zone = { top: ctaBar.offsetTop - 8, left: ctaBar.offsetLeft, right: ctaBar.offsetLeft + ctaBar.offsetWidth }
+    const covers = controls.some(el => {
+      const r = el.getBoundingClientRect()
+      return r.width && r.bottom > zone.top && r.top < vh && r.right > zone.left && r.left < zone.right
+    })
+    const ctaOn = chapters[0].getBoundingClientRect().top <= middle && contact.getBoundingClientRect().top >= vh - 1 && !covers
+    if (ctaOn !== ctaShown) { ctaShown = ctaOn; ctaBar.classList.toggle('is-on', ctaOn); ctaBar.setAttribute('aria-hidden', String(!ctaOn)); cta.tabIndex = ctaOn ? 0 : -1 }
+    // while the next chapter rides in with its own bar, the sticky one steps aside
+    const riding = riders.some(r => { const t = r.getBoundingClientRect().top; return t > 1 && t < vh })
+    if (riding !== away) { away = riding; bar.classList.toggle('is-away', riding) }
     const key = chapter.dataset.chapter + '|' + (part?.dataset.part ?? '')
     if (key === shown) return
     shown = key
