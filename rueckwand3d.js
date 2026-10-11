@@ -3,7 +3,7 @@
 // and the relief, painted in one colour or a Verlauf, the relief optionally in an accent colour.
 // The LED is not in the glass: it sits under the wall cabinets (or the shelf) and grazes the
 // panel from above, so the structure and the relief catch the light. Textures come from
-// scripts/rueckwand-textures.py (n-*, s-*, n-r-*, s-r-*, a-*), the combinations from
+// scripts/rueckwand-textures.py (n-*, s-*, n-r-*, a-*), the combinations from
 // scripts/rueckwand-combinations.py.
 import * as THREE from 'three'
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
@@ -103,7 +103,7 @@ export async function initRueckwand3D({ deck, combos, base = 'img/rueckwand/', o
     const own = {
       paintA: { value: new THREE.Color(combo.a) }, paintB: { value: new THREE.Color(combo.b || combo.a) },
       accent: { value: new THREE.Color(combo.ak || combo.a) }, accentOn: { value: combo.ak ? 1 : 0 },
-      reliefMap: { value: maps.nr }, accentMap: { value: maps.am }, escS: { value: maps.ss }, escR: { value: maps.sr },
+      reliefMap: { value: maps.nr }, accentMap: { value: maps.am }, escS: { value: maps.ss },
       reliefScale: { value: combo.r ? 1.0 : 0 }, panelW: { value: combo.w }, ledY: { value: LED_Y }, ledOn: { value: 0 }, shade: { value: 1 },
     }
     m.userData.uniforms = own
@@ -120,7 +120,7 @@ export async function initRueckwand3D({ deck, combos, base = 'img/rueckwand/', o
         .replace('#include <common>', `#include <common>
 varying vec2 vPlan; varying float vH;
 uniform vec3 paintA; uniform vec3 paintB; uniform vec3 accent; uniform float accentOn;
-uniform sampler2D reliefMap; uniform sampler2D accentMap; uniform sampler2D escS; uniform sampler2D escR;
+uniform sampler2D reliefMap; uniform sampler2D accentMap; uniform sampler2D escS;
 uniform float reliefScale; uniform float panelW; uniform float ledY; uniform float ledOn; uniform float shade;
 uniform vec3 ledA; uniform vec3 ledB;
 vec2 relief = vec2( 0.0 );
@@ -147,7 +147,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
 		// the LED under the cabinets: a pool of light from the top edge down, grazing the glass
 		float below = ledY - vH;
 		float fall = below >= 0.0 ? exp( - below / 330.0 ) : exp( below / 70.0 ) * 0.35;
-		float esc = texture2D( escS, vPlan ).r * ( 1.0 - 0.9 * acc.g ) + texture2D( escR, vPlan ).r * 1.3;
+		float esc = texture2D( escS, vPlan ).r * ( 1.0 - 0.9 * acc.g ) + acc.b * 1.3;
 		vec3 led = mix( ledA, ledB, px );
 		totalEmissiveRadiance += led * ledOn * fall * ( 0.05 + 2.6 * esc + 0.9 * diffuseColor.rgb );
 	}`)
@@ -195,16 +195,15 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     panel.loading = true
     const { combo } = panel
     const W = combo.w, H = combo.h
-    const [ns, ss, nr, sr, am] = await Promise.all([
+    const [ns, ss, nr, am] = await Promise.all([
       combo.s ? texture(`${base}n-${combo.s}.webp`) : flat,
       combo.s ? texture(`${base}s-${combo.s}.webp`) : black,
       combo.r ? texture(`${base}n-r-${combo.r}.webp`) : flat,
-      combo.r ? texture(`${base}s-r-${combo.r}.webp`) : black,
       combo.r ? texture(`${base}a-${combo.r}.webp`) : black,
     ])
     const mats = []
     const own = mat => { mats.push(mat); return mat }
-    const glass = own(tiles ? tileMaterial() : panelMaterial(combo, { ns, ss, nr, sr, am }))
+    const glass = own(tiles ? tileMaterial() : panelMaterial(combo, { ns, ss, nr, am }))
     const group = new THREE.Group()
     const add = (mesh, cast = true, receive = true) => { mesh.castShadow = cast; mesh.receiveShadow = receive; group.add(mesh); return mesh }
     const box = (w, h, d, x, y, z, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); return add(m) }
