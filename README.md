@@ -15,7 +15,7 @@ Kein Build nötig: `index.html` wird direkt ausgeliefert.
 npx serve .
 ```
 
-Das 3D-Deck lädt three.js von jsDelivr; ohne Internet oder ohne WebGL2 zeigt es die vorgerenderten Bilder `img/kombi-NN.jpg`.
+Das 3D-Deck lädt three.js von jsDelivr; ohne Internet oder ohne WebGL2 zeigt es die vorgerenderten Bilder `media/kombi-NN.jpg`.
 
 ## Quelle
 

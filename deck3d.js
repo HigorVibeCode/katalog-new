@@ -33,13 +33,13 @@ const capped = m => {
 }
 const slug = name => name.toLowerCase().replace(/ /g, '-').replace(/ä/g, 'ae')
 
-export async function initDeck3D({ deck, combos, base = 'img/glas/', onIndex, reduced = false, start = 0 }) {
+export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, reduced = false, start = 0 }) {
   const forms = await (await fetch(`${base}formen.json`)).json()
   const canvas = document.createElement('canvas')
   canvas.className = 'deck-canvas'
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 nicht verfügbar')
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.5 : 2))   // phones: 1.5 is sharp enough and far lighter
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.05
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -56,7 +56,8 @@ export async function initDeck3D({ deck, combos, base = 'img/glas/', onIndex, re
   camera.lookAt(0, -310, 0)
 
   // LED edges glow and bleed a little light around them, as in the photos.
-  const composer = new EffectComposer(renderer)
+  // the post-processing chain renders off screen, where the canvas antialias does not reach: 4× MSAA there
+  const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }))
   composer.addPass(new RenderPass(scene, camera))
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.45, 0.82)
   composer.addPass(bloom)
