@@ -183,8 +183,8 @@ float facing = 0.0;`)
     const colors = geo.attributes.color?.array || new Float32Array(p.count * 3)
     const on = ledEnabled, c = new THREE.Color()
     for (let i = 0; i < p.count; i++) {
-      if (on) c.copy(ledA).lerp(ledB, p.getX(i) / GW + 0.5).multiplyScalar(1.7)
-      else c.set('#3d7d68')
+      if (on) c.copy(ledA).lerp(ledB, p.getX(i) / GW + 0.5).multiplyScalar(0.75)
+      else c.set('#2c5a4c')
       c.toArray(colors, i * 3)
     }
     if (!geo.attributes.color) geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
@@ -234,7 +234,7 @@ float facing = 0.0;`)
     u.veil.value = back
     panel.side.emissiveIntensity = ledEnabled ? 0.12 + 1.3 * f : 0.25 * (1 - 0.8 * back)
     panel.rimMat.color.setScalar(ledEnabled ? 0.06 + 0.94 * f : 1 - 0.8 * back)
-    panel.rimMat.opacity = ledEnabled ? 0.5 + 0.5 * f : 0.7 * (1 - 0.6 * back)
+    panel.rimMat.opacity = ledEnabled ? 0.3 + 0.3 * f : 0.45 * (1 - 0.6 * back)   // a quiet, even line
   }
 
   // Layout: the same coverflow as the image deck, in millimetres.
