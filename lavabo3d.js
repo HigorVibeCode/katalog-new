@@ -111,7 +111,8 @@ export async function initLavabo3D({ deck, combos, base = 'img/lavabo/', onIndex
     color: '#86d3b6', roughness: 0.12, transmission: 0.3, thickness: 40, ior: 1.5,
     attenuationColor: '#2f8f6f', attenuationDistance: 25, emissive: '#2e8a68', emissiveIntensity: 0.25,
   })
-  const chrome = capped(new THREE.MeshStandardMaterial({ color: '#f1f2f2', metalness: 1, roughness: 0.12 }))
+  // chrome mirrors a brighter room, so it reads as polished metal and not as a dark stick
+  const chrome = capped(new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 1, roughness: 0.08, envMap: bathroom(renderer, 0.42), envMapIntensity: 1.2 }))
   const rimMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', vertexColors: true, toneMapped: false, transparent: true, opacity: 0.6 })
 
   // the paint on the underside: colour (a Verlauf from left to right), the surface as normals,
@@ -340,7 +341,7 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
     panel.side.emissiveIntensity = ledEnabled ? 0.1 + 2.2 * f : 0.25
     panel.rimMat.color.setScalar(ledEnabled ? 0.08 + 0.92 * f : 0.5 + 0.5 * front)
     panel.rimMat.opacity = ledEnabled ? 0.25 + 0.65 * f : 0.25
-    panel.glow.material.color.copy(ledMid).multiplyScalar(0.22 * f)
+    panel.glow.material.color.copy(ledMid).multiplyScalar(0.32 * f)
     panel.glow.visible = f > 0.01
   }
 
@@ -384,7 +385,8 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
   const aimCamera = () => {
     fitDistance = fit(shot ? start : pos)
     target.z = shot ? panels[start].m.D * 0.5 : 310
-    const a = sway, el = THREE.MathUtils.degToRad(36)
+    // a little from the right: the spout and the glass edge show in three-quarter view
+    const a = 0.18 + sway, el = THREE.MathUtils.degToRad(36)
     camera.position.set(target.x + Math.sin(a) * Math.cos(el) * fitDistance, target.y + Math.sin(el) * fitDistance, target.z + Math.cos(a) * Math.cos(el) * fitDistance)
     camera.lookAt(target)
   }
@@ -730,16 +732,31 @@ function mesh(pos, uv, uv1, idx) {
   return g
 }
 
-// a slim single-lever mixer standing on the glass; tall for a bowl on the slab
+// a single-lever mixer standing on the glass, tall for a bowl on the slab: a turned round body
+// with a soft shoulder, a spout that leaves the body, arcs forward and turns down to an aerator
+// over the basin, and a slim lever on a round pivot on top
 function mixer(material, tall = false) {
   const g = new THREE.Group()
-  const part = (geo, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.rotation.x = rx; m.castShadow = true; g.add(m) }
-  const H = tall ? 330 : 190, reach = tall ? 190 : 150
-  part(new THREE.CylinderGeometry(26, 27, 8, 32), 0, 4, 0)
-  part(new THREE.CylinderGeometry(19, 21, H, 32), 0, H / 2 + 5, 0)
-  part(new THREE.CylinderGeometry(11, 11, reach, 24), 0, H - 12, reach / 2 - 3, Math.PI / 2)
-  part(new THREE.CylinderGeometry(12, 12, 4, 24), 0, H - 14, reach - 4)
-  part(new THREE.BoxGeometry(12, 10, 70), 0, H + 8, -26)
+  const H = tall ? 300 : 175, reach = tall ? 185 : 145
+  const add = mesh => { mesh.castShadow = true; g.add(mesh); return mesh }
+  const body = [[0, 0], [27, 0], [27.5, 2.5], [26, 5], [21.5, 9], [20, 16], [19, H - 18], [18.6, H - 9], [16.5, H - 3], [11, H], [0, H]]
+  add(new THREE.Mesh(new THREE.LatheGeometry(body.map(([r, y]) => new THREE.Vector2(r, y)), 48), material))
+  // the spout
+  const spout = new THREE.CubicBezierCurve3(new THREE.Vector3(0, H - 38, 4), new THREE.Vector3(0, H - 30, reach * 0.55),
+    new THREE.Vector3(0, H - 24, reach * 1.02), new THREE.Vector3(0, H - 64, reach))
+  add(new THREE.Mesh(new THREE.TubeGeometry(spout, 48, 9, 20, false), material))
+  const aerator = add(new THREE.Mesh(new THREE.CylinderGeometry(10.5, 10.5, 12, 24), material))
+  aerator.position.set(0, H - 66, reach)
+  const mouth = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 1.5, 20), new THREE.MeshStandardMaterial({ color: '#2b2d2d', metalness: 0.5, roughness: 0.5 }))
+  mouth.position.set(0, H - 72.6, reach)
+  g.add(mouth)
+  // the lever
+  const pivot = add(new THREE.Mesh(new THREE.CylinderGeometry(12, 13, 14, 32), material))
+  pivot.position.set(0, H + 6, 0)
+  // the lever lies forward over the body, slightly raised, like a real single-lever mixer
+  const lever = add(new THREE.Mesh(new THREE.CapsuleGeometry(5.5, 52, 6, 16), material))
+  lever.rotation.x = 1.3
+  lever.position.set(0, H + 16, 22)
   return g
 }
 
@@ -799,9 +816,8 @@ function drain(material) {
 
 // Reflections in the glossy top: a soft ceiling, a window on the left and the light above the
 // mirror, which the glass mirrors as a calm band.
-function bathroom(renderer) {
+function bathroom(renderer, k = 0.07) {
   const env = new THREE.Scene()
-  const k = 0.07
   const room = new THREE.Mesh(new THREE.BoxGeometry(40, 30, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k * 1.01, k * 0.98), side: THREE.BackSide }))
   room.position.y = 6
   env.add(room)
@@ -848,7 +864,7 @@ function wallAndFloor() {
 
   const gc = document.createElement('canvas'); gc.width = gc.height = 128
   const gg = gc.getContext('2d')
-  const rad = gg.createRadialGradient(64, 40, 4, 64, 40, 64)
+  const rad = gg.createRadialGradient(64, 64, 2, 64, 64, 64)
   rad.addColorStop(0, 'rgba(255,255,255,1)'); rad.addColorStop(0.5, 'rgba(255,255,255,.35)'); rad.addColorStop(1, 'rgba(255,255,255,0)')
   gg.fillStyle = rad; gg.fillRect(0, 0, 128, 128)
   const glowTex = new THREE.CanvasTexture(gc)
@@ -856,8 +872,9 @@ function wallAndFloor() {
     group, wallMat, sideMat,
     setLit: lit => { wallMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.emissiveIntensity = lit ? 0.55 : 0.12; floorMat.color.set(lit ? '#5b5752' : '#2a2826') },
     glow: w => {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.15, 520), new THREE.MeshBasicMaterial({ map: glowTex, color: '#000000', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))
-      m.position.set(0, -170, 0)
+      // the LED sits in the edge against the wall: its light spreads on the wall above and below
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.12, 640), new THREE.MeshBasicMaterial({ map: glowTex, color: '#000000', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))
+      m.position.set(0, 10, 0)
       return m
     },
   }
