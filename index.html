@@ -13,11 +13,11 @@
   --line: #d9e0db;
   --accent: #2f6f62;
   --panel: #e8ede9;
-  --room2-bg: #1b2320;
-  --room2-fg: #eef2ef;
-  --room2-muted: #a3b0aa;
-  --room2-line: #34403b;
-  --room2-panel: #252f2b;
+  --room2-bg: #121715;
+  --room2-fg: #e6ebe8;
+  --room2-muted: #97a39e;
+  --room2-line: #2a3330;
+  --room2-panel: #1b2220;
   --room3-bg: #eee6da;
   --room3-fg: #2a221b;
   --room3-muted: #77695a;
@@ -32,12 +32,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #101412; --surface: #171d1b; --fg: #e6ebe8; --muted: #97a39e; --line: #2a3330; --accent: #7cc3b2; --panel: #1a211e;
-  --room2-bg: #141a18; --room2-fg: #e6ebe8; --room2-muted: #97a39e; --room2-line: #2c3532; --room2-panel: #1d2522;
+  --room2-bg: #121715; --room2-fg: #e6ebe8; --room2-muted: #97a39e; --room2-line: #2a3330; --room2-panel: #1b2220;
   --room3-bg: #1e1913; --room3-fg: #efe6da; --room3-muted: #ab9d8b; --room3-line: #3a3128; --room3-panel: #2a231b;
   color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #101412; --surface: #171d1b; --fg: #e6ebe8; --muted: #97a39e; --line: #2a3330; --accent: #7cc3b2; --panel: #1a211e;
-  --room2-bg: #141a18; --room2-fg: #e6ebe8; --room2-muted: #97a39e; --room2-line: #2c3532; --room2-panel: #1d2522;
+  --room2-bg: #121715; --room2-fg: #e6ebe8; --room2-muted: #97a39e; --room2-line: #2a3330; --room2-panel: #1b2220;
   --room3-bg: #1e1913; --room3-fg: #efe6da; --room3-muted: #ab9d8b; --room3-line: #3a3128; --room3-panel: #2a231b;
   color-scheme: dark }
 
@@ -109,7 +109,7 @@ a { color: inherit; }
 
 /* Sticky chapter bar: always says which room you are in. */
 .chapterbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px var(--gutter); background: var(--cb-bg, var(--bg)); color: var(--cb-fg, var(--fg)); border-bottom: 1px solid var(--cb-line, var(--line)); transition: background .45s, color .45s, border-color .45s; }
-.chapterbar[data-chapter="lavabo"] { --cb-bg: var(--room2-bg); --cb-fg: var(--room2-fg); --cb-line: var(--room2-line); }
+.chapterbar[data-chapter="trennwand"], .chapterbar[data-chapter="lavabo"] { --cb-bg: var(--room2-bg); --cb-fg: var(--room2-fg); --cb-line: var(--room2-line); }
 .chapterbar[data-chapter="rueckwand"] { --cb-bg: var(--room3-bg); --cb-fg: var(--room3-fg); --cb-line: var(--room3-line); }
 /* the bar of the next chapter rides in on top of its cover; the sticky bar takes over once it reaches the top */
 .cb-inline { position: relative; top: auto; z-index: 3; }
@@ -137,7 +137,8 @@ a { color: inherit; }
 /* Rooms. */
 .room { display: grid; gap: 30px; padding-block: 40px calc(56px + 8svh); }
 .benefits + .part { margin-top: 26px; }
-.room-shower { background: var(--bg); color: var(--fg); }
+/* the glass wall and the lavabo share one dark room tone, in light and dark mode alike */
+.room-shower { --fg: var(--room2-fg); --muted: var(--room2-muted); --line: var(--room2-line); --panel: var(--room2-panel); background: var(--room2-bg); color: var(--fg); }
 .room-basin { --fg: var(--room2-fg); --muted: var(--room2-muted); --line: var(--room2-line); --panel: var(--room2-panel); background: var(--room2-bg); color: var(--fg); }
 .room-kitchen { --fg: var(--room3-fg); --muted: var(--room3-muted); --line: var(--room3-line); --panel: var(--room3-panel); background: var(--room3-bg); color: var(--fg); }
 .intro { font-size: 17px; color: var(--muted); max-width: 34em; }
@@ -463,12 +464,12 @@ a { color: inherit; }
       </div>
 
       <div class="benefits" data-part="Warum Glas" tabindex="0" aria-label="Vorteile, antippen für den nächsten">
-        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Aus einem Stück</strong><span>Keine Fuge, kein Silikon.</span></div><div class="benefit"><strong>Nach Mass</strong><span>Passend zum bestehenden Möbel.</span></div><div class="benefit"><strong>Licht für die Nacht</strong><span>Sanftes Leuchten statt Deckenlampe.</span></div><div class="benefit"><strong>Ein Unikat</strong><span>Kein Stück gleicht dem anderen.</span></div></div>
+        <div class="benefit-bars" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+        <div class="benefit-stage" aria-live="polite"><div class="benefit"><strong>Aus einem Stück</strong><span>Keine Fuge, kein Silikon.</span></div><div class="benefit"><strong>Nach Mass</strong><span>Passend zu Raum und Wand, auch in der Ecke.</span></div><div class="benefit"><strong>Pflegeleicht</strong><span>Glatt und dicht. Ein Tuch genügt.</span></div><div class="benefit"><strong>Licht für die Nacht</strong><span>Sanftes Leuchten statt Deckenlampe.</span></div><div class="benefit"><strong>Ein Unikat</strong><span>Kein Stück gleicht dem anderen.</span></div><div class="benefit"><strong>Zeitlos</strong><span>Glas kommt nicht aus der Mode.</span></div></div>
       </div>
 
       <div class="part kombi" data-part="Inspiration für Kombinationen">
-        <div class="row-head"><div><h3>Inspiration für Kombinationen</h3><span>Visualisierung</span></div><p>Umriss, Becken, Unterseite und Farbe frei kombinierbar – auch für die Ecke, mit Aufsatzbecken oder ganz klar. 50 Beispiele aus unzähligen Möglichkeiten.</p></div>
+        <div class="row-head"><div><h3>Inspiration für Kombinationen</h3><span>Visualisierung</span></div><p>Umriss, Becken, Unterseite und Farbe frei kombinierbar. 50 Beispiele aus tausenden Möglichkeiten.</p></div>
         <div class="deck lav" id="lav-deck" tabindex="0" role="group" aria-roledescription="Karussell" aria-label="Lavabo-Kombinationen, mit den Pfeiltasten blättern">
           <div class="deck-stage"></div>
           <button class="deck-arrow deck-prev" type="button" aria-label="Vorheriges Lavabo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -525,7 +526,7 @@ a { color: inherit; }
 
       <div class="part tech" data-part="Gut zu wissen">
         <div class="row-head"><h3>Gut zu wissen</h3></div>
-        <ul class="facts"><li><strong>19 mm</strong><span>Glasstärke</span></li><li><strong>1 Stück</strong><span>Becken und Platte</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Umriss, Unterseite, Farbe</span></li></ul>
+        <ul class="facts"><li><strong>19 mm</strong><span>Glasstärke</span></li><li><strong>2100 × 700 mm</strong><span>maximal pro Lavabo</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Umriss, Unterseite, Farbe</span></li></ul>
         <button class="tech-open" type="button" data-sheet="tech-lavabo">Technische Daten <span aria-hidden="true">↑</span></button>
       </div>
     </div>
@@ -603,17 +604,17 @@ a { color: inherit; }
 <dialog class="tech-sheet" id="tech-trennwand" aria-labelledby="tech-trennwand-title">
   <div class="sheet-body" tabindex="-1" autofocus>
     <header class="sheet-head"><div><span class="label">01 Trennwand · Glaswand</span><h2 id="tech-trennwand-title">Technische Daten</h2></div><button class="sheet-close" type="button" aria-label="Schliessen">×</button></header>
-    <dl class="spec"><div><dt>Glasstärke</dt><dd>8 bis 12 mm</dd></div><div><dt>Masse</dt><dd>Nach Mass, ohne Mindestmass. Maximal 3000 × 2000 mm pro Glas.</dd></div><div><dt>Licht</dt><dd>Mit oder ohne LED in der Kante</dd></div><div><dt>Oberfläche</dt><dd>Jede Struktur, jede Farbe, jedes Relief</dd></div><div><dt>Form</dt><dd>Frei wählbar, zum Beispiel Rechteck, Rundbogen, Schräg oder Abgerundet</dd></div></dl>
-    <a class="pdf-btn" href="technik/glas-technik.pdf" download="Buechler-Glas-Technischer-Katalog.pdf"><span><b>PDF herunterladen</b><small>Technischer Katalog: Formen, Strukturen, Reliefs, Licht und alle Kombinationen</small></span><i aria-hidden="true">↓</i></a>
+    <dl class="spec"><div><dt>Glasstärke</dt><dd>8 bis 12 mm</dd></div><div><dt>Masse</dt><dd>Nach Mass, ohne Mindestmass. Maximal 3000 × 2000 mm pro Glas.</dd></div><div><dt>Form</dt><dd>Frei wählbar: Rechteck, Rundbogen, Schräg, Abgerundet, Facette, eigener Entwurf oder Schablone. Auch gebogen, zum Beispiel mit Radius 900 mm (C) oder 260 mm (J).</dd></div><div><dt>Oberfläche</dt><dd>Jede Struktur, jedes Relief. Float auch sandgestrahlt.</dd></div><div><dt>Farbe</dt><dd>Klar oder farbig, jede Farbe.</dd></div><div><dt>Licht</dt><dd>Mit oder ohne LED in der Kante, jede Lichtfarbe.</dd></div></dl>
+    <a class="pdf-btn" href="technik/glas-technik.pdf" download="Buechler-Glas-Trennwand-Katalog.pdf"><span><b>PDF herunterladen</b><small>Trennwand-Katalog: Formen, Strukturen, Reliefs, Licht, technische Daten und 50 Ideen</small></span><i aria-hidden="true">↓</i></a>
     <p class="spec-note">Alle Angaben werden mit der Offerte verbindlich bestätigt.</p>
   </div>
 </dialog>
 <dialog class="tech-sheet" id="tech-lavabo" aria-labelledby="tech-lavabo-title">
   <div class="sheet-body" tabindex="-1" autofocus>
     <header class="sheet-head"><div><span class="label">02 Lavabo</span><h2 id="tech-lavabo-title">Technische Daten</h2></div><button class="sheet-close" type="button" aria-label="Schliessen">×</button></header>
-    <dl class="spec"><div><dt>Glasstärke</dt><dd>19 mm</dd></div><div><dt>Bauweise</dt><dd>Becken und Platte aus einem Stück, oder Glasplatte mit Aufsatzbecken aus Glas</dd></div><div><dt>Masse</dt><dd>Je nach Modell, von L 65 bis 210 cm und T 35 bis 70 cm</dd></div><div><dt>Beckentiefe</dt><dd>15 cm</dd></div><div><dt>Form</dt><dd>Umriss frei wählbar, auch als Ecklavabo. Beckenform fix nach Modell, weitere auf Anfrage. Rückwand aus Glas auf Wunsch.</dd></div><div><dt>Oberfläche</dt><dd>Oben glatt. Unterseite Float (glatt), Minimal oder Struktur</dd></div><div><dt>Farbe</dt><dd>Auf der Unterseite, einfarbig oder als Verlauf. Jede Farbe möglich – oder klar, ohne Farbe</dd></div><div><dt>Licht</dt><dd>Mit oder ohne LED in der Kante, jede Lichtfarbe</dd></div></dl>
+    <dl class="spec"><div><dt>Glasstärke</dt><dd>19 mm</dd></div><div><dt>Masse</dt><dd>Je nach Modell L 65 bis 210 cm, T 35 bis 70 cm. Ecklavabos bis etwa 95 × 95 cm.</dd></div><div><dt>Form</dt><dd>Umriss frei wählbar, auch als Ecklavabo. Beckenform fix nach Modell, weitere auf Anfrage. Rückwand aus Glas auf Wunsch.</dd></div><div><dt>Bauweise</dt><dd>Becken und Platte aus einem Stück, oder Glasplatte mit Aufsatzbecken aus Glas.</dd></div><div><dt>Becken</dt><dd>Gewölbt bis zum Ablauf, ohne flachen Boden, höchstens 15 cm tief.</dd></div><div><dt>Oberfläche</dt><dd>Oben glatt. Unterseite Float (glatt), Minimal oder Struktur.</dd></div><div><dt>Farbe</dt><dd>Auf der Unterseite, einfarbig oder als Verlauf, jede Farbe – oder klar, ohne Farbe.</dd></div><div><dt>Licht</dt><dd>Mit oder ohne LED in der Kante an der Wand, jede Lichtfarbe.</dd></div></dl>
     <div class="spec-links"><a href="img/lavabo-formen-1.png" target="_blank" rel="noopener">Formenübersicht, Seite 1 ↗</a><a href="img/lavabo-formen-2.png" target="_blank" rel="noopener">Formenübersicht, Seite 2 ↗</a></div>
-    <a class="pdf-btn" href="technik/lavabo-technik.pdf" download="Buechler-Glas-Lavabo-Katalog.pdf"><span><b>PDF herunterladen</b><small>Lavabo-Katalog: Modelle, Ecklavabos, Aufsatzbecken, Farben, Licht und 50 Kombinationen</small></span><i aria-hidden="true">↓</i></a>
+    <a class="pdf-btn" href="technik/lavabo-technik.pdf" download="Buechler-Glas-Lavabo-Katalog.pdf"><span><b>PDF herunterladen</b><small>Lavabo-Katalog: Modelle, Ecklavabos, Aufsatzbecken, Farben, Licht, technische Daten und 50 Ideen</small></span><i aria-hidden="true">↓</i></a>
     <p class="spec-note">Alle Angaben werden mit der Offerte verbindlich bestätigt.</p>
   </div>
 </dialog>
@@ -621,7 +622,6 @@ a { color: inherit; }
   <div class="sheet-body" tabindex="-1" autofocus>
     <header class="sheet-head"><div><span class="label">03 Rückwand · Küche</span><h2 id="tech-rueckwand-title">Technische Daten</h2></div><button class="sheet-close" type="button" aria-label="Schliessen">×</button></header>
     <dl class="spec"><div><dt>Glasstärke</dt><dd>6 bis 8 mm</dd></div><div><dt>Masse</dt><dd>Nach Mass, ohne Mindestmass. Maximal 3000 × 2000 mm pro Glas.</dd></div><div><dt>Bearbeitung</dt><dd>Bohrungen und Ausschnitte, zum Beispiel für Steckdosen</dd></div><div><dt>Licht</dt><dd>Ohne LED in der Kante. Unterbauleuchten bringen die Struktur zur Geltung.</dd></div><div><dt>Oberfläche</dt><dd>Jede Struktur, jedes Relief, jede Farbe</dd></div></dl>
-    <a class="pdf-btn" href="technik/glas-technik.pdf" download="Buechler-Glas-Technischer-Katalog.pdf"><span><b>PDF herunterladen</b><small>Technischer Katalog: Formen, Strukturen, Reliefs, Licht und alle Kombinationen</small></span><i aria-hidden="true">↓</i></a>
     <p class="spec-note">Alle Angaben werden mit der Offerte verbindlich bestätigt.</p>
   </div>
 </dialog>

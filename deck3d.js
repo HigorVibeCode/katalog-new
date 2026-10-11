@@ -18,6 +18,19 @@ export const LED = [
   { name: 'Ohne Licht', a: null, b: null },
 ]
 const smoothstep = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t) }
+// A sharp highlight on the polished glass can exceed what the half-float bloom buffers hold
+// (65504) and turn the whole frame black on some graphics cards; every glass material keeps its
+// output below that (as in lavabo3d.js).
+const capped = m => {
+  const before = m.onBeforeCompile
+  m.onBeforeCompile = (shader, renderer) => {
+    if (before !== THREE.Material.prototype.onBeforeCompile) before.call(m, shader, renderer)
+    shader.fragmentShader = shader.fragmentShader.replace('#include <dithering_fragment>', 'gl_FragColor.rgb = min( gl_FragColor.rgb, vec3( 64.0 ) );\n\t#include <dithering_fragment>')
+  }
+  const key = m.customProgramCacheKey.bind(m)
+  m.customProgramCacheKey = () => key() + '-capped'
+  return m
+}
 const slug = name => name.toLowerCase().replace(/ /g, '-').replace(/ä/g, 'ae')
 
 export async function initDeck3D({ deck, combos, base = 'img/glas/', onIndex, reduced = false, start = 0 }) {
@@ -94,7 +107,7 @@ export async function initDeck3D({ deck, combos, base = 'img/glas/', onIndex, re
     const [normalMap, escape, edges] = await Promise.all([texture(`${base}n-${key}.webp`), texture(`${base}s-${key}.webp`), edgeMap(panel.combo.form)])
     const face = glass(normalMap, escape, edges, panel.combo.float)
     const geo = geometry(panel.combo.form)
-    const side = edge.clone(), rimMat = rimMaterial.clone()
+    const side = capped(edge.clone()), rimMat = rimMaterial.clone()
     const mesh = new THREE.Mesh(geo, geo.type === 'BoxGeometry' ? [side, side, side, side, face, face] : [face, side])
     const group = new THREE.Group()
     group.add(mesh, new THREE.Mesh(rim(panel.combo.form), rimMat))
@@ -174,7 +187,7 @@ float facing = 0.0;`)
 	}`)
     }
     m.customProgramCacheKey = () => 'kiln-glass-6'
-    return m
+    return capped(m)
   }
 
   // Rim colour along the glass: one colour, or a blend from the left to the right edge.
