@@ -183,7 +183,7 @@ float facing = 0.0;`)
     const colors = geo.attributes.color?.array || new Float32Array(p.count * 3)
     const on = ledEnabled, c = new THREE.Color()
     for (let i = 0; i < p.count; i++) {
-      if (on) c.copy(ledA).lerp(ledB, p.getX(i) / GW + 0.5).multiplyScalar(3.2)
+      if (on) c.copy(ledA).lerp(ledB, p.getX(i) / GW + 0.5).multiplyScalar(1.7)
       else c.set('#3d7d68')
       c.toArray(colors, i * 3)
     }
@@ -251,7 +251,7 @@ float facing = 0.0;`)
       let turn = -Math.max(-1.4, Math.min(1.4, d)) * 0.7
       if (ad < 0.5) turn += sway * (1 - ad * 2)
       // a bent glass seen straight on looks flat: on stage it turns a little so the bend shows
-      if (/^Gebogen/.test(panel.combo.form)) turn += 0.44 * (1 - smoothstep(0, 1, ad))
+      if (/^Gebogen/.test(panel.combo.form)) turn -= 0.44 * (1 - smoothstep(0, 1, ad))   // right edge forward
       panel.group.rotation.y = turn
       panel.group.scale.setScalar(1 + 0.2 * (1 - smoothstep(0, 1, ad)))   // the glass on stage is 20 % larger
       // side glasses step back into the shadow
@@ -441,7 +441,8 @@ function rimGeometry(form, forms) {
     const pts = forms[form].map(([x, y]) => new THREE.Vector3(x - GW / 2, y - GH / 2, 0))
     add([...pts, pts[0]])
   }
-  return new THREE.TubeGeometry(path, Math.min(900, path.curves.length * 3), 4.2, 5, false)
+  // thick enough to stay a continuous line on screen (a thinner tube breaks up into dashes)
+  return new THREE.TubeGeometry(path, Math.min(1400, path.curves.length * 4), 6.5, 6, false)
 }
 
 // ------------------------------------------------------------------ light and room
