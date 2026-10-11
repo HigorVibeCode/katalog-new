@@ -38,7 +38,7 @@ export async function initRueckwand3D({ deck, combos, base = 'img/rueckwand/', o
   canvas.className = 'deck-canvas'
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 nicht verfügbar')
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.5 : 2))   // phones: 1.5 is sharp enough and far lighter
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -404,10 +404,13 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     camera.lookAt(target)
   }
 
-  let visible = false, frame = 0, dirty = true, last = 0
+  let visible = false, frame = 0, dirty = true, last = 0, lastScroll = 0
+  addEventListener('scroll', () => { lastScroll = performance.now() }, { passive: true })
   const invalidate = () => { dirty = true; if (!frame && visible) frame = requestAnimationFrame(tick) }
   const tick = now => {
     frame = 0
+    // while the page scrolls the glass holds still, so the scroll keeps the whole frame budget
+    if (!drag && now - lastScroll < 140) { last = 0; frame = setTimeout(() => { frame = requestAnimationFrame(tick) }, 140); return }
     const dt = Math.min(100, last ? now - last : 16)
     last = now
     const moving = Math.abs(aim - pos) > 0.0005 || drag || spin
@@ -506,7 +509,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     visible = entry.isIntersecting
     if (visible) wake()
     else if (frame) { cancelAnimationFrame(frame); clearTimeout(frame); frame = 0 }
-  }, { rootMargin: '200px' }).observe(deck)
+  }).observe(deck)
 
   deck.prepend(canvas)
   deck.classList.add('is-3d')
