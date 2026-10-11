@@ -56,10 +56,12 @@ export async function initRueckwand3D({ deck, combos, base = 'img/rueckwand/', o
   sun.castShadow = true
   sun.shadow.mapSize.set(2048, 2048)
   Object.assign(sun.shadow.camera, { left: -2600, right: 2600, top: 2200, bottom: -2200, near: 500, far: 9000 })
-  sun.shadow.radius = 5
+  sun.shadow.radius = 7
   sun.shadow.bias = -0.0005
-  const sky = new THREE.HemisphereLight('#eef0ec', '#2a2622', 0.6)
-  scene.add(sun, sun.target, sky)
+  const sky = new THREE.HemisphereLight('#eef0ef', '#2a2a2a', 0.6)
+  const fill = new THREE.DirectionalLight('#eef2f5', 0.5)           // the room behind the camera
+  fill.position.set(2600, 1400, 3400)
+  scene.add(sun, sun.target, sky, fill)
 
   const camera = new THREE.PerspectiveCamera(30, 1, 50, 40000)
   const target = new THREE.Vector3(0, 300, 300)
@@ -119,13 +121,20 @@ uniform float reliefScale; uniform float panelW; uniform float ledY; uniform flo
 uniform vec3 ledA; uniform vec3 ledB;
 vec2 relief = vec2( 0.0 );
 vec4 acc = vec4( 0.0 );
-float px = 0.0;`)
+float px = 0.0;
+float hash12( vec2 p ) { vec3 p3 = fract( vec3( p.xyx ) * 0.1031 ); p3 += dot( p3, p3.yzx + 33.33 ); return fract( ( p3.x + p3.y ) * p3.z ); }
+float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * ( 3.0 - 2.0 * f );
+	return mix( mix( hash12( i ), hash12( i + vec2( 1.0, 0.0 ) ), u.x ), mix( hash12( i + vec2( 0.0, 1.0 ) ), hash12( i + vec2( 1.0, 1.0 ) ), u.x ), u.y ); }`)
         .replace('#include <color_fragment>', `#include <color_fragment>
 	px = clamp( ( vPlan.x * ${CW.toFixed(1)} - ( ${(CW / 2).toFixed(1)} - panelW * 0.5 ) ) / panelW, 0.0, 1.0 );
 	acc = texture2D( accentMap, vPlan );
 	// seen through 6 mm of glass: a faint green
 	diffuseColor.rgb *= mix( paintA, paintB, smoothstep( 0.1, 0.9, px ) ) * vec3( 0.95, 0.985, 0.97 );
-	diffuseColor.rgb = mix( diffuseColor.rgb, accent * vec3( 0.95, 0.985, 0.97 ), smoothstep( 0.3, 0.75, acc.r ) * accentOn );`)
+	diffuseColor.rgb = mix( diffuseColor.rgb, accent * vec3( 0.95, 0.985, 0.97 ), smoothstep( 0.3, 0.75, acc.r ) * accentOn );
+	// hand-applied paint is never perfectly even: a faint cloudiness, a little denser at the edges
+	float cloud = vnoise( vPlan * vec2( 34.0, 14.0 ) ) * 0.6 + vnoise( vPlan * vec2( 110.0, 46.0 ) ) * 0.4;
+	float edge = min( min( px, 1.0 - px ) * panelW, vH ) ;
+	diffuseColor.rgb *= ( 0.975 + 0.05 * cloud ) * ( 0.94 + 0.06 * smoothstep( 0.0, 60.0, edge ) );`)
         .replace('#include <normal_fragment_maps>', normalChunk)
         .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 	{
@@ -141,7 +150,7 @@ float px = 0.0;`)
         .replace('#include <dithering_fragment>', `gl_FragColor.rgb *= shade;
 	#include <dithering_fragment>`)
     }
-    m.customProgramCacheKey = () => 'rueckwand-panel-1'
+    m.customProgramCacheKey = () => 'rueckwand-panel-2'
     return capped(m)
   }
 
@@ -164,8 +173,9 @@ float px = 0.0;`)
 
   const fronts = { Weiss: new THREE.MeshStandardMaterial({ color: '#e7e5df', roughness: 0.55 }), Anthrazit: new THREE.MeshStandardMaterial({ color: '#2f3134', roughness: 0.6 }),
     Eiche: wood('#9b7a52'), Salbei: new THREE.MeshStandardMaterial({ color: '#7f8f78', roughness: 0.6 }), Schwarz: new THREE.MeshStandardMaterial({ color: '#141516', roughness: 0.5 }) }
-  const tops = { 'Stein dunkel': new THREE.MeshPhysicalMaterial({ color: '#1e1f20', roughness: 0.28, clearcoat: 0.5, clearcoatRoughness: 0.2 }),
-    'Stein hell': new THREE.MeshPhysicalMaterial({ color: '#d9d5cc', roughness: 0.3, clearcoat: 0.4, clearcoatRoughness: 0.25 }), Eiche: wood('#a8875c', 1 / 900) }
+  const tops = { 'Stein dunkel': stone('#1c1d1e', 'rgba(205,205,200,', 'rgba(150,150,145,', 0.32), 'Stein hell': stone('#dad6cd', 'rgba(120,115,108,', 'rgba(255,255,250,', 0.3),
+    Eiche: wood('#a8875c', 1 / 900) }
+  const alu = capped(new THREE.MeshStandardMaterial({ color: '#c9ccce', metalness: 0.8, roughness: 0.35, envMapIntensity: 1.3 }))
   const carcass = new THREE.MeshStandardMaterial({ color: '#1b1b1b', roughness: 0.9 })
   const steel = capped(new THREE.MeshStandardMaterial({ color: '#e4e6e7', metalness: 0.85, roughness: 0.38, envMapIntensity: 1.6 }))
   const chrome = capped(new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 1, roughness: 0.08, envMapIntensity: 1.4 }))
@@ -212,10 +222,22 @@ float px = 0.0;`)
     box(W, 760, 560, 0, -40 - 380, 280, carcass)
     box(W, 100, 520, 0, FLOOR + 50, 260, carcass)
     const n = Math.max(2, Math.round(W / 600)), fw = W / n
+    const handles = combo.fronten === 'Eiche' || combo.fronten === 'Salbei'
+    // handleless fronts sit lower and leave an aluminium grip channel under the worktop
+    const drop = handles ? 0 : 32
+    if (!handles) {
+      box(W, 30, 6, 0, -40 - 17, 548, alu).castShadow = false
+      box(W, 3, 26, 0, -40 - 2, 560, alu).castShadow = false
+      box(W, 24, 6, 0, -40 - 182 - drop - 12, 548, alu).castShadow = false
+    }
     for (let j = 0; j < n; j++) {
       const x = -W / 2 + fw * (j + 0.5)
-      box(fw - 3, 176, 19, x, -40 - 3 - 88, 570, fronts[combo.fronten])
-      box(fw - 3, 576, 19, x, -40 - 182 - 288 - 3, 570, fronts[combo.fronten])
+      box(fw - 3, 176 - drop * 0.5, 19, x, -40 - 3 - drop - (176 - drop * 0.5) / 2, 570, fronts[combo.fronten])
+      box(fw - 3, 576 - drop * 0.5 - 24 * !handles, 19, x, -40 - 182 - drop - 24 * !handles - 3 - (576 - drop * 0.5 - 24 * !handles) / 2, 570, fronts[combo.fronten])
+      if (handles) {
+        const L = Math.min(fw * 0.45, 320)
+        for (const hy of [-40 - 3 - 88, -40 - 182 - 3 - 70]) bar(group, x, hy, 580, L, alu)
+      }
     }
     const top = new THREE.Shape([[-W / 2, 0], [W / 2, 0], [W / 2, -640], [-W / 2, -640]].map(([x, y]) => new THREE.Vector2(x, y)))
     top.holes.push(new THREE.Path([[sinkX - 250, -150], [sinkX - 250, -550], [sinkX + 250, -550], [sinkX + 250, -150]].map(([x, y]) => new THREE.Vector2(x, y))))
@@ -224,6 +246,8 @@ float px = 0.0;`)
     topMesh.rotation.x = -Math.PI / 2
     topMesh.position.y = -41.5
     box(500, 190, 400, sinkX, -95, 350, sinkInside).castShadow = false
+    for (const [w, d, x, z] of [[530, 15, sinkX, 142], [530, 15, sinkX, 558], [15, 400, sinkX - 258, 350], [15, 400, sinkX + 258, 350]]) box(w, 2, d, x, 1, z, alu).castShadow = false
+    const plug = new THREE.Mesh(new THREE.CylinderGeometry(32, 32, 2, 32), alu); plug.position.set(sinkX + 120, -188, 430); group.add(plug)
     const tap = mixer(chrome); tap.position.set(sinkX, 0, 95); group.add(tap)
     box(600, 5, 520, hobX, 2, 330, hobMat).castShadow = false
 
@@ -246,6 +270,12 @@ float px = 0.0;`)
       for (let j = 0; j < n; j++) box(fw - 3, 714, 19, -W / 2 + fw * (j + 0.5), LED_Y + 360, t + 340, fronts[combo.fronten])
       box(W - 40, 6, 12, 0, LED_Y - 3, t + 50, ledStrip).castShadow = false
     }
+    // soft contact shadows where the glass meets the worktop and the cabinets, and under the plinth
+    shade(group, W, 70, 0, 35, t + 0.8, 0, 0.32)
+    shade(group, W, 80, 0, 0.8, 40, Math.PI / 2, 0.28)
+    const aoTop = combo.format === 'hoch' ? null : shade(group, W, 140, 0, LED_Y - 70, t + 0.8, Math.PI, 0.3)
+    shade(group, W + 600, 140, 300, FLOOR + 0.8, 590, Math.PI / 2, 0.35)
+    props(group, panel.i, W, t, sinkX, hobX, fronts.Eiche)
     // a tall unit closes the kitchen on the right
     box(600, CEILING - FLOOR - 100, 560, W / 2 + 300, (CEILING + FLOOR) / 2 - 50, 280, carcass)
     box(597, 1870, 19, W / 2 + 300, FLOOR + 100 + 935 + 1.5, 570, fronts[combo.fronten])
@@ -254,7 +284,7 @@ float px = 0.0;`)
     const glow = room.glow(W)
     group.add(glow)
     scene.add(group)
-    Object.assign(panel, { group, glow, glass, u: glass.userData.uniforms, ledStrip, mats, loading: false })
+    Object.assign(panel, { group, glow, aoTop, glass, u: glass.userData.uniforms, ledStrip, mats, loading: false })
     invalidate()
   }
   const release = panel => {
@@ -299,6 +329,7 @@ float px = 0.0;`)
     if (f > 0.01) panel.ledStrip.color.copy(ledMid).multiplyScalar(0.6 + 2.4 * f)
     else panel.ledStrip.color.set(ledEnabled ? '#202122' : '#3a3c3d')
     panel.glow.material.color.copy(ledMid).multiplyScalar(0.3 * f)
+    if (panel.aoTop) panel.aoTop.material.opacity = 0.3 * (1 - f)          // the LED lights the corner the cabinets shade
     panel.glow.visible = f > 0.01
   }
 
@@ -487,6 +518,114 @@ function mixer(material) {
   return g
 }
 
+// a bar handle on two small posts
+function bar(group, x, y, z, L, material) {
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, L, 16), material)
+  rod.rotation.z = Math.PI / 2
+  rod.position.set(x, y, z + 28)
+  rod.castShadow = true
+  group.add(rod)
+  for (const dx of [-L / 2 + 14, L / 2 - 14]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 28, 12), material)
+    post.rotation.x = Math.PI / 2
+    post.position.set(x + dx, y, z + 14)
+    group.add(post)
+  }
+}
+
+// a darkening that fades out: the contact shadow in a corner
+function gradientTexture() {
+  const c = document.createElement('canvas'); c.width = 4; c.height = 128
+  const g = c.getContext('2d')
+  const lin = g.createLinearGradient(0, 128, 0, 0)
+  lin.addColorStop(0, 'rgba(0,0,0,1)'); lin.addColorStop(0.35, 'rgba(0,0,0,.35)'); lin.addColorStop(1, 'rgba(0,0,0,0)')
+  g.fillStyle = lin; g.fillRect(0, 0, 4, 128)
+  return new THREE.CanvasTexture(c)
+}
+let shadowMap = null
+// the plane is darkest along its lower edge; rx turns it: 0 upright (dark at the bottom), PI upright
+// (dark at the top), PI / 2 lying flat (dark towards the wall)
+function shade(group, w, h, x, y, z, rx, opacity) {
+  shadowMap ??= gradientTexture()
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ alphaMap: shadowMap, color: '#000000', transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide }))
+  m.rotation.x = rx
+  m.position.set(x, y, z)
+  m.renderOrder = 2
+  group.add(m)
+  return m
+}
+
+// a few everyday things, different in each kitchen, kept to the ends so the glass stays free
+function props(group, i, W, t, sinkX, hobX, woodMat) {
+  const kind = i % 4
+  const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); return mesh }
+  if (kind === 0 || kind === 2) {                                          // a chopping board leaning on the glass
+    const r = 34, bw = 290, bh = 410
+    const outline = new THREE.Shape()
+    outline.moveTo(-bw / 2 + r, -bh / 2); outline.lineTo(bw / 2 - r, -bh / 2); outline.quadraticCurveTo(bw / 2, -bh / 2, bw / 2, -bh / 2 + r)
+    outline.lineTo(bw / 2, bh / 2 - r); outline.quadraticCurveTo(bw / 2, bh / 2, bw / 2 - r, bh / 2); outline.lineTo(-bw / 2 + r, bh / 2)
+    outline.quadraticCurveTo(-bw / 2, bh / 2, -bw / 2, bh / 2 - r); outline.lineTo(-bw / 2, -bh / 2 + r); outline.quadraticCurveTo(-bw / 2, -bh / 2, -bw / 2 + r, -bh / 2)
+    const hole = new THREE.Path(); hole.absarc(0, bh / 2 - 48, 17, 0, Math.PI * 2, true); outline.holes.push(hole)
+    const geo = new THREE.ExtrudeGeometry(outline, { depth: 16, bevelEnabled: true, bevelSize: 3, bevelThickness: 3, bevelSegments: 3, curveSegments: 16 })
+    geo.scale(1, 1, 1); geo.translate(0, 0, -8)
+    const tex = woodMat.map.clone(); tex.repeat.set(1 / 300, 1 / 300); tex.needsUpdate = true
+    const board = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }))
+    board.rotation.x = -0.12
+    add(board, -W / 2 + 205, 206, t + 40)
+  }
+  if (kind === 0 || kind === 1) {                                          // herbs in a pot
+    const pot = add(new THREE.Mesh(new THREE.CylinderGeometry(62, 50, 110, 28), new THREE.MeshStandardMaterial({ color: '#b5674a', roughness: 0.8 })), W / 2 - 170, 55, 260)
+    const leafMat = new THREE.MeshStandardMaterial({ color: '#4f7a3f', roughness: 0.7 })
+    for (let k = 0; k < 9; k++) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(30 + (k % 3) * 8, 14, 10), leafMat)
+      b.scale.set(1, 0.8, 1)
+      add(b, W / 2 - 170 + Math.cos(k * 2.4) * 34, 130 + (k % 4) * 18, 260 + Math.sin(k * 2.4) * 34)
+    }
+    void pot
+  }
+  if (kind === 1 || kind === 3) {                                          // a bottle of oil between sink and hob
+    const x = (sinkX + 250 + hobX - 300) / 2
+    add(new THREE.Mesh(new THREE.CylinderGeometry(32, 32, 230, 24), new THREE.MeshPhysicalMaterial({ color: '#c9b04a', roughness: 0.1, transparent: true, opacity: 0.75, clearcoat: 1 })), x, 115, 120)
+    add(new THREE.Mesh(new THREE.CylinderGeometry(12, 16, 60, 16), new THREE.MeshStandardMaterial({ color: '#2b2b2b', roughness: 0.4 })), x, 260, 120)
+  }
+  if (kind === 3) {                                                        // a pair of glasses jars at the right end
+    const jar = new THREE.MeshPhysicalMaterial({ color: '#e8efec', roughness: 0.05, transparent: true, opacity: 0.35, clearcoat: 1 })
+    add(new THREE.Mesh(new THREE.CylinderGeometry(55, 55, 170, 28), jar), W / 2 - 200, 85, 200)
+    add(new THREE.Mesh(new THREE.CylinderGeometry(45, 45, 120, 28), jar), W / 2 - 320, 60, 230)
+  }
+}
+
+// a stone worktop: speckled, with a few soft veins
+function stone(base, speck, vein, roughness) {
+  const c = document.createElement('canvas'); c.width = c.height = 1024
+  const g = c.getContext('2d')
+  g.fillStyle = base; g.fillRect(0, 0, 1024, 1024)
+  let seed = 7
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+  for (let i = 0; i < 26000; i++) {
+    const a = rnd() * 0.22
+    g.fillStyle = speck + a + ')'
+    const r = rnd() * 1.6 + 0.3
+    g.fillRect(rnd() * 1024, rnd() * 1024, r, r)
+  }
+  g.filter = 'blur(1.5px)'
+  for (let k = 0; k < 7; k++) {
+    g.strokeStyle = vein + (0.08 + rnd() * 0.12) + ')'
+    g.lineWidth = 1 + rnd() * 3
+    g.beginPath()
+    let x = rnd() * 1024, y = rnd() * 1024
+    g.moveTo(x, y)
+    for (let s = 0; s < 14; s++) { x += 40 + rnd() * 70; y += (rnd() - 0.4) * 90; g.lineTo(x, y) }
+    g.stroke()
+  }
+  g.filter = 'none'
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(1 / 1300, 1 / 1300)
+  return new THREE.MeshPhysicalMaterial({ map: t, roughness, clearcoat: 0.6, clearcoatRoughness: 0.18 })
+}
+
 // a double socket in a cut-out of the glass
 function socketPair(group, x, y, t, color) {
   const frame = new THREE.MeshStandardMaterial({ color, roughness: 0.4 })
@@ -572,7 +711,7 @@ function roomShell() {
   const group = new THREE.Group()
   const c = document.createElement('canvas'); c.width = 1024; c.height = 512
   const g = c.getContext('2d')
-  g.fillStyle = '#c4c0b8'; g.fillRect(0, 0, 1024, 512)
+  g.fillStyle = '#c3c4c4'; g.fillRect(0, 0, 1024, 512)
   const img = g.getImageData(0, 0, 1024, 512)
   for (let i = 0; i < img.data.length; i += 4) { const n = (Math.random() - 0.5) * 8; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n }
   g.putImageData(img, 0, 0)
@@ -584,7 +723,7 @@ function roomShell() {
   const wall = new THREE.Mesh(new THREE.PlaneGeometry(30000, CEILING - FLOOR), wallMat)
   wall.position.set(0, (CEILING + FLOOR) / 2, -1)
   wall.receiveShadow = true
-  const floorMat = new THREE.MeshStandardMaterial({ color: '#6b655d', roughness: 0.75 })
+  const floorMat = new THREE.MeshStandardMaterial({ color: '#5f6061', roughness: 0.75 })
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(30000, 24000), floorMat)
   floor.rotation.x = -Math.PI / 2
   floor.position.set(0, FLOOR, 12000)
@@ -606,7 +745,7 @@ function roomShell() {
   const glowTex = new THREE.CanvasTexture(gc)
   return {
     group,
-    setLit: lit => { wallMat.color.setScalar(lit ? 0.75 : 0.22); floorMat.color.set(lit ? '#6b655d' : '#2a2724'); ceilMat.emissiveIntensity = lit ? 1 : 0.15; ceilMat.color.setScalar(lit ? 1 : 0.3) },
+    setLit: lit => { wallMat.color.setScalar(lit ? 0.75 : 0.22); floorMat.color.set(lit ? '#5f6061' : '#28292a'); ceilMat.emissiveIntensity = lit ? 1 : 0.15; ceilMat.color.setScalar(lit ? 1 : 0.3) },
     // the light pool on the worktop, from the wall forward
     glow: w => {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 560), new THREE.MeshBasicMaterial({ map: glowTex, color: '#000000', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))

@@ -63,7 +63,7 @@ export async function initLavabo3D({ deck, combos, base = 'img/lavabo/', onIndex
     catcher.receiveShadow = true
     scene.add(catcher)
   }
-  const sun = new THREE.DirectionalLight('#fff4e8', 2.2)
+  const sun = new THREE.DirectionalLight('#fbfaf7', 2.2)
   sun.position.set(-700, 2200, 1500)
   sun.target.position.set(0, -200, 0)
   sun.castShadow = true
@@ -276,17 +276,16 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
       group.add(cab)
     }
     group.scale.setScalar(panel.s)
-    const glow = room.glow(panel.w)
-    scene.add(group, glow)
+    scene.add(group)
     paintRim(geo.rim, m.L)
-    Object.assign(panel, { group, glow, top, u: (under || top).userData.uniforms, side, rimMat, rim: geo.rim, mats, loading: false })
+    Object.assign(panel, { group, top, u: (under || top).userData.uniforms, side, rimMat, rim: geo.rim, mats, loading: false })
     invalidate()
   }
   const release = panel => {
     if (!panel.group) return
-    scene.remove(panel.group, panel.glow)
-    panel.mats.forEach(mat => mat.dispose()); panel.glow.material.dispose()
-    Object.assign(panel, { group: null, glow: null, top: null, u: null, side: null, rimMat: null, mats: null })
+    scene.remove(panel.group)
+    panel.mats.forEach(mat => mat.dispose())
+    Object.assign(panel, { group: null, top: null, u: null, side: null, rimMat: null, mats: null })
   }
 
   const paintRim = (geo, L) => {
@@ -341,8 +340,6 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
     panel.side.emissiveIntensity = ledEnabled ? 0.1 + 2.2 * f : 0.25
     panel.rimMat.color.setScalar(ledEnabled ? 0.08 + 0.92 * f : 0.5 + 0.5 * front)
     panel.rimMat.opacity = ledEnabled ? 0.25 + 0.65 * f : 0.25
-    panel.glow.material.color.copy(ledMid).multiplyScalar(0.32 * f)
-    panel.glow.visible = f > 0.01
   }
 
   // Layout: the lavabos side by side along the wall; the deck slides along it.
@@ -361,7 +358,6 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
       const x = xs[panel.i] - here
       panel.group.visible = Math.abs(x) < 4200
       panel.group.position.set(x, 0, 0)
-      panel.glow.position.x = x
       const front = 1 - smoothstep(0.12, 0.8, ad)
       const shade = 1 - Math.min(ad * 0.55, 0.7)
       lightPanel(panel, front)
@@ -835,13 +831,13 @@ function bathroom(renderer, k = 0.07) {
   return texture
 }
 
-// The wall the lavabos hang on and the floor, plaster lit softly from the left. Each lavabo
-// throws a coloured glow onto the wall below it when its LED is on.
+// The wall the lavabos hang on and the floor: neutral grey plaster and stone, lit softly from the
+// left. The LED light stays in the glass; nothing of it is painted onto the wall.
 function wallAndFloor() {
   const group = new THREE.Group()
   const c = document.createElement('canvas'); c.width = 1024; c.height = 512
   const g = c.getContext('2d')
-  g.fillStyle = '#b9b5ad'; g.fillRect(0, 0, 1024, 512)
+  g.fillStyle = '#b4b6b7'; g.fillRect(0, 0, 1024, 512)
   const img = g.getImageData(0, 0, 1024, 512)
   for (let i = 0; i < img.data.length; i += 4) { const n = (Math.random() - 0.5) * 9; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n }
   g.putImageData(img, 0, 0)
@@ -851,31 +847,19 @@ function wallAndFloor() {
   tex.repeat.set(6, 3)
   const wallMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, color: '#ffffff' })
   // the side wall of a corner lavabo faces away from the window: a little light of its own
-  const sideMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, color: '#ffffff', emissive: '#56524b', emissiveMap: tex })
+  const sideMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, color: '#ffffff', emissive: '#535657', emissiveMap: tex })
   const wall = new THREE.Mesh(new THREE.PlaneGeometry(16000, 5000), wallMat)
   wall.position.set(0, 300, -1)
   wall.receiveShadow = true
-  const floorMat = new THREE.MeshStandardMaterial({ color: '#5b5752', roughness: 0.8 })
+  const floorMat = new THREE.MeshStandardMaterial({ color: '#585a5c', roughness: 0.8 })
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(16000, 6000), floorMat)
   floor.rotation.x = -Math.PI / 2
   floor.position.set(0, -HEIGHT, 3000)
   floor.receiveShadow = true
   group.add(wall, floor)
 
-  const gc = document.createElement('canvas'); gc.width = gc.height = 128
-  const gg = gc.getContext('2d')
-  const rad = gg.createRadialGradient(64, 64, 2, 64, 64, 64)
-  rad.addColorStop(0, 'rgba(255,255,255,1)'); rad.addColorStop(0.5, 'rgba(255,255,255,.35)'); rad.addColorStop(1, 'rgba(255,255,255,0)')
-  gg.fillStyle = rad; gg.fillRect(0, 0, 128, 128)
-  const glowTex = new THREE.CanvasTexture(gc)
   return {
     group, wallMat, sideMat,
-    setLit: lit => { wallMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.emissiveIntensity = lit ? 0.55 : 0.12; floorMat.color.set(lit ? '#5b5752' : '#2a2826') },
-    glow: w => {
-      // the LED sits in the edge against the wall: its light spreads on the wall above and below
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.12, 640), new THREE.MeshBasicMaterial({ map: glowTex, color: '#000000', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))
-      m.position.set(0, 10, 0)
-      return m
-    },
+    setLit: lit => { wallMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.emissiveIntensity = lit ? 0.55 : 0.12; floorMat.color.set(lit ? '#585a5c' : '#28292a') },
   }
 }
