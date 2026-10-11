@@ -441,8 +441,10 @@ function rimGeometry(form, forms) {
     const pts = forms[form].map(([x, y]) => new THREE.Vector3(x - GW / 2, y - GH / 2, 0))
     add([...pts, pts[0]])
   }
-  // thick enough to stay a continuous line on screen (a thinner tube breaks up into dashes)
-  return new THREE.TubeGeometry(path, Math.min(1400, path.curves.length * 4), 6.5, 6, false)
+  // thick enough to stay a continuous line on screen (a thinner tube breaks up into dashes); the
+  // tube samples the outline evenly along its length, so it needs a sample every few millimetres
+  // or it cuts across the corners
+  return new THREE.TubeGeometry(path, Math.min(2400, Math.ceil(path.getLength() / 5)), 6.5, 6, false)
 }
 
 // ------------------------------------------------------------------ light and room
