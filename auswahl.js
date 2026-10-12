@@ -207,6 +207,7 @@ function focusTitle() { requestAnimationFrame(() => ui.body.querySelector('h2')?
 
 // ------------------------------------------------------------------ result
 
+const MAIL_NAMES = { Automatisch: 'Farbwechsel (alle Farben)' }      // what the shop reads in the e-mail
 const pairs = () => steps().filter(s => state.sel[s.id]).map(s => [s.title, option(s.id, state.sel[s.id]).name])
 
 function photos() {
@@ -217,10 +218,11 @@ function photos() {
 // partial: only the steps already passed (optional steps carry a default before they are seen)
 function mailto(partial = false) {
   const ch = chapterOf(), passed = steps().slice(0, state.at).map(s => s.title)
-  const list = partial ? pairs().filter(([title]) => passed.includes(title)) : pairs()
+  const list = (partial ? pairs().filter(([title]) => passed.includes(title)) : pairs()).map(([k, v]) => [k, MAIL_NAMES[v] ?? v])
   const subject = list.length ? `Anfrage – ${ch.title}: ${list.slice(0, 3).map(p => p[1]).join(', ')}` : `Anfrage – ${ch.title}`
   const chosen = list.length ? `Ich interessiere mich für diese Auswahl (${ch.title}):\n\n${list.map(([k, v]) => `${k}: ${v}`).join('\n')}` : `Ich interessiere mich für: ${ch.title}`
-  const body = `Guten Tag\n\n${chosen}\n\nBitte kontaktieren Sie mich für eine persönliche Beratung.\n\nName:\nTelefon:\nOrt:\nMasse (falls bekannt):\n\nFreundliche Grüsse`
+  const own = list.some(([, v]) => v === 'Ihr Motiv') ? '\n\nMein Motiv (Bild oder Text) sende ich als Anhang mit.' : ''
+  const body = `Guten Tag\n\n${chosen}${own}\n\nBitte kontaktieren Sie mich für eine persönliche Beratung.\n\nName:\nTelefon:\nOrt:\nMasse (falls bekannt):\n\nFreundliche Grüsse`
   return `mailto:${opts.mail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
