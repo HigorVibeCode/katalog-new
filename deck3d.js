@@ -102,25 +102,49 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
     if (!edgeMaps.has(form)) edgeMaps.set(form, texture(`${base}e-${slug(form)}.webp`))
     return edgeMaps.get(form)
   }
+  // Structure and relief are separate maps (scripts/glass-textures.py --split), shared between
+  // the glasses and released when no glass uses them any more.
+  const cache = new Map()
+  const acquire = url => {
+    let e = cache.get(url)
+    if (!e) cache.set(url, e = { n: 0, t: texture(url) })
+    e.n++
+    return e.t
+  }
+  const drop = url => {
+    const e = cache.get(url)
+    if (e && --e.n === 0) { cache.delete(url); e.t.then(t => t.dispose()).catch(() => {}) }
+  }
+  const pixel = rgba => { const t = new THREE.DataTexture(new Uint8Array(rgba), 1, 1); t.needsUpdate = true; return t }
+  const flatNormal = pixel([128, 128, 255, 255]), noRelief = pixel([0, 0, 255, 255])
+  const STRUCTURES = ['arc-sweep', 'lateral-sweep', 'flow-scape', 'rake-fan', 'abstract', 'minimal', 'linear']
+  // a combination's maps: float glass carries only its sandblast design; kiln glass a structure
+  // and, if any, a relief
+  const mapsOf = combo => {
+    if (combo.float) return [null, `${base}s-${combo.maps}.webp`, null, null]
+    const s = combo.s ?? STRUCTURES.find(k => combo.maps.startsWith(k + '-'))
+    const r = combo.r ?? combo.maps.slice(s.length + 1)
+    return [`${base}n-s-${s}.webp`, `${base}s-s-${s}.webp`, r === 'ohne' ? null : `${base}n-r-${r}.webp`, r === 'ohne' ? null : `${base}r-${r}.webp`]
+  }
   const build = async panel => {
     panel.loading = true
-    const key = panel.combo.maps
-    const [normalMap, escape, edges] = await Promise.all([texture(`${base}n-${key}.webp`), texture(`${base}s-${key}.webp`), edgeMap(panel.combo.form)])
-    const face = glass(normalMap, escape, edges, panel.combo.float)
+    const urls = mapsOf(panel.combo)
+    const [normalMap, escape, reliefNormal, relief, edges] = await Promise.all([...urls.map(u => u && acquire(u)), edgeMap(panel.combo.form)])
+    const face = glass(normalMap ?? flatNormal, escape, edges, panel.combo.float, reliefNormal ?? flatNormal, relief ?? noRelief, !relief && !panel.combo.float)
     const geo = geometry(panel.combo.form)
     const side = capped(edge.clone()), rimMat = rimMaterial.clone()
     const mesh = new THREE.Mesh(geo, geo.type === 'BoxGeometry' ? [side, side, side, side, face, face] : [face, side])
     const group = new THREE.Group()
     group.add(mesh, new THREE.Mesh(rim(panel.combo.form), rimMat))
     scene.add(group)
-    Object.assign(panel, { group, face, side, rimMat, maps: [normalMap, escape], loading: false })
+    Object.assign(panel, { group, face, side, rimMat, maps: urls.filter(Boolean), loading: false })
     invalidate()
   }
   const release = panel => {
     if (!panel.group) return
     scene.remove(panel.group)
     panel.face.dispose(); panel.side.dispose(); panel.rimMat.dispose()
-    panel.maps.forEach(t => t.dispose())
+    panel.maps.forEach(drop)
     Object.assign(panel, { group: null, face: null, side: null, rimMat: null, maps: null })
   }
 
@@ -128,7 +152,7 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
   // where the surface tilts (escape map), strongest near the lit edges (edge map).
   // Float glass (isFloat): clear and flat, no kiln texture; the escape map is the sandblasted design,
   // which turns satin, scatters the room light and catches the LED.
-  const glass = (normalMap, escape, edges, isFloat = false) => {
+  const glass = (normalMap, escape, edges, isFloat = false, reliefNormal, relief, bare = false) => {
     const m = new THREE.MeshPhysicalMaterial({
       color: '#ffffff', metalness: 0, roughness: 0.1, transmission: 1, thickness: 90, ior: 1.5,
       attenuationColor: '#d6eee4', attenuationDistance: 1400, specularIntensity: 1, envMapIntensity: 1,
@@ -136,7 +160,8 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
     })
     const own = { crinkleMap: { value: crinkle }, crinkleRepeat: { value: new THREE.Vector2(2.02, 4.04) }, crinkleScale: { value: isFloat ? 0 : 1.7 }, floatGlass: { value: isFloat ? 1 : 0 },
       escapeMap: { value: escape }, edgeMap: { value: edges }, shade: { value: 1 },
-      ledOn: { value: 0 }, roomGlow: { value: 0.42 }, veil: { value: 0 }, dayRelief: { value: 0 } }
+      ledOn: { value: 0 }, roomGlow: { value: 0.42 }, veil: { value: 0 }, dayRelief: { value: 0 },
+      reliefNormal: { value: reliefNormal }, reliefMap: { value: relief }, structGain: { value: bare ? 1.25 : 1 } }
     m.userData.uniforms = own
     m.onBeforeCompile = shader => {
       Object.assign(shader.uniforms, own, shared)
@@ -148,6 +173,7 @@ uniform vec3 ledA; uniform vec3 ledB; uniform float ledOn; uniform float shade; 
 uniform float floatGlass;
 uniform float veil;
 uniform float dayRelief;
+uniform sampler2D reliefNormal; uniform sampler2D reliefMap; uniform float structGain;
 float frostAmt = 0.0;
 float crinkleSpark = 0.0;
 float facing = 0.0;`)
@@ -160,7 +186,14 @@ float facing = 0.0;`)
 	roughnessFactor = mix( roughnessFactor, 0.62, frostAmt );
 	diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.93, 0.96, 0.95 ), frostAmt );`)
         .replace('#include <transmission_fragment>', THREE.ShaderChunk.transmission_fragment.replace('material.transmission = transmission;', 'material.transmission = transmission * ( 1.0 - 0.72 * frostAmt );'))
-        .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('mapN.xy *= normalScale;', `mapN.xy *= normalScale;
+        .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', `vec3 mapN;
+	{
+		vec3 sN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;
+		vec3 rN = texture2D( reliefNormal, vNormalMapUv ).xyz * 2.0 - 1.0;
+		float keep = texture2D( reliefMap, vNormalMapUv ).b;
+		vec2 g = sN.xy / max( sN.z, 0.2 ) * structGain * mix( 0.12, 1.0, keep ) + rN.xy / max( rN.z, 0.2 );
+		mapN = normalize( vec3( g, 1.0 ) );
+	}`).replace('mapN.xy *= normalScale;', `mapN.xy *= normalScale;
 	vec3 detN = texture2D( crinkleMap, vNormalMapUv * crinkleRepeat ).xyz * 2.0 - 1.0;
 	detN.xy *= crinkleScale;
 	crinkleSpark = length( detN.xy );
@@ -171,7 +204,8 @@ float facing = 0.0;`)
 	diffuseColor.rgb *= 1.0 - roomGlow * clamp( - facing * 1.3, 0.0, 0.65 );`))
         .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 	{
-		float esc = texture2D( escapeMap, vNormalMapUv ).r;
+		vec4 rel4 = texture2D( reliefMap, vNormalMapUv );
+		float esc = clamp( texture2D( escapeMap, vNormalMapUv ).r * mix( 0.12, 1.0, rel4.b ) * ( 1.0 - floatGlass ) + texture2D( escapeMap, vNormalMapUv ).r * floatGlass + rel4.r, 0.0, 1.0 );
 		float lit = texture2D( edgeMap, vNormalMapUv ).r;
 		vec3 led = mix( ledA, ledB, vNormalMapUv.x );
 		float spark = smoothstep( 0.12, 0.65, crinkleSpark );
@@ -188,11 +222,11 @@ float facing = 0.0;`)
 		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * frostAmt * shade * ( 0.07 + roomGlow * 0.7 ) * grain;
 		// LED off: the relief (G of the escape map) carries a soft satin sheen of its own, so the
 		// drawing reads a shade lighter than the structure around it
-		float rel = texture2D( escapeMap, vNormalMapUv ).g * ( 1.0 - floatGlass );
+		float rel = rel4.g * ( 1.0 - floatGlass );
 		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * dayRelief * shade * rel * ( 0.045 + 0.11 * clamp( facing + 0.5, 0.0, 1.0 ) );
 	}`)
     }
-    m.customProgramCacheKey = () => 'kiln-glass-7'
+    m.customProgramCacheKey = () => 'kiln-glass-8'
     return capped(m)
   }
 
