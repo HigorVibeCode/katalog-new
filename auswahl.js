@@ -242,6 +242,27 @@ async function show3D(stage) {
 const loseContext = canvas => { try { (canvas.getContext('webgl2') || canvas.getContext('webgl'))?.getExtension('WEBGL_lose_context')?.loseContext() } catch {} }
 function disposePreview() { if (preview) { loseContext(preview); preview.remove(); preview = null } }
 
+// ------------------------------------------------------------------ from a deck example
+
+const slug = s => String(s).toLowerCase().replaceAll('ä', 'ae').replaceAll('ö', 'oe').replaceAll('ü', 'ue')
+  .replaceAll(' · ', '-').replaceAll(' ', '-').replaceAll('ø', 'o')
+const STRUCTURES = ['arc-sweep', 'lateral-sweep', 'flow-scape', 'rake-fan', 'abstract', 'minimal', 'linear']
+
+function fromDeck(chapter, c, light) {
+  const licht = LIGHT_ORDER[light] ?? 'ohne'
+  if (chapter === 'trennwand') {
+    if (c.float) return { form: slug(c.form), glas: c.maps ? 'sand' : 'float', motiv: c.maps?.replace(/^float-/, ''), licht }
+    const s = STRUCTURES.find(k => c.maps.startsWith(k + '-'))
+    return { form: slug(c.form), glas: 'struktur', struktur: s, relief: c.maps.slice(s.length + 1), licht }
+  }
+  if (chapter === 'lavabo') {
+    const v = c.schale
+    const schale = !v ? undefined : v.farbe === 'Klar' ? 'klar' : v.farbe === 'Satiniert' ? 'satiniert' : 'wie-platte'
+    return { modell: slug(c.model), unterseite: slug(c.unterseite), farbe: slug(c.farbe), schale, licht }
+  }
+  return { format: c.format, struktur: c.s || 'float', relief: c.r || 'ohne', akzent: c.r && c.akzent ? slug(c.akzent) : 'ohne', farbe: slug(c.farbe), licht }
+}
+
 // ------------------------------------------------------------------ open / close
 
 export async function open(chapter, options = {}) {
@@ -252,10 +273,16 @@ export async function open(chapter, options = {}) {
   }
   if (!ui) build()
   const keep = state?.chapter === chapter
-  state = { chapter, sel: keep ? state.sel : { ...(options.preset || {}) }, at: 0 }
-  if (options.preset) state.sel = { ...options.preset }
+  state = { chapter, sel: keep ? state.sel : {}, at: 0 }
+  if (options.from) {
+    // from the deck: the example in front becomes the selection and the selector opens on the
+    // result (or on the first step the example does not answer)
+    state.sel = fromDeck(chapter, options.from.combo, options.from.light)
+    settle()
+    const open = steps().findIndex(s => !state.sel[s.id])
+    state.at = open < 0 ? steps().length : open
+  }
   settle()
-  if (options.preset) state.at = steps().length          // a preset from the deck opens on the result
   ui.root.hidden = false
   document.documentElement.classList.add('aw-open')
   requestAnimationFrame(() => ui.root.classList.add('is-open'))
