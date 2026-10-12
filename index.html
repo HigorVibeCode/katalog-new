@@ -191,6 +191,13 @@ a { color: inherit; }
 .hero-index a.is-active i { animation: fill var(--hero-dur) linear forwards; }
 @keyframes fill { to { width: 100%; } }
 .hero.paused .hero-index a.is-active i, .hero.paused .hero-slide.is-active img { animation-play-state: paused; }
+/* wide screens: the cover photos are upright; they keep their proportion as a centred panel over the
+   full height and fade out to the sides, instead of being stretched across the screen */
+@media (min-width: 760px) {
+  .hero-slides { left: 50%; right: auto; width: min(100%, calc(min(100svh, 1000px) * .8)); height: 100%; transform: translateX(-50%); }
+  .hero-slides::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, #0b0f0e, rgba(11,15,14,0) 16%, rgba(11,15,14,0) 84%, #0b0f0e); }
+  .hero-slides::after { background: linear-gradient(180deg, rgba(11,15,14,.45) 0%, rgba(11,15,14,0) 16%, rgba(11,15,14,0) 38%, rgba(11,15,14,.82) 66%, #0b0f0e 92%); }
+}
 @media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } .hero-slide.is-active img { animation: none; } .hero-index a.is-active i { animation: none; width: 100%; } }
 @media (max-height: 700px) { .hero p { display: none; } .hero-index small { display: none; } }
 
