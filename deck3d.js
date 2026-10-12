@@ -136,7 +136,7 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
     })
     const own = { crinkleMap: { value: crinkle }, crinkleRepeat: { value: new THREE.Vector2(2.02, 4.04) }, crinkleScale: { value: isFloat ? 0 : 1.7 }, floatGlass: { value: isFloat ? 1 : 0 },
       escapeMap: { value: escape }, edgeMap: { value: edges }, shade: { value: 1 },
-      ledOn: { value: 0 }, roomGlow: { value: 0.42 }, veil: { value: 0 } }
+      ledOn: { value: 0 }, roomGlow: { value: 0.42 }, veil: { value: 0 }, dayRelief: { value: 0 } }
     m.userData.uniforms = own
     m.onBeforeCompile = shader => {
       Object.assign(shader.uniforms, own, shared)
@@ -147,6 +147,7 @@ uniform sampler2D escapeMap; uniform sampler2D edgeMap;
 uniform vec3 ledA; uniform vec3 ledB; uniform float ledOn; uniform float shade; uniform float roomGlow;
 uniform float floatGlass;
 uniform float veil;
+uniform float dayRelief;
 float frostAmt = 0.0;
 float crinkleSpark = 0.0;
 float facing = 0.0;`)
@@ -185,9 +186,13 @@ float facing = 0.0;`)
 		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * roomGlow * shade * ( ( 0.03 + 0.08 * spark ) * ( 1.0 - floatGlass ) + 0.8 * clamp( facing, 0.0, 1.0 ) + 0.16 * esc * ( 1.0 - floatGlass ) );
 		// sandblasted areas: a soft satin glow, much brighter with the LED
 		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * frostAmt * shade * ( 0.07 + roomGlow * 0.7 ) * grain;
+		// LED off: the relief (G of the escape map) carries a soft satin sheen of its own, so the
+		// drawing reads a shade lighter than the structure around it
+		float rel = texture2D( escapeMap, vNormalMapUv ).g * ( 1.0 - floatGlass );
+		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * dayRelief * shade * rel * ( 0.045 + 0.11 * clamp( facing + 0.5, 0.0, 1.0 ) );
 	}`)
     }
-    m.customProgramCacheKey = () => 'kiln-glass-6'
+    m.customProgramCacheKey = () => 'kiln-glass-7'
     return capped(m)
   }
 
@@ -246,6 +251,7 @@ float facing = 0.0;`)
     panel.side.emissive.copy(ledEnabled ? ledMid : edge.emissive)
     const back = 1 - front
     u.veil.value = back
+    u.dayRelief.value = ledEnabled ? 0 : 0.25 + 0.75 * front
     panel.side.emissiveIntensity = ledEnabled ? 0.12 + 1.3 * f : 0.25 * (1 - 0.8 * back)
     panel.rimMat.color.setScalar(ledEnabled ? 0.06 + 0.94 * f : 1 - 0.8 * back)
     panel.rimMat.opacity = ledEnabled ? 0.3 + 0.3 * f : 0.45 * (1 - 0.6 * back)   // a quiet, even line
