@@ -55,7 +55,51 @@ const FORMAT_ICONS = {
   nische: 'M4 20h56v12H4z', hoch: 'M18 4h28v40H18z', welle: 'M4 20c10-8 18 4 28-2s18-6 28 2v16H4z',
   bogen: 'M4 26h30V14a14 14 0 0 1 26 0v22H4z', schwung: 'M10 6h22c6 0 6 10 14 16s14 6 14 6v12H10z',
 }
+// Glass icons (after the first catalogue): the same plant behind every pane shows what the glass
+// does – float lets it through clear, satin softens it, a structure bends it.
+const GLASS_ICON = {
+  trennwand: { glas: { float: 'klar', sand: 'satiniert', struktur: 'struktur' }, relief: { ohne: 'struktur' } },
+  lavabo: { unterseite: { float: 'klar', minimal: 'minimal', struktur: 'struktur' }, schale: { klar: 'klar', satiniert: 'satiniert', 'wie-platte': 'farbig' } },
+  rueckwand: { relief: { ohne: 'struktur' } },
+}
+let iconN = 0
+const PLANT = `<ellipse cx="81" cy="205" rx="37" ry="5" fill="#000" opacity=".25"/><path d="M50 159C54 172 57 193 62 201Q80 208 98 201C103 189 107 171 110 159Z" fill="#b8805d"/><ellipse cx="80" cy="159" rx="30" ry="7.5" fill="#c99470"/><ellipse cx="80" cy="158" rx="25.5" ry="4.5" fill="#5a4a3c"/><path d="M80 159C83 123 76 96 79 61M79 139C66 121 54 101 44 80M81 129C100 111 113 91 119 76M77 111C66 94 59 74 55 59" stroke="#5f8a56" stroke-width="2.4" stroke-linecap="round" fill="none"/><g fill="#4f8a58"><path d="M80 84C63 78 63 52 78 31C92 44 96 68 80 84Z"/><path d="M70 105C48 101 32 80 31 62C56 63 74 83 70 105Z"/><path d="M88 107C87 83 108 60 131 59C132 81 112 101 88 107Z"/><path d="M75 134C51 137 30 119 23 98C46 94 70 109 75 134Z"/><path d="M85 141C94 120 118 113 140 120C132 141 109 150 85 141Z"/><path d="M57 78C42 69 42 49 48 36C66 42 70 64 57 78Z" fill="#7aa66a"/></g>`
+const STREAKS = 'M-5 50C36 35 37 5 64-7M-9 104C42 83 38 39 92-5M-5 158C43 131 59 102 69 71S107 27 147-2M14 198C38 157 81 145 92 106S120 70 155 43M64 195C76 169 120 153 123 128S143 103 159 95M116 198C128 177 149 171 157 149'
+function glassIcon(kind) {
+  const id = `gi${++iconN}`
+  const filter = {
+    satiniert: `<filter id="${id}"><feGaussianBlur stdDeviation="7"/></filter>`,
+    struktur: `<filter id="${id}" x="-15%" y="-10%" width="130%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".017 .055" numOctaves="1" seed="7"/><feDisplacementMap in="SourceGraphic" scale="16" xChannelSelector="R" yChannelSelector="G"/></filter>`,
+    minimal: `<filter id="${id}" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".03 .08" numOctaves="1" seed="3"/><feDisplacementMap in="SourceGraphic" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>`,
+    farbig: `<filter id="${id}"><feGaussianBlur stdDeviation="2"/></filter>`,
+  }[kind] || ''
+  const pane = {
+    klar: 'rgba(220,245,238,.05)', satiniert: 'rgba(225,238,234,.42)', struktur: 'rgba(220,245,238,.08)',
+    minimal: 'rgba(220,245,238,.06)', farbig: 'rgba(25,168,180,.55)',
+  }[kind]
+  const lines = kind === 'struktur' ? `<path d="${STREAKS}" stroke="rgba(255,255,255,.55)" stroke-width="1.6" fill="none" stroke-linecap="round"/>`
+    : kind === 'minimal' ? `<path d="${STREAKS}" stroke="rgba(255,255,255,.22)" stroke-width="1" fill="none" stroke-linecap="round"/>` : ''
+  return `<svg viewBox="0 0 160 220" preserveAspectRatio="xMidYMid slice"><defs>${filter}<clipPath id="${id}c"><rect x="0" y="0" width="160" height="220"/></clipPath></defs>
+    <rect width="160" height="220" fill="#16201d"/><g transform="translate(8 8) scale(.9)" ${filter ? `filter="url(#${id})"` : ''}>${PLANT}</g>
+    <g clip-path="url(#${id}c)"><rect x="0" y="0" width="160" height="220" fill="${pane}"/>${lines}
+    <path d="M14 0L-20 220M40 0L6 220" stroke="rgba(255,255,255,${kind === 'satiniert' ? '.0' : '.10'})" stroke-width="10"/></g></svg>`
+}
+// light: a pane seen from the front, its edges glowing in the colour (or dark without light)
+function lightIcon(o) {
+  const id = `gl${++iconN}`, off = o.id === 'ohne'
+  const stops = off ? '' : o.id === 'auto' ? '<stop stop-color="#b24dff"/><stop offset=".35" stop-color="#18d8f0"/><stop offset=".7" stop-color="#2fe0a0"/><stop offset="1" stop-color="#ff5fa8"/>'
+    : o.id === 'violett-tuerkis' ? '<stop stop-color="#b24dff"/><stop offset="1" stop-color="#18d8f0"/>' : `<stop stop-color="${o.swatch}"/><stop offset="1" stop-color="${o.swatch}"/>`
+  return `<svg viewBox="0 0 160 100"><defs>${off ? '' : `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0">${stops}</linearGradient><filter id="${id}b" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>`}</defs>
+    <rect width="160" height="100" fill="#0e1513"/>
+    ${off ? '' : `<rect x="44" y="12" width="72" height="76" rx="3" fill="none" stroke="url(#${id})" stroke-width="9" filter="url(#${id}b)" opacity=".9"/>`}
+    <rect x="44" y="12" width="72" height="76" rx="3" fill="rgba(220,245,238,${off ? '.05' : '.08'})" stroke="${off ? 'rgba(255,255,255,.35)' : `url(#${id})`}" stroke-width="${off ? 1.5 : 2.5}"/>
+    ${off ? '<path d="M38 92L122 8" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linecap="round"/>' : ''}</svg>`
+}
+
 function picture(stepId, o) {
+  const icon = GLASS_ICON[state.chapter]?.[stepId]?.[o.id]
+  if (icon) return el('i', { class: 'aw-pic aw-pic--icon', html: glassIcon(icon) })
+  if (stepId === 'licht') return el('i', { class: 'aw-pic aw-pic--icon', html: lightIcon(o) })
   if (o.svg) return el('i', { class: 'aw-pic aw-pic--svg', html: o.svg })
   if (o.sprite) {
     const [name, i] = o.sprite, rows = Math.ceil(sprites[name] / 8)

@@ -532,6 +532,33 @@ html.aw-open .cta-bar { visibility: hidden; }
 
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 @media (prefers-reduced-motion: reduce) { .chapterbar, #chapterbar, .cb-steps a { transition: none; } }
+
+/* Palette: the dark rooms stay neutral (the glass and its light read best on them); the brand green
+   marks every action and the current step, and the page closes in a deep brand green. */
+:root { --brand: #0a9a4b; --brand-hover: #0cb058; --brand-hi: #33d17e; --brand-deep: #0b1f18; --brand-deeper: #08170f; }
+.cta, .gestalten, .aw-next, .aw-send { background: var(--brand); color: #fff; }
+.cta:hover, .gestalten:hover, .aw-next:not(:disabled):hover, .aw-send:hover { background: var(--brand-hover); }
+.cb-steps a[aria-current="true"] { background: var(--brand-hi); }
+.aw-bar i.now { background: var(--brand-hi); }
+.aw-bar i.done { background: color-mix(in srgb, var(--brand-hi) 55%, transparent); }
+.aw-tabs button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.aw-opt.is-on { border-color: var(--brand-hi); box-shadow: inset 0 0 0 1px var(--brand-hi); background: #17251f; }
+.aw-opt.is-on::after { background: var(--brand-hi); color: #06120c; }
+.aw-chips button.is-here { border-color: var(--brand-hi); }
+.deck-choose:hover { border-color: var(--brand-hi); }
+.aw-pic--icon { overflow: hidden; }
+.aw-pic--icon svg { display: block; width: 100%; height: 100%; }
+.aw-grid--glas, .aw-grid--unterseite, .aw-grid--schale { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.aw-grid--glas .aw-opt b, .aw-grid--unterseite .aw-opt b, .aw-grid--schale .aw-opt b { font-size: 13.5px; hyphens: auto; -webkit-hyphens: auto; }
+@media (min-width: 760px) { .aw-grid--glas .aw-opt b, .aw-grid--unterseite .aw-opt b, .aw-grid--schale .aw-opt b { font-size: 15px; } }
+.aw-grid--glas .aw-pic, .aw-grid--unterseite .aw-pic, .aw-grid--schale .aw-pic { aspect-ratio: 3 / 4; }
+@media (min-width: 760px) { .aw-grid--glas .aw-pic, .aw-grid--unterseite .aw-pic, .aw-grid--schale .aw-pic { aspect-ratio: 1; } }
+/* the close of the page: Beratung and footer in the deep brand green */
+.contact { --fg: #e8f0eb; --muted: #9bbaac; --line: #1f3c30; --accent: #33d17e; background: var(--brand-deep); color: var(--fg); border-top-color: var(--line); }
+.contact a { color: #fff; text-decoration-color: color-mix(in srgb, var(--brand-hi) 70%, transparent); text-underline-offset: 4px; }
+.contact .label { color: var(--brand-hi); }
+.footer { --muted: #86a698; background: var(--brand-deeper); }
+.chapterbar[data-chapter="kontakt"] { --cb-bg: var(--brand-deep); --cb-fg: #e8f0eb; --cb-line: #1f3c30; }
 </style>
 
 <section class="hero stack" id="start" aria-labelledby="cover-title">
