@@ -9,7 +9,7 @@
 .intro-stage { position: relative; z-index: 1; display: grid; justify-items: center; gap: clamp(18px, 3vh, 30px); width: min(74vw, 420px); }
 .intro-logo { position: relative; display: block; width: 100%; height: auto; overflow: visible; }
 .intro-pool { position: absolute; left: 12%; right: 12%; top: 64%; height: 22%; background: radial-gradient(closest-side, rgba(90, 170, 220, .22), rgba(150, 90, 255, .08) 55%, transparent); filter: blur(6px); opacity: 0; animation: intro-fade 1.6s ease 1.7s forwards; pointer-events: none; }
-.intro-tagline { margin: 0; font: 500 11px/1 var(--text, sans-serif); letter-spacing: .34em; text-transform: uppercase; color: rgba(255, 255, 255, .62); opacity: 0; animation: intro-rise .9s cubic-bezier(.2, .7, .2, 1) 2.45s forwards; white-space: nowrap; }
+.intro-tagline { margin: 0; font: 500 11px/1 var(--text, sans-serif); letter-spacing: .34em; text-transform: uppercase; color: rgba(255, 255, 255, .62); opacity: 0; animation: intro-rise .9s cubic-bezier(.2, .7, .2, 1) 2.45s forwards; text-align: center; line-height: 1.7; text-wrap: balance; }
 .intro-foot { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 var(--edge, 20px) max(22px, env(safe-area-inset-bottom)); font: 500 10.5px/1 var(--text, sans-serif); letter-spacing: .22em; text-transform: uppercase; color: rgba(255, 255, 255, .42); opacity: 0; animation: intro-fade .8s ease .5s forwards; }
 .intro-skip { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0; border: 0; background: none; color: rgba(255, 255, 255, .7); font: inherit; letter-spacing: .14em; cursor: pointer; }
 .intro-skip:focus-visible { outline: 1px solid rgba(255, 255, 255, .7); outline-offset: 4px; }
@@ -101,6 +101,7 @@ html.intro-out .hero { transition: transform .95s cubic-bezier(.7, 0, .2, 1), fi
 })()
 </script>
 
+<script src="i18n.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Manrope:wght@400;500;600&display=swap">
@@ -568,6 +569,26 @@ html.aw-open .cta-bar { visibility: hidden; }
 .contact .label { color: var(--brand-hi); }
 .footer { --muted: #86a698; background: var(--brand-deeper); }
 .chapterbar[data-chapter="kontakt"] { --cb-bg: var(--brand-deep); --cb-fg: #e8f0eb; --cb-line: #1f3c30; }
+/* Languages: a small globe at the top of the cover, and the full list in the footer */
+html.i18n-wait body { opacity: 0; }
+body { transition: opacity .2s ease; }
+.hero-meta { display: flex; align-items: center; gap: 14px; }
+.lang { position: relative; }
+.lang summary { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 11px; border: 1px solid rgba(255,255,255,.32); border-radius: 999px; background: rgba(10,14,13,.28); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #fff; font-size: 11.5px; font-weight: 500; letter-spacing: .1em; cursor: pointer; list-style: none; }
+.lang summary::-webkit-details-marker { display: none; }
+.lang summary:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 2px; }
+.lang[open] summary { border-color: var(--brand-hi); }
+.lang-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; display: grid; min-width: 176px; padding: 6px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; background: rgba(12,18,16,.94); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+.lang-menu button { display: flex; align-items: center; gap: 12px; min-height: 42px; padding: 0 12px; border: 0; border-radius: 9px; background: none; color: rgba(255,255,255,.86); font: inherit; font-size: 14.5px; text-align: left; cursor: pointer; }
+.lang-menu button b { width: 22px; font-size: 11px; font-weight: 500; letter-spacing: .1em; color: rgba(255,255,255,.5); }
+.lang-menu button:hover { background: rgba(255,255,255,.07); }
+.lang-menu button[aria-current="true"] { color: #fff; background: color-mix(in srgb, var(--brand) 28%, transparent); }
+.lang-menu button[aria-current="true"] b { color: var(--brand-hi); }
+.lang-row { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 12px; }
+.lang-row button { min-height: 32px; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+.lang-row button:hover, .lang-row button[aria-current="true"] { color: #fff; }
+.lang-row button[aria-current="true"] { text-decoration: underline; text-decoration-color: var(--brand-hi); text-underline-offset: 4px; }
+@media (max-width: 380px) { .hero-edition { display: none; } }
 </style>
 
 <section class="hero stack" id="start" aria-labelledby="cover-title">
@@ -578,7 +599,7 @@ html.aw-open .cta-bar { visibility: hidden; }
   </div>
   <div class="hero-top">
     <img class="brand-logo" src="media/buechler-glas-light.svg" alt="Büchler Glas" width="168" height="22">
-    <span class="hero-edition">Katalog 2026</span>
+    <div class="hero-meta"><span class="hero-edition">Katalog 2026</span><details class="lang"><summary aria-label="Sprache"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.3" stroke="currentColor" stroke-width="1.1"/><path d="M1.8 8h12.4M8 1.7c-3.6 3.6-3.6 9 0 12.6M8 1.7c3.6 3.6 3.6 9 0 12.6" stroke="currentColor" stroke-width="1.1"/></svg><span class="lang-now" data-no-i18n>DE</span></summary><div class="lang-menu" data-no-i18n><button type="button" data-lang-pick="de" lang="de" aria-current="true"><b>DE</b>Deutsch</button><button type="button" data-lang-pick="en" lang="en" aria-current="false"><b>EN</b>English</button><button type="button" data-lang-pick="fr" lang="fr" aria-current="false"><b>FR</b>Français</button><button type="button" data-lang-pick="it" lang="it" aria-current="false"><b>IT</b>Italiano</button><button type="button" data-lang-pick="es" lang="es" aria-current="false"><b>ES</b>Español</button><button type="button" data-lang-pick="pt" lang="pt" aria-current="false"><b>PT</b>Português</button></div></details></div>
   </div>
   <div class="hero-body">
     <span class="label">Glas für Bad und Küche</span>
@@ -907,7 +928,7 @@ html.aw-open .cta-bar { visibility: hidden; }
   </div>
 </dialog>
 
-<footer class="footer"><div class="wrap"><span>© 2026 Büchler Glas AG</span><span>Originalfotos zeigen realisierte Projekte. Visualisierungen sind als solche gekennzeichnet.</span><span>Entwurf</span></div></footer>
+<footer class="footer"><div class="wrap"><span>© 2026 Büchler Glas AG</span><span>Originalfotos zeigen realisierte Projekte. Visualisierungen sind als solche gekennzeichnet.</span><span>Entwurf</span><nav class="lang-row" aria-label="Sprache"><button type="button" data-no-i18n data-lang-pick="de" lang="de" aria-current="true">Deutsch</button><button type="button" data-no-i18n data-lang-pick="en" lang="en" aria-current="false">English</button><button type="button" data-no-i18n data-lang-pick="fr" lang="fr" aria-current="false">Français</button><button type="button" data-no-i18n data-lang-pick="it" lang="it" aria-current="false">Italiano</button><button type="button" data-no-i18n data-lang-pick="es" lang="es" aria-current="false">Español</button><button type="button" data-no-i18n data-lang-pick="pt" lang="pt" aria-current="false">Português</button></nav></div></footer>
 
 <script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <script>
@@ -1246,7 +1267,7 @@ html.aw-open .cta-bar { visibility: hidden; }
   })
   ctaMail.addEventListener('click', () => {
     if (!ctaMail.dataset.mail) return
-    const subject = `Anfrage – ${subjects[bar.dataset.chapter] ?? 'Glas für Bad und Küche'}`
+    const subject = I18N.T('Anfrage – {x}', { x: I18N.T(subjects[bar.dataset.chapter] ?? 'Glas für Bad und Küche') })
     ctaMail.href = `mailto:${ctaMail.dataset.mail}?subject=${encodeURIComponent(subject)}`
   })
 

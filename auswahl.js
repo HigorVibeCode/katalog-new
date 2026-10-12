@@ -8,6 +8,10 @@ const LIGHT_ORDER = ['auto', 'violett-tuerkis', 'tuerkis', 'warmweiss', 'ohne'] 
 const NUMBERS = { trennwand: '01', lavabo: '02', rueckwand: '03' }
 
 let data = null, ui = null, state = null, opts = {}, preview = null, sprites = {}
+// texts in the reader's language (i18n.js); the page translates what is shown, the e-mail is built here
+const T = (s, vars) => window.I18N ? window.I18N.T(s, vars) : vars ? s.replace(/\{(\w)\}/g, (m, n) => vars[n] ?? m) : s
+const lang = () => window.I18N?.lang ?? 'de'
+addEventListener('langchange', () => { if (ui && !ui.root.hidden) render() })
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag)
@@ -218,9 +222,12 @@ function photos() {
 function mailto(partial = false) {
   const ch = chapterOf(), passed = steps().slice(0, state.at).map(s => s.title)
   const list = partial ? pairs().filter(([title]) => passed.includes(title)) : pairs()
-  const subject = list.length ? `Anfrage – ${ch.title}: ${list.slice(0, 3).map(p => p[1]).join(', ')}` : `Anfrage – ${ch.title}`
-  const chosen = list.length ? `Ich interessiere mich für diese Auswahl (${ch.title}):\n\n${list.map(([k, v]) => `${k}: ${v}`).join('\n')}` : `Ich interessiere mich für: ${ch.title}`
-  const body = `Guten Tag\n\n${chosen}\n\nBitte kontaktieren Sie mich für eine persönliche Beratung.\n\nName:\nTelefon:\nOrt:\nMasse (falls bekannt):\n\nFreundliche Grüsse`
+  const title = T(ch.title), lines = list.map(([k, v]) => `${T(k)}: ${T(v)}`).join('\n')
+  const subject = list.length ? T('Anfrage – {x}: {y}', { x: title, y: list.slice(0, 3).map(p => T(p[1])).join(', ') }) : T('Anfrage – {x}', { x: title })
+  const chosen = list.length ? `${T('Ich interessiere mich für diese Auswahl ({x}):', { x: title })}\n\n${lines}` : T('Ich interessiere mich für: {x}', { x: title })
+  // in another language the shop also gets the selection in German, as it names the glass
+  const german = list.length && lang() !== 'de' ? `\n\n\n— ${T('Auswahl auf Deutsch')} —\n${ch.title}\n${list.map(([k, v]) => `${k}: ${v}`).join('\n')}` : ''
+  const body = `${T('Guten Tag')}\n\n${chosen}\n\n${T('Bitte kontaktieren Sie mich für eine persönliche Beratung.')}\n\n${T('Name:')}\n${T('Telefon:')}\n${T('Ort:')}\n${T('Masse (falls bekannt):')}\n\n${T('Freundliche Grüsse')}${german}`
   return `mailto:${opts.mail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
