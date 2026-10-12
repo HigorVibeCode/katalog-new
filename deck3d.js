@@ -116,12 +116,12 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
     if (e && --e.n === 0) { cache.delete(url); e.t.then(t => t.dispose()).catch(() => {}) }
   }
   const pixel = rgba => { const t = new THREE.DataTexture(new Uint8Array(rgba), 1, 1); t.needsUpdate = true; return t }
-  const flatNormal = pixel([128, 128, 255, 255]), noRelief = pixel([0, 0, 255, 255])
+  const flatNormal = pixel([128, 128, 255, 255]), noRelief = pixel([0, 0, 255, 255]), noEscape = pixel([0, 0, 0, 255])
   const STRUCTURES = ['arc-sweep', 'lateral-sweep', 'flow-scape', 'rake-fan', 'abstract', 'minimal', 'linear']
   // a combination's maps: float glass carries only its sandblast design; kiln glass a structure
   // and, if any, a relief
   const mapsOf = combo => {
-    if (combo.float) return [null, `${base}s-${combo.maps}.webp`, null, null]
+    if (combo.float) return [null, combo.maps ? `${base}s-${combo.maps}.webp` : null, null, null]   // clear float: no design
     const s = combo.s ?? STRUCTURES.find(k => combo.maps.startsWith(k + '-'))
     const r = combo.r ?? combo.maps.slice(s.length + 1)
     return [`${base}n-s-${s}.webp`, `${base}s-s-${s}.webp`, r === 'ohne' ? null : `${base}n-r-${r}.webp`, r === 'ohne' ? null : `${base}r-${r}.webp`]
@@ -130,7 +130,7 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
     panel.loading = true
     const urls = mapsOf(panel.combo)
     const [normalMap, escape, reliefNormal, relief, edges] = await Promise.all([...urls.map(u => u && acquire(u)), edgeMap(panel.combo.form)])
-    const face = glass(normalMap ?? flatNormal, escape, edges, panel.combo.float, reliefNormal ?? flatNormal, relief ?? noRelief, !relief && !panel.combo.float)
+    const face = glass(normalMap ?? flatNormal, escape ?? noEscape, edges, panel.combo.float, reliefNormal ?? flatNormal, relief ?? noRelief, !relief && !panel.combo.float)
     const geo = geometry(panel.combo.form)
     const side = capped(edge.clone()), rimMat = rimMaterial.clone()
     const mesh = new THREE.Mesh(geo, geo.type === 'BoxGeometry' ? [side, side, side, side, face, face] : [face, side])

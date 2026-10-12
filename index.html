@@ -431,6 +431,94 @@ a { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) { .cta-bar, .cta { transition: none; } }
 
+
+/* Chapter end: the selector (main action) beside the technical data. */
+.tech-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.tech-actions .tech-open { justify-self: auto; }
+.gestalten { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 22px; border: 0; border-radius: 999px; background: #fff; color: #11171a; font: 600 15px/1 var(--text); cursor: pointer; transition: transform .25s, box-shadow .25s; }
+.gestalten:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+
+/* „Ihr Glas gestalten“: a page rising over the catalogue (auswahl.js). */
+html.aw-open, html.aw-open body { overflow: hidden; }
+html.aw-open .cta-bar { visibility: hidden; }
+.aw { position: fixed; inset: 0; z-index: 90; display: flex; align-items: flex-end; background: rgba(0, 0, 0, 0); transition: background .45s; }
+.aw.is-open { background: rgba(0, 0, 0, .55); }
+.aw[hidden] { display: none; }
+.aw-sheet { display: flex; flex-direction: column; width: 100%; height: calc(100svh - 8px); max-width: 1040px; margin: 0 auto; overflow: hidden; border-radius: 22px 22px 0 0; background: #0d1211; color: var(--room2-fg); transform: translateY(102%); transition: transform .5s cubic-bezier(.2, .8, .2, 1); box-shadow: 0 -20px 60px rgba(0, 0, 0, .5); }
+.aw.is-open .aw-sheet { transform: none; }
+.aw-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--gutter) 10px; }
+.aw-head > div { display: grid; gap: 3px; min-width: 0; }
+.aw-where { font: 600 14px/1.2 var(--display); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aw-count { font-size: 12px; color: var(--room2-muted); }
+.aw-close { flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--room2-panel); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; }
+.aw-bar { display: flex; gap: 4px; padding: 0 var(--gutter) 10px; }
+.aw-bar i { flex: 1; height: 3px; border-radius: 2px; background: var(--room2-line); transition: background .3s; }
+.aw-bar i.done { background: rgba(255, 255, 255, .55); }
+.aw-bar i.now { background: #fff; }
+.aw-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px var(--gutter) 28px; }
+.aw-body h2 { font-size: clamp(26px, 6.4vw, 36px); line-height: 1.08; outline: none; }
+.aw-lead { margin: 8px 0 18px; max-width: 40em; color: var(--room2-muted); font-size: 15px; }
+.aw-tabs { display: flex; gap: 6px; margin: -4px 0 14px; overflow-x: auto; scrollbar-width: none; }
+.aw-tabs button { flex: none; min-height: 34px; padding: 0 14px; border: 1px solid var(--room2-line); border-radius: 999px; background: none; color: var(--room2-fg); font: 500 13px/1 var(--text); cursor: pointer; }
+.aw-tabs button[aria-pressed="true"] { background: #fff; border-color: #fff; color: #11171a; }
+.aw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 8px; }
+.aw-grid--farbe, .aw-grid--akzent, .aw-grid--licht { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+.aw-grid--glas, .aw-grid--unterseite, .aw-grid--schale, .aw-grid--format { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.aw-opt { position: relative; display: grid; align-content: start; gap: 4px; min-height: 64px; padding: 10px; border: 1px solid var(--room2-line); border-radius: 12px; background: var(--room2-panel); color: var(--room2-fg); text-align: left; font: inherit; cursor: pointer; transition: border-color .2s, background .2s, transform .2s; }
+.aw-opt:hover { border-color: rgba(255, 255, 255, .35); }
+.aw-opt.is-on { border-color: #fff; background: #222b29; box-shadow: inset 0 0 0 1px #fff; }
+.aw-opt.is-on::after { content: '✓'; position: absolute; top: 8px; right: 9px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #fff; color: #11171a; font-size: 13px; font-weight: 700; }
+.aw-opt b { font: 500 14.5px/1.2 var(--display); }
+.aw-opt small { font-size: 12px; line-height: 1.35; color: var(--room2-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.aw-opt--text { padding: 14px; min-height: 96px; }
+.aw-opt--text b { font-size: 17px; }
+.aw-pic { display: block; width: 100%; aspect-ratio: 1; margin-bottom: 4px; border-radius: 8px; background: #0b0f0e; color: #d8ebe4; }
+.aw-pic--svg { display: grid; place-items: center; padding: 10%; }
+.aw-pic--svg svg { width: 100%; height: 100%; }
+.aw-grid--modell .aw-pic, .aw-grid--format .aw-pic { aspect-ratio: 16 / 9; }
+.aw-grid--modell .aw-pic--svg { padding: 6%; }
+.aw-pic--img { background-repeat: no-repeat; }
+.aw-grid--farbe .aw-pic, .aw-grid--akzent .aw-pic, .aw-grid--licht .aw-pic { aspect-ratio: 1.6; }
+.aw-pic--swatch { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.aw-foot { border-top: 1px solid var(--room2-line); padding: 10px var(--gutter) max(12px, env(safe-area-inset-bottom)); display: grid; gap: 10px; background: #0d1211; }
+.aw-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.aw-chips:empty { display: none; }
+.aw-chips button { flex: none; display: grid; gap: 1px; padding: 6px 12px; border: 1px solid var(--room2-line); border-radius: 10px; background: none; color: var(--room2-fg); font: 500 13px/1.2 var(--text); text-align: left; cursor: pointer; }
+.aw-chips button small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--room2-muted); }
+.aw-chips button.is-here { border-color: #fff; }
+.aw-nav { display: flex; justify-content: space-between; gap: 10px; }
+.aw-back, .aw-next { min-height: 46px; padding: 0 20px; border-radius: 999px; font: 600 15px/1 var(--text); cursor: pointer; }
+.aw-back { border: 1px solid var(--room2-line); background: none; color: var(--room2-fg); }
+.aw-next { margin-left: auto; border: 0; background: #fff; color: #11171a; }
+.aw-next:disabled { opacity: .35; cursor: default; }
+.aw-back[hidden], .aw-next[hidden] { display: none; }
+.aw-result { display: grid; gap: 14px; }
+.aw-result .aw-lead { margin: 0; }
+.aw-stage { position: relative; overflow: hidden; border-radius: 14px; background: #0b100f; height: min(62svh, 560px); touch-action: pan-y; }
+.aw-stage--rueckwand, .aw-stage--lavabo { height: min(48svh, 440px); }
+.aw-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.aw-stage.is-loading::after { content: 'Wird geladen …'; position: absolute; inset: 0; display: grid; place-items: center; color: var(--room2-muted); font-size: 13px; }
+.aw-list { display: grid; margin: 0; }
+.aw-list div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--room2-line); }
+.aw-list dt { color: var(--room2-muted); font-size: 14px; }
+.aw-list dd { margin: 0; }
+.aw-list dd button { padding: 0; border: 0; background: none; color: var(--room2-fg); font: 500 15px/1.3 var(--text); text-align: right; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .25); text-underline-offset: 4px; }
+.aw-result h3 { margin-top: 10px; font-size: 20px; }
+.aw-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.aw-photos li { display: grid; gap: 6px; }
+.aw-photos button { display: block; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #0b0f0e; cursor: zoom-in; }
+.aw-photos img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.aw-photos span { display: grid; gap: 2px; font-size: 13px; line-height: 1.3; }
+.aw-photos small { font-size: 11.5px; color: var(--room2-muted); }
+.aw-empty { margin: 0; padding: 16px; border-radius: 12px; background: var(--room2-panel); color: var(--room2-muted); font-size: 14.5px; }
+.aw-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.aw-send { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.aw-send[hidden], .aw-chips[hidden] { display: none; }
+.aw-again { min-height: 50px; padding: 0 20px; border: 1px solid var(--room2-line); border-radius: 999px; background: none; color: var(--room2-fg); font: 500 15px/1 var(--text); cursor: pointer; }
+.aw-note { margin: 0; font-size: 12px; color: var(--room2-muted); }
+@media (min-width: 760px) { .aw-sheet { height: calc(100svh - 32px); border-radius: 22px 22px 0 0; } .aw-result { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .aw, .aw-sheet { transition: none; } }
+
 /* Contact. */
 .contact { display: grid; gap: 12px; padding-block: var(--space) calc(var(--space) * .8); background: var(--surface); border-top: 1px solid var(--line); }
 .contact h2 { font-size: clamp(32px, 8vw, 56px); line-height: 1.02; }
@@ -546,7 +634,7 @@ a { color: inherit; }
       <div class="part tech" data-part="Gut zu wissen">
         <div class="row-head"><h3>Gut zu wissen</h3></div>
         <ul class="facts"><li><strong>8–12 mm</strong><span>Glasstärke</span></li><li><strong>3000 × 2000 mm</strong><span>maximal pro Glas</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Form, Struktur, Farbe, Relief</span></li></ul>
-        <button class="tech-open" type="button" data-sheet="tech-trennwand">Technische Daten <span aria-hidden="true">↑</span></button>
+        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="trennwand">Ihr Glas gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-trennwand">Technische Daten <span aria-hidden="true">↑</span></button></div>
       </div>
     </div>
   </section>
@@ -638,7 +726,7 @@ a { color: inherit; }
       <div class="part tech" data-part="Gut zu wissen">
         <div class="row-head"><h3>Gut zu wissen</h3></div>
         <ul class="facts"><li><strong>19 mm</strong><span>Glasstärke</span></li><li><strong>2100 × 700 mm</strong><span>maximal pro Lavabo</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Umriss, Unterseite, Farbe</span></li></ul>
-        <button class="tech-open" type="button" data-sheet="tech-lavabo">Technische Daten <span aria-hidden="true">↑</span></button>
+        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="lavabo">Ihr Glas gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-lavabo">Technische Daten <span aria-hidden="true">↑</span></button></div>
       </div>
     </div>
   </section>
@@ -725,7 +813,7 @@ a { color: inherit; }
       <div class="part tech" data-part="Gut zu wissen">
         <div class="row-head"><h3>Gut zu wissen</h3></div>
         <ul class="facts"><li><strong>6–8 mm</strong><span>Glasstärke</span></li><li><strong>3000 × 2000 mm</strong><span>maximal pro Glas</span></li><li><strong>LED</strong><span>von oben, unter den Schränken</span></li><li><strong>Frei</strong><span>Struktur, Relief, Farbe</span></li></ul>
-        <button class="tech-open" type="button" data-sheet="tech-rueckwand">Technische Daten <span aria-hidden="true">↑</span></button>
+        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="rueckwand">Ihr Glas gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-rueckwand">Technische Daten <span aria-hidden="true">↑</span></button></div>
       </div>
     </div>
   </section>
@@ -871,6 +959,12 @@ a { color: inherit; }
       const blob = await (await fetch(link.href)).blob()
       await viewerDownloads.save({ filename: link.getAttribute('download'), data: blob })
     } catch (error) { if (!['declined', 'rate_limited'].includes(error?.code)) window.open(link.href, '_blank') }
+  }))
+
+  /* „Ihr Glas gestalten“: the selector of the chapter (auswahl.js, loaded on first use). */
+  document.querySelectorAll('[data-auswahl]').forEach(button => button.addEventListener('click', async () => {
+    const selector = await import('./auswahl.js')
+    selector.open(button.dataset.auswahl, { mail: document.getElementById('cta')?.dataset.mail, lightbox: lbOpen, reduced, returnFocus: button })
   }))
 
   /* Technical sheets: open from the chapter, close by button, backdrop tap or Escape. */
@@ -1088,7 +1182,7 @@ a { color: inherit; }
      (data-mail), otherwise a jump to the Beratung. */
   const ctaBar = document.getElementById('cta-bar'), cta = document.getElementById('cta')
   const contact = document.getElementById('kontakt')
-  const controls = [...document.querySelectorAll('.ba-switch, .deck-tag, .deck-arrow, .tech-open, .mosaic-all')]
+  const controls = [...document.querySelectorAll('.ba-switch, .deck-tag, .deck-arrow, .tech-actions, .mosaic-all')]
   const subjects = { trennwand: 'Trennwand', lavabo: 'Lavabo', rueckwand: 'Rückwand' }
   let ctaShown = null
   cta.addEventListener('click', () => {
