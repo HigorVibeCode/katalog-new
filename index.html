@@ -424,11 +424,17 @@ a { color: inherit; }
    It comes in once the cover is gone and steps aside when the Beratung is on screen. */
 .cta-bar { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; padding: 7px var(--gutter) max(7px, env(safe-area-inset-bottom)); background: rgba(12, 16, 15, .94); border-top: 1px solid rgba(255, 255, 255, .08); transform: translateY(110%); transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
 .cta-bar.is-on { transform: none; }
-.cta { display: flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 20px; border-radius: 999px; background: #fff; color: #1c2622; font: 600 14px/1 var(--text); text-decoration: none; }
+.cta-bar { display: flex; gap: 8px; }
+.cta { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 20px; border: 0; border-radius: 999px; background: #fff; color: #1c2622; font: 600 14.5px/1 var(--text); text-decoration: none; cursor: pointer; }
+.cta-mail { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, .28); border-radius: 50%; background: rgba(12, 16, 15, .6); color: #fff; transition: border-color .25s, background .25s; }
+.cta-mail:hover { border-color: var(--brand-hi); }
+.cta-mail:focus-visible { outline: 2px solid #8fd6bd; outline-offset: 3px; }
 .cta:focus-visible { outline: 2px solid #8fd6bd; outline-offset: 3px; }
 @media (min-width: 760px) {
   .cta-bar { left: auto; right: 24px; bottom: 24px; padding: 0; background: none; border: 0; transform: translateY(calc(100% + 40px)); }
-  .cta { box-shadow: 0 10px 30px rgba(0, 0, 0, .35); transition: transform .25s; }
+  .cta { flex: none; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); transition: transform .25s, background .25s; }
+  .cta-mail { width: 44px; height: 44px; background: rgba(12, 16, 15, .75); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .cta { min-height: 44px; }
   .cta:hover { transform: translateY(-2px); }
 }
 @media (prefers-reduced-motion: reduce) { .cta-bar, .cta { transition: none; } }
@@ -465,7 +471,8 @@ html.aw-open .cta-bar { visibility: hidden; }
 .aw-tabs button[aria-pressed="true"] { background: #fff; border-color: #fff; color: #11171a; }
 .aw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 8px; }
 .aw-grid--farbe, .aw-grid--akzent, .aw-grid--licht { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
-.aw-grid--glas, .aw-grid--unterseite, .aw-grid--schale, .aw-grid--format { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.aw-grid--glas, .aw-grid--unterseite, .aw-grid--schale { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.aw-grid--format { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .aw-opt { position: relative; display: grid; align-content: start; gap: 4px; min-height: 64px; padding: 10px; border: 1px solid var(--room2-line); border-radius: 12px; background: var(--room2-panel); color: var(--room2-fg); text-align: left; font: inherit; cursor: pointer; transition: border-color .2s, background .2s, transform .2s; }
 .aw-opt:hover { border-color: rgba(255, 255, 255, .35); }
 .aw-opt.is-on { border-color: #fff; background: #222b29; box-shadow: inset 0 0 0 1px #fff; }
@@ -518,6 +525,8 @@ html.aw-open .cta-bar { visibility: hidden; }
 .aw-send[hidden], .aw-chips[hidden] { display: none; }
 .aw-again { min-height: 50px; padding: 0 20px; border: 1px solid var(--room2-line); border-radius: 999px; background: none; color: var(--room2-fg); font: 500 15px/1 var(--text); cursor: pointer; }
 .aw-note { margin: 0; font-size: 12px; color: var(--room2-muted); }
+.aw-direct { margin: 22px 0 0; font-size: 13.5px; color: var(--room2-muted); }
+.aw-direct a { color: var(--room2-fg); text-decoration-color: var(--brand-hi); text-underline-offset: 4px; }
 @media (min-width: 760px) { .aw-sheet { height: calc(100svh - 32px); border-radius: 22px 22px 0 0; } .aw-result { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .aw, .aw-sheet { transition: none; } }
 
@@ -664,7 +673,7 @@ html.aw-open .cta-bar { visibility: hidden; }
       <div class="part tech" data-part="Gut zu wissen">
         <div class="row-head"><h3>Gut zu wissen</h3></div>
         <ul class="facts"><li><strong>8–12 mm</strong><span>Glasstärke</span></li><li><strong>3000 × 2000 mm</strong><span>maximal pro Glas</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Form, Struktur, Farbe, Relief</span></li></ul>
-        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="trennwand">Ihr Glas gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-trennwand">Technische Daten <span aria-hidden="true">↑</span></button></div>
+        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="trennwand">Trennwand gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-trennwand">Technische Daten <span aria-hidden="true">↑</span></button></div>
       </div>
     </div>
   </section>
@@ -757,7 +766,7 @@ html.aw-open .cta-bar { visibility: hidden; }
       <div class="part tech" data-part="Gut zu wissen">
         <div class="row-head"><h3>Gut zu wissen</h3></div>
         <ul class="facts"><li><strong>19 mm</strong><span>Glasstärke</span></li><li><strong>2100 × 700 mm</strong><span>maximal pro Lavabo</span></li><li><strong>LED</strong><span>mit oder ohne</span></li><li><strong>Frei</strong><span>Umriss, Unterseite, Farbe</span></li></ul>
-        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="lavabo">Ihr Glas gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-lavabo">Technische Daten <span aria-hidden="true">↑</span></button></div>
+        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="lavabo">Lavabo gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-lavabo">Technische Daten <span aria-hidden="true">↑</span></button></div>
       </div>
     </div>
   </section>
@@ -845,7 +854,7 @@ html.aw-open .cta-bar { visibility: hidden; }
       <div class="part tech" data-part="Gut zu wissen">
         <div class="row-head"><h3>Gut zu wissen</h3></div>
         <ul class="facts"><li><strong>6–8 mm</strong><span>Glasstärke</span></li><li><strong>3000 × 2000 mm</strong><span>maximal pro Glas</span></li><li><strong>LED</strong><span>von oben, unter den Schränken</span></li><li><strong>Frei</strong><span>Struktur, Relief, Farbe</span></li></ul>
-        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="rueckwand">Ihr Glas gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-rueckwand">Technische Daten <span aria-hidden="true">↑</span></button></div>
+        <div class="tech-actions"><button class="gestalten" type="button" data-auswahl="rueckwand">Rückwand gestalten <span aria-hidden="true">→</span></button><button class="tech-open" type="button" data-sheet="tech-rueckwand">Technische Daten <span aria-hidden="true">↑</span></button></div>
       </div>
     </div>
   </section>
@@ -864,7 +873,7 @@ html.aw-open .cta-bar { visibility: hidden; }
   </section>
 </main>
 
-<div class="cta-bar" id="cta-bar" aria-hidden="true"><a class="cta" id="cta" href="mailto:info@buechlerglas.ch?subject=Anfrage" data-mail="info@buechlerglas.ch" tabindex="-1">Beratung anfragen</a></div>
+<div class="cta-bar" id="cta-bar" aria-hidden="true"><button class="cta" id="cta" type="button" tabindex="-1"><span id="cta-label">Trennwand gestalten</span> <span aria-hidden="true">→</span></button><a class="cta-mail" id="cta-mail" href="mailto:info@buechlerglas.ch?subject=Anfrage" data-mail="info@buechlerglas.ch" tabindex="-1" aria-label="Direkt anfragen per E-Mail" title="Direkt anfragen"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3.8 7l8.2 6.2L20.2 7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></a></div>
 
 <dialog class="lightbox" id="lightbox" aria-label="Foto">
   <div class="lb-top"><span class="lb-count"></span><button class="lb-close" type="button" aria-label="Schliessen">×</button></div>
@@ -996,7 +1005,7 @@ html.aw-open .cta-bar { visibility: hidden; }
   /* „Ihr Glas gestalten“: the selector of the chapter (auswahl.js, loaded on first use). */
   document.querySelectorAll('[data-auswahl]').forEach(button => button.addEventListener('click', async () => {
     const selector = await import('./auswahl.js')
-    selector.open(button.dataset.auswahl, { mail: document.getElementById('cta')?.dataset.mail, lightbox: lbOpen, reduced, returnFocus: button })
+    selector.open(button.dataset.auswahl, { mail: document.getElementById('cta-mail')?.dataset.mail, lightbox: lbOpen, reduced, returnFocus: button })
   }))
 
   /* Technical sheets: open from the chapter, close by button, backdrop tap or Escape. */
@@ -1033,7 +1042,7 @@ html.aw-open .cta-bar { visibility: hidden; }
     const choose = deck.parentElement.querySelector('.deck-choose')
     choose?.addEventListener('click', async () => {
       const selector = await import('./auswahl.js')
-      selector.open(chapter, { from: { combo: combos[current], light: lightNow }, mail: document.getElementById('cta')?.dataset.mail, lightbox: lbOpen, reduced, returnFocus: choose })
+      selector.open(chapter, { from: { combo: combos[current], light: lightNow }, mail: document.getElementById('cta-mail')?.dataset.mail, lightbox: lbOpen, reduced, returnFocus: choose })
     })
     const showIndex = index => {
       current = index
@@ -1221,17 +1230,24 @@ html.aw-open .cta-bar { visibility: hidden; }
   const names = { trennwand: '01 Trennwand', lavabo: '02 Lavabo', rueckwand: '03 Rückwand', kontakt: 'Beratung' }
   let shown = ''
 
-  /* Call to action: an e-mail with the visible chapter in the subject where an address is set
-     (data-mail), otherwise a jump to the Beratung. */
+  /* Call to action, named after the chapter in view: „Lavabo gestalten“ opens the selector of
+     that chapter; the round envelope beside it writes an e-mail straight away (with the chapter
+     in the subject where an address is set, otherwise it jumps to the Beratung). */
   const ctaBar = document.getElementById('cta-bar'), cta = document.getElementById('cta')
+  const ctaMail = document.getElementById('cta-mail'), ctaLabel = document.getElementById('cta-label')
   const contact = document.getElementById('kontakt')
   const controls = [...document.querySelectorAll('.ba-switch, .deck-tag, .deck-arrow, .deck-choose, .tech-actions, .mosaic-all')]
   const subjects = { trennwand: 'Trennwand', lavabo: 'Lavabo', rueckwand: 'Rückwand' }
   let ctaShown = null
-  cta.addEventListener('click', () => {
-    if (!cta.dataset.mail) return
+  cta.addEventListener('click', async () => {
+    const chapter = subjects[bar.dataset.chapter] ? bar.dataset.chapter : 'trennwand'
+    const selector = await import('./auswahl.js')
+    selector.open(chapter, { mail: ctaMail.dataset.mail, lightbox: lbOpen, reduced, returnFocus: cta })
+  })
+  ctaMail.addEventListener('click', () => {
+    if (!ctaMail.dataset.mail) return
     const subject = `Anfrage – ${subjects[bar.dataset.chapter] ?? 'Glas für Bad und Küche'}`
-    cta.href = `mailto:${cta.dataset.mail}?subject=${encodeURIComponent(subject)}`
+    ctaMail.href = `mailto:${ctaMail.dataset.mail}?subject=${encodeURIComponent(subject)}`
   })
 
   let queued = false
@@ -1263,7 +1279,7 @@ html.aw-open .cta-bar { visibility: hidden; }
         return r.width && r.bottom > zone.top && r.top < vh && r.right > zone.left && r.left < zone.right
       })
     }
-    if (ctaOn !== ctaShown) { ctaShown = ctaOn; ctaBar.classList.toggle('is-on', ctaOn); ctaBar.setAttribute('aria-hidden', String(!ctaOn)); cta.tabIndex = ctaOn ? 0 : -1 }
+    if (ctaOn !== ctaShown) { ctaShown = ctaOn; ctaBar.classList.toggle('is-on', ctaOn); ctaBar.setAttribute('aria-hidden', String(!ctaOn)); cta.tabIndex = ctaMail.tabIndex = ctaOn ? 0 : -1 }
     // while the next chapter rides in with its own bar, the sticky one steps aside
     const riding = riders.some(r => { const t = r.getBoundingClientRect().top; return t > 1 && t < vh })
     if (riding !== away) { away = riding; bar.classList.toggle('is-away', riding) }
@@ -1271,6 +1287,7 @@ html.aw-open .cta-bar { visibility: hidden; }
     if (key === shown) return
     shown = key
     bar.dataset.chapter = chapter.dataset.chapter
+    if (subjects[chapter.dataset.chapter]) ctaLabel.textContent = `${subjects[chapter.dataset.chapter]} gestalten`
     chapterName.textContent = names[chapter.dataset.chapter]
     partName.textContent = chapter.dataset.chapter === 'kontakt' ? '' : part?.dataset.part ?? ''
     steps.forEach(step => step.setAttribute('aria-current', String(step.getAttribute('href') === '#' + chapter.dataset.chapter)))

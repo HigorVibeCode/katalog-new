@@ -145,7 +145,7 @@ function render() {
   ui.where.textContent = `${NUMBERS[state.chapter]} ${ch.title} · Ihr Glas gestalten`
   ui.count.textContent = last ? 'Ihre Auswahl' : `Schritt ${state.at + 1} von ${list.length}`
   ui.bar.replaceChildren(...list.map((s, i) => el('i', { class: i < state.at ? 'done' : i === state.at ? 'now' : '' })), el('i', { class: last ? 'now' : '' }))
-  ui.chips.replaceChildren(...list.filter(s => state.sel[s.id]).map(s => {
+  ui.chips.replaceChildren(...list.filter((s, i) => state.sel[s.id] && i <= state.at).map(s => {   // only steps already reached
     const i = list.indexOf(s)
     return el('button', { type: 'button', class: i === state.at ? 'is-here' : '', onclick: () => go(i), 'aria-label': `${s.title} ändern: ${option(s.id, state.sel[s.id]).name}` },
       el('small', {}, s.title), option(s.id, state.sel[s.id]).name)
@@ -180,7 +180,8 @@ function renderStep(step) {
   ui.body.replaceChildren(el('div', { class: 'aw-step' },
     el('h2', { id: 'aw-title', tabindex: '-1' }, step.title),
     el('p', { class: 'aw-lead' }, step.lead + (step.optional ? ' Optional.' : '')),
-    tabs, grid))
+    tabs, grid,
+    el('p', { class: 'aw-direct' }, 'Lieber persönlich? ', el('a', { href: mailto(true) }, 'Direkt anfragen'), state.at ? ' – mit Ihrer bisherigen Auswahl.' : '.')))
   focusTitle()
 }
 
@@ -206,17 +207,20 @@ function focusTitle() { requestAnimationFrame(() => ui.body.querySelector('h2')?
 
 // ------------------------------------------------------------------ result
 
-const pairs = () => steps().map(s => [s.title, option(s.id, state.sel[s.id]).name])
+const pairs = () => steps().filter(s => state.sel[s.id]).map(s => [s.title, option(s.id, state.sel[s.id]).name])
 
 function photos() {
   return data.photos.filter(p => p.chapter === state.chapter && Object.entries(p.tags).every(([k, v]) => matches([v], valueOf(k))))
     .sort((a, b) => Object.keys(b.tags).length - Object.keys(a.tags).length)
 }
 
-function mailto() {
-  const ch = chapterOf(), list = pairs()
-  const subject = `Anfrage – ${ch.title}: ${list.slice(0, 3).map(p => p[1]).join(', ')}`
-  const body = `Guten Tag\n\nIch interessiere mich für diese Auswahl (${ch.title}):\n\n${list.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nBitte kontaktieren Sie mich für eine persönliche Beratung.\n\nName:\nTelefon:\nOrt:\nMasse (falls bekannt):\n\nFreundliche Grüsse`
+// partial: only the steps already passed (optional steps carry a default before they are seen)
+function mailto(partial = false) {
+  const ch = chapterOf(), passed = steps().slice(0, state.at).map(s => s.title)
+  const list = partial ? pairs().filter(([title]) => passed.includes(title)) : pairs()
+  const subject = list.length ? `Anfrage – ${ch.title}: ${list.slice(0, 3).map(p => p[1]).join(', ')}` : `Anfrage – ${ch.title}`
+  const chosen = list.length ? `Ich interessiere mich für diese Auswahl (${ch.title}):\n\n${list.map(([k, v]) => `${k}: ${v}`).join('\n')}` : `Ich interessiere mich für: ${ch.title}`
+  const body = `Guten Tag\n\n${chosen}\n\nBitte kontaktieren Sie mich für eine persönliche Beratung.\n\nName:\nTelefon:\nOrt:\nMasse (falls bekannt):\n\nFreundliche Grüsse`
   return `mailto:${opts.mail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
