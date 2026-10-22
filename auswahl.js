@@ -1,6 +1,6 @@
 // „Ihr Glas gestalten“: the selector of each chapter. A page rises over the catalogue and walks
 // through the steps of the chapter (auswahl.json, from scripts/auswahl-data.py); at the end it
-// shows the chosen glass in 3D, the real photos that match it, and sends the selection by e-mail.
+// shows the chosen glass in 3D and the real photos that match it, and sends the selection by e-mail.
 // The rules live in the data: a step with "when" is shown only when the choices so far match it.
 
 const IMG = 'media/'
@@ -8,10 +8,12 @@ const LIGHT_ORDER = ['auto', 'violett-tuerkis', 'tuerkis', 'warmweiss', 'ohne'] 
 const NUMBERS = { trennwand: '01', lavabo: '02', rueckwand: '03' }
 
 let data = null, ui = null, state = null, opts = {}, preview = null, sprites = {}
-// texts in the reader's language (i18n.js); the page translates what is shown, the e-mail is built here
-const T = (s, vars) => window.I18N ? window.I18N.T(s, vars) : vars ? s.replace(/\{(\w)\}/g, (m, n) => vars[n] ?? m) : s
-const lang = () => window.I18N?.lang ?? 'de'
-addEventListener('langchange', () => { if (ui && !ui.root.hidden) render() })
+// the interface texts of the page's language (the JSON block #i18n, built by i18n/build.py)
+const T = JSON.parse(document.getElementById('i18n').textContent)
+const t = (key, values = {}) => T[key].replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '')
+const LANG = document.documentElement.lang.slice(0, 2)
+// the key the 3D scenes know an option by (its German name), whatever language it is shown in
+const key = o => o.k ?? o.name
 
 const el = (tag, attrs = {}, ...kids) => {
   const e = document.createElement(tag)
@@ -124,13 +126,13 @@ function build() {
   ui.root = el('div', { class: 'aw', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'aw-title', hidden: true })
   ui.where = el('span', { class: 'aw-where' })
   ui.count = el('span', { class: 'aw-count' })
-  ui.close = el('button', { class: 'aw-close', type: 'button', 'aria-label': 'Schliessen', onclick: () => close() }, '×')
+  ui.close = el('button', { class: 'aw-close', type: 'button', 'aria-label': t('aw.close'), onclick: () => close() }, '×')
   ui.bar = el('div', { class: 'aw-bar', 'aria-hidden': 'true' })
   ui.body = el('div', { class: 'aw-body' })
-  ui.chips = el('div', { class: 'aw-chips', 'aria-label': 'Ihre Auswahl' })
-  ui.back = el('button', { class: 'aw-back', type: 'button', onclick: () => go(state.at - 1) }, '← Zurück')
-  ui.next = el('button', { class: 'aw-next', type: 'button', onclick: () => go(state.at + 1) }, 'Weiter →')
-  ui.send = el('a', { class: 'aw-next aw-send', hidden: true }, 'Diese Auswahl anfragen')
+  ui.chips = el('div', { class: 'aw-chips', 'aria-label': t('aw.yours') })
+  ui.back = el('button', { class: 'aw-back', type: 'button', onclick: () => go(state.at - 1) }, t('aw.back'))
+  ui.next = el('button', { class: 'aw-next', type: 'button', onclick: () => go(state.at + 1) }, t('aw.next'))
+  ui.send = el('a', { class: 'aw-next aw-send', hidden: true }, t('aw.send'))
   ui.root.append(
     el('div', { class: 'aw-sheet' },
       el('header', { class: 'aw-head' }, el('div', {}, ui.where, ui.count), ui.close),
@@ -146,12 +148,12 @@ function render() {
   settle()
   const list = steps(), last = state.at >= list.length
   const ch = chapterOf()
-  ui.where.textContent = `${NUMBERS[state.chapter]} ${ch.title} · Ihr Glas gestalten`
-  ui.count.textContent = last ? 'Ihre Auswahl' : `Schritt ${state.at + 1} von ${list.length}`
+  ui.where.textContent = t('aw.where', { n: NUMBERS[state.chapter], title: ch.title })
+  ui.count.textContent = last ? t('aw.yours') : t('aw.step', { n: state.at + 1, total: list.length })
   ui.bar.replaceChildren(...list.map((s, i) => el('i', { class: i < state.at ? 'done' : i === state.at ? 'now' : '' })), el('i', { class: last ? 'now' : '' }))
   ui.chips.replaceChildren(...list.filter((s, i) => state.sel[s.id] && i <= state.at).map(s => {   // only steps already reached
     const i = list.indexOf(s)
-    return el('button', { type: 'button', class: i === state.at ? 'is-here' : '', onclick: () => go(i), 'aria-label': `${s.title} ändern: ${option(s.id, state.sel[s.id]).name}` },
+    return el('button', { type: 'button', class: i === state.at ? 'is-here' : '', onclick: () => go(i), 'aria-label': t('aw.change', { title: s.title, value: option(s.id, state.sel[s.id]).name }) },
       el('small', {}, s.title), option(s.id, state.sel[s.id]).name)
   }))
   ui.back.hidden = state.at === 0
@@ -161,7 +163,7 @@ function render() {
   ui.next.hidden = false
   const step = list[state.at]
   ui.next.disabled = !state.sel[step.id]
-  ui.next.textContent = state.at === list.length - 1 ? 'Ihre Auswahl ansehen →' : 'Weiter →'
+  ui.next.textContent = state.at === list.length - 1 ? t('aw.see') : t('aw.next')
   renderStep(step)
 }
 
@@ -177,15 +179,15 @@ function renderStep(step) {
   }))
   fill()
   // the 50 lavabo models: a filter by kind
-  const tabs = step.id === 'modell' && groups ? el('div', { class: 'aw-tabs', role: 'group', 'aria-label': 'Art' },
-    ...[{ id: null, name: 'Alle' }, ...groups].map(g => el('button', { type: 'button', 'aria-pressed': String(g.id === filter), onclick: e => {
+  const tabs = step.id === 'modell' && groups ? el('div', { class: 'aw-tabs', role: 'group', 'aria-label': t('aw.kind') },
+    ...[{ id: null, name: t('aw.all') }, ...groups].map(g => el('button', { type: 'button', 'aria-pressed': String(g.id === filter), onclick: e => {
       filter = g.id; e.currentTarget.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === e.currentTarget))); fill()
     } }, g.name))) : null
   ui.body.replaceChildren(el('div', { class: 'aw-step' },
     el('h2', { id: 'aw-title', tabindex: '-1' }, step.title),
-    el('p', { class: 'aw-lead' }, step.lead + (step.optional ? ' Optional.' : '')),
+    el('p', { class: 'aw-lead' }, step.lead + (step.optional ? t('aw.optional') : '')),
     tabs, grid,
-    el('p', { class: 'aw-direct' }, 'Lieber persönlich? ', el('a', { href: mailto(true) }, 'Direkt anfragen'), state.at ? ' – mit Ihrer bisherigen Auswahl.' : '.')))
+    el('p', { class: 'aw-direct' }, t('aw.personal'), el('a', { href: mailto(true) }, t('aw.direct')), state.at ? t('aw.withsel') : '.')))
   focusTitle()
 }
 
@@ -211,8 +213,9 @@ function focusTitle() { requestAnimationFrame(() => ui.body.querySelector('h2')?
 
 // ------------------------------------------------------------------ result
 
-const MAIL_NAMES = { Automatisch: 'Farbwechsel (alle Farben)' }      // what the shop reads in the e-mail
-const pairs = () => steps().filter(s => state.sel[s.id]).map(s => [s.title, option(s.id, state.sel[s.id]).name])
+// what Büchler Glas reads in the e-mail: the automatic light is named for what it does
+const mailName = (s, o) => s.id === 'licht' && o.id === 'auto' ? t('mail.auto') : o.name
+const pairs = () => steps().filter(s => state.sel[s.id]).map(s => [s.title, option(s.id, state.sel[s.id]).name, mailName(s, option(s.id, state.sel[s.id])), state.sel[s.id]])
 
 function photos() {
   return data.photos.filter(p => p.chapter === state.chapter && Object.entries(p.tags).every(([k, v]) => matches([v], valueOf(k))))
@@ -222,36 +225,34 @@ function photos() {
 // partial: only the steps already passed (optional steps carry a default before they are seen)
 function mailto(partial = false) {
   const ch = chapterOf(), passed = steps().slice(0, state.at).map(s => s.title)
-  const list = (partial ? pairs().filter(([title]) => passed.includes(title)) : pairs()).map(([k, v]) => [k, MAIL_NAMES[v] ?? v])
-  const title = T(ch.title), lines = list.map(([k, v]) => `${T(k)}: ${T(v)}`).join('\n')
-  const subject = list.length ? T('Anfrage – {x}: {y}', { x: title, y: list.slice(0, 3).map(p => T(p[1])).join(', ') }) : T('Anfrage – {x}', { x: title })
-  const chosen = list.length ? `${T('Ich interessiere mich für diese Auswahl ({x}):', { x: title })}\n\n${lines}` : T('Ich interessiere mich für: {x}', { x: title })
-  // in another language the shop also gets the selection in German, as it names the glass
-  const german = list.length && lang() !== 'de' ? `\n\n\n— ${T('Auswahl auf Deutsch')} —\n${ch.title}\n${list.map(([k, v]) => `${k}: ${v}`).join('\n')}` : ''
-  const own = list.some(([, v]) => v === 'Ihr Motiv') ? `\n\n${T('Mein Motiv (Bild oder Text) sende ich als Anhang mit.')}` : ''
-  const body = `${T('Guten Tag')}\n\n${chosen}${own}\n\n${T('Bitte kontaktieren Sie mich für eine persönliche Beratung.')}\n\n${T('Name:')}\n${T('Telefon:')}\n${T('Ort:')}\n${T('Masse (falls bekannt):')}\n\n${T('Freundliche Grüsse')}${german}`
+  const all = partial ? pairs().filter(([title]) => passed.includes(title)) : pairs()
+  const list = all.map(([k, , v]) => [k, v])
+  const subject = list.length ? t('mail.subject.sel', { title: ch.title, list: list.slice(0, 3).map(p => p[1]).join(', ') }) : t('mail.subject.ch', { title: ch.title })
+  const chosen = list.length ? `${t('mail.chosen', { title: ch.title })}\n\n${list.map(([k, v]) => `${k}: ${v}`).join('\n')}` : t('mail.interest', { title: ch.title })
+  const own = all.some(p => p[3] === 'kreativ') ? `\n\n${t('mail.own')}` : ''
+  const body = `${t('mail.hello')}\n\n${chosen}${own}\n\n${t('mail.contact')}\n\n${t('mail.fields')}\n\n${t('mail.bye')}`
   return `mailto:${opts.mail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
 function renderResult() {
   const ch = chapterOf(), found = photos()
-  const stage = el('div', { class: `aw-stage aw-stage--${state.chapter}` })
+  const stage = el('div', { class: `aw-stage aw-stage--${state.chapter}`, 'data-loading': t('aw.loading') })
   const pics = found.length
     ? el('ul', { class: 'aw-photos' }, ...found.map((p, i) => el('li', {},
-        el('button', { type: 'button', 'aria-label': `Foto vergrössern: ${p.caption}`, onclick: () => opts.lightbox?.(found.map(f => ({ src: IMG + f.src, cap: f.caption })), i) },
+        el('button', { type: 'button', 'aria-label': t('aw.zoom', { caption: p.caption }), onclick: () => opts.lightbox?.(found.map(f => ({ src: IMG + f.src, cap: f.caption })), i) },
           el('img', { src: IMG + p.src, alt: p.caption, loading: 'lazy' })),
-        el('span', {}, p.caption, el('small', {}, p.origin === 'projekt' ? 'Realisiertes Projekt' : 'Referenz in Floatglas')))))
-    : el('p', { class: 'aw-empty' }, 'Für genau diese Auswahl zeigen wir noch kein Foto. Gerne zeigen wir Ihnen die Möglichkeiten in einer persönlichen Beratung, mit Mustern in unserer Ausstellung.')
+        el('span', {}, p.caption, el('small', {}, p.origin === 'projekt' ? t('aw.project') : t('aw.reference'))))))
+    : el('p', { class: 'aw-empty' }, t('aw.empty'))
   ui.body.replaceChildren(el('div', { class: 'aw-result' },
-    el('h2', { id: 'aw-title', tabindex: '-1' }, 'Ihre Auswahl'),
-    el('p', { class: 'aw-lead' }, `${ch.title} – so könnte Ihr Glas aussehen. Visualisierung; jedes Stück ist ein Unikat.`),
+    el('h2', { id: 'aw-title', tabindex: '-1' }, t('aw.yours')),
+    el('p', { class: 'aw-lead' }, t('aw.lead', { title: ch.title })),
     stage,
     el('dl', { class: 'aw-list' }, ...pairs().map(([k, v], i) => el('div', {}, el('dt', {}, k), el('dd', {}, el('button', { type: 'button', onclick: () => go(i) }, v))))),
-    el('h3', {}, found.length ? `Echte Fotos zu Ihrer Auswahl · ${found.length}` : 'Echte Fotos'),
+    el('h3', {}, found.length ? t('aw.photos.n', { n: found.length }) : t('aw.photos')),
     pics,
     el('div', { class: 'aw-actions' },
-      el('button', { type: 'button', class: 'aw-again', onclick: () => { state.sel = {}; go(0) } }, 'Neu beginnen')),
-    el('p', { class: 'aw-note' }, 'Ihr E-Mail-Programm öffnet sich mit Ihrer Auswahl. Alle Angaben werden mit der Offerte verbindlich bestätigt.')))
+      el('button', { type: 'button', class: 'aw-again', onclick: () => { state.sel = {}; go(0) } }, t('aw.again'))),
+    el('p', { class: 'aw-note' }, t('aw.note'))))
   focusTitle()
   show3D(stage)
 }
@@ -260,18 +261,18 @@ function renderResult() {
 function combo() {
   const s = state.sel, o = id => option(id, s[id])
   if (state.chapter === 'trennwand') {
-    return { form: o('form').name, float: s.glas !== 'struktur', maps: s.glas === 'sand' ? `float-${s.motiv}` : null,
+    return { form: key(o('form')), float: s.glas !== 'struktur', maps: s.glas === 'sand' ? `float-${s.motiv}` : null,
       s: s.struktur, r: s.relief || 'ohne', name: pairs().map(p => p[1]).join(' + ') }
   }
   if (state.chapter === 'lavabo') {
-    const f = o('farbe'), c = { model: o('modell').name, unterseite: o('unterseite').name, farbe: f.name, a: f.a, b: f.b }
+    const f = o('farbe'), c = { model: key(o('modell')), unterseite: key(o('unterseite')), farbe: key(f), a: f.a, b: f.b }
     if (o('modell').group === 'aufsatz') {
-      c.schale = s.schale === 'klar' ? { farbe: 'Klar' } : s.schale === 'satiniert' ? { farbe: 'Satiniert', a: '#e3ece9' } : { farbe: f.name, a: f.a, b: f.b, unterseite: o('unterseite').name }
+      c.schale = s.schale === 'klar' ? { farbe: 'Klar' } : s.schale === 'satiniert' ? { farbe: 'Satiniert', a: '#e3ece9' } : { farbe: key(f), a: f.a, b: f.b, unterseite: key(o('unterseite')) }
     }
     return c
   }
   const f = o('farbe'), ak = s.akzent && s.akzent !== 'ohne' ? o('akzent') : null
-  return { ...o('format').scene, format: s.format, struktur: o('struktur').name, relief: o('relief').name, farbe: f.name, a: f.a, b: f.b,
+  return { ...o('format').scene, format: s.format, struktur: key(o('struktur')), relief: key(o('relief')), farbe: key(f), a: f.a, b: f.b,
     s: s.struktur === 'float' ? null : s.struktur, r: s.relief === 'ohne' ? null : s.relief, akzent: ak?.name, ak: ak?.a, name: '' }
 }
 
@@ -325,7 +326,7 @@ function fromDeck(chapter, c, light) {
 export async function open(chapter, options = {}) {
   opts = options
   if (!data) {
-    data = await (await fetch('auswahl.json')).json()
+    data = await (await fetch(`auswahl.${LANG}.json`)).json()
     countSprites()
   }
   if (!ui) build()

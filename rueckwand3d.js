@@ -11,6 +11,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { LED } from './deck3d.js'
+import { palm, parkWhenAway, planks, plaster, roomEnvironment, slab, surface } from './room3d.js'
 
 export { LED }
 const CW = 3600, CH = 1500                                // the textures cover 3600 × 1500 mm, worktop at the bottom
@@ -36,9 +37,16 @@ const capped = m => {
 export async function initRueckwand3D({ deck, combos, base = 'media/rueckwand/', onIndex, reduced = false, start = 0, tiles = false, view = null }) {
   const canvas = document.createElement('canvas')
   canvas.className = 'deck-canvas'
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' })   // the composer's target is multisampled; the canvas only takes the finished frame
+  // shaders compile without the page waiting on them: no error read-back (it blocks until each program
+  // is linked), and the scene is compiled in parallel before its first frame (compileAsync)
+  renderer.debug.checkShaderErrors = false
+  // the page keeps one scene alive at a time: dispose() gives every listener, observer and the
+  // whole WebGL context (all its video memory) back; the deck is built again on the way back
+  const life = new AbortController(), signal = life.signal
+  const on = (target, type, fn, options = {}) => target.addEventListener(type, fn, { ...options, signal })
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 nicht verfügbar')
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5))     // a Retina screen at 2× costs twice the pixels for little gain
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -46,22 +54,29 @@ export async function initRueckwand3D({ deck, combos, base = 'media/rueckwand/',
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   const scene = new THREE.Scene()
-  scene.environment = kitchenEnv(renderer)
   const room = roomShell()
   scene.add(room.group)
   // daylight from a window on the left, in front of the kitchen
-  const sun = new THREE.DirectionalLight('#fff4e8', 2.0)
-  sun.position.set(-1800, 2600, 3200)
+  const sun = new THREE.DirectionalLight('#fff1dc', 2.6)
+  sun.position.set(-3600, 5200, 6400)                              // far enough that the palm outside lies inside the shadow camera
   sun.target.position.set(0, 300, 0)
   sun.castShadow = true
   sun.shadow.mapSize.set(2048, 2048)
-  Object.assign(sun.shadow.camera, { left: -2600, right: 2600, top: 2200, bottom: -2200, near: 500, far: 9000 })
-  sun.shadow.radius = 7
+  Object.assign(sun.shadow.camera, { left: -2600, right: 2600, top: 2200, bottom: -2200, near: 500, far: 14000 })
+  sun.shadow.radius = 10
   sun.shadow.bias = -0.0005
-  const sky = new THREE.HemisphereLight('#eef0ef', '#2a2a2a', 0.6)
-  const fill = new THREE.DirectionalLight('#eef2f5', 0.5)           // the room behind the camera
+  const sky = new THREE.HemisphereLight('#eef0ef', '#4a4540', 0.5)
+  const fill = new THREE.DirectionalLight('#eef2f5', 0.3)           // the room behind the camera
   fill.position.set(2600, 1400, 3400)
   scene.add(sun, sun.target, sky, fill)
+  // the reflections in the glass and the chrome: the room itself, with its window, its ceiling
+  // spots and the wall behind the camera, taken from in front of the kitchen by day and by night
+  const envs = {}
+  const environment = lit => {
+    if (!envs[lit]) { room.setLit(lit); envs[lit] = roomEnvironment(renderer, scene, [0, 1000, 1400], scene.children.filter(o => o !== room.group && !o.isLight && o !== sun.target)) }
+    return envs[lit]
+  }
+  scene.environment = environment(true)
 
   const camera = new THREE.PerspectiveCamera(30, 1, 50, 40000)
   const target = new THREE.Vector3(0, 300, 300)
@@ -71,6 +86,7 @@ export async function initRueckwand3D({ deck, combos, base = 'media/rueckwand/',
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.45, 0.82)
   composer.addPass(bloom)
   composer.addPass(new OutputPass())
+  deck.__scene = { scene, renderer, render: () => composer.render(), parts: { bloom } }   // for the test page
 
   const loader = new THREE.TextureLoader()
   const cache = new Map()
@@ -149,13 +165,13 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
 		float below = ledY - vH;
 		float fall = below >= 0.0 ? exp( - below / 330.0 ) : exp( below / 70.0 ) * 0.35;
 		float esc = texture2D( escS, vPlan ).r * ( 1.0 - 0.9 * acc.g ) + acc.b * 1.3;
-		vec3 led = mix( ledA, ledB, px );
+		vec3 led = mix( mix( ledA, ledB, px ), vec3( 1.0 ), 0.3 );   // paler than the LED itself, as the light spreads through the glass
 		totalEmissiveRadiance += led * ledOn * fall * ( 0.05 + 2.6 * esc + 0.9 * diffuseColor.rgb );
 	}`)
         .replace('#include <dithering_fragment>', `gl_FragColor.rgb *= shade;
 	#include <dithering_fragment>`)
     }
-    m.customProgramCacheKey = () => 'rueckwand-panel-4'
+    m.customProgramCacheKey = () => 'rueckwand-panel-5'
     return capped(m)
   }
 
@@ -176,8 +192,8 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     return m
   }
 
-  const fronts = { Weiss: new THREE.MeshStandardMaterial({ color: '#e7e5df', roughness: 0.55 }), Anthrazit: new THREE.MeshStandardMaterial({ color: '#2f3134', roughness: 0.6 }),
-    Eiche: wood('#9b7a52'), Salbei: new THREE.MeshStandardMaterial({ color: '#7f8f78', roughness: 0.6 }), Schwarz: new THREE.MeshStandardMaterial({ color: '#141516', roughness: 0.5 }) }
+  const lacquer = (color, roughness = 0.45) => new THREE.MeshPhysicalMaterial({ color, roughness, clearcoat: 0.25, clearcoatRoughness: 0.35, envMapIntensity: 0.8 })
+  const fronts = { Weiss: lacquer('#e9e7e1'), Anthrazit: lacquer('#2f3134', 0.5), Eiche: wood('#9b7a52'), Salbei: lacquer('#7f8f78', 0.5), Schwarz: lacquer('#141516', 0.4) }
   const tops = { 'Stein dunkel': stone('#1c1d1e', 'rgba(205,205,200,', 'rgba(150,150,145,', 0.32), 'Stein hell': stone('#dad6cd', 'rgba(120,115,108,', 'rgba(255,255,250,', 0.3),
     Eiche: wood('#a8875c', 1 / 900) }
   const alu = capped(new THREE.MeshStandardMaterial({ color: '#c9ccce', metalness: 0.8, roughness: 0.35, envMapIntensity: 1.3 }))
@@ -210,7 +226,7 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     const box = (w, h, d, x, y, z, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); return add(m) }
 
     // the glass panel, on the wall from the worktop up, in its outline
-    const t = combo.t || 6
+    const t = typeof combo.t === 'number' ? combo.t : 6                 // combo.t also carries the translations
     const form = panelForm(combo)
     const shape = new THREE.Shape(form.outline.map(([x, y]) => new THREE.Vector2(x, y)))
     const pg = new THREE.ShapeGeometry(shape, 32)
@@ -342,7 +358,8 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     sky.intensity = ledEnabled ? 0.14 : 0.6
     scene.environmentIntensity = ledEnabled ? 0.4 : 1
     room.setLit(!ledEnabled)
-    bloom.strength = ledEnabled ? 0.55 : 0.18
+    scene.environment = environment(!ledEnabled)
+    bloom.strength = ledEnabled ? 0.42 : 0.18
     invalidate()
     return LED[led]
   }
@@ -406,9 +423,10 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
   }
 
   let visible = false, frame = 0, dirty = true, last = 0, lastScroll = 0
-  addEventListener('scroll', () => { lastScroll = performance.now() }, { passive: true })
+  on(window, 'scroll', () => { lastScroll = performance.now() }, { passive: true })
   const invalidate = () => { dirty = true; if (!frame && visible) frame = requestAnimationFrame(tick) }
   const tick = now => {
+    if (signal.aborted) return
     frame = 0
     // while the page scrolls the glass holds still, so the scroll keeps the whole frame budget
     if (!drag && now - lastScroll < 140) { last = 0; frame = setTimeout(() => { frame = requestAnimationFrame(tick) }, 140); return }
@@ -457,13 +475,13 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
   }
 
   let drag = null
-  deck.addEventListener('pointerdown', e => {
+  on(deck, 'pointerdown', e => {
     if (e.target.closest('button')) return
     spin = null
     drag = { x: e.clientX, start: pos, lastX: e.clientX, lastT: performance.now(), v: 0, moved: false, id: e.pointerId }
     aim = pos
   })
-  deck.addEventListener('pointermove', e => {
+  on(deck, 'pointermove', e => {
     if (!drag || e.pointerId !== drag.id) return
     const dx = e.clientX - drag.x
     if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; deck.setPointerCapture(e.pointerId) }
@@ -487,16 +505,18 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
       goTo(Math.round(pos) + (x < 0.33 ? -1 : 1))
     }
   }
-  deck.addEventListener('pointerup', end)
-  deck.addEventListener('pointercancel', e => { if (drag) { drag.moved = true; drag.v = 0; end(e) } })
-  deck.addEventListener('keydown', e => {
+  on(deck, 'pointerup', end)
+  on(deck, 'pointercancel', e => { if (drag) { drag.moved = true; drag.v = 0; end(e) } })
+  on(deck, 'keydown', e => {
     if (e.key === 'ArrowRight') { e.preventDefault(); goTo(Math.round(aim) + 1) }
     if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.round(aim) - 1) }
     if (e.key === 'Home') { e.preventDefault(); goTo(0) }
     if (e.key === 'End') { e.preventDefault(); goTo(panels.length - 1) }
   })
 
+  let away = null
   const resize = () => {
+    if (away?.parked) return
     const w = deck.clientWidth, h = deck.clientHeight
     renderer.setSize(w, h, false)
     composer.setPixelRatio(renderer.getPixelRatio())
@@ -505,12 +525,18 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
     camera.updateProjectionMatrix()
     invalidate()
   }
-  new ResizeObserver(resize).observe(deck)
-  new IntersectionObserver(([entry]) => {
+  const sizes = new ResizeObserver(resize)
+  sizes.observe(deck)
+  signal.addEventListener('abort', () => sizes.disconnect())
+  const seen = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (visible) wake()
     else if (frame) { cancelAnimationFrame(frame); clearTimeout(frame); frame = 0 }
-  }).observe(deck)
+  })
+  seen.observe(deck)
+  signal.addEventListener('abort', () => seen.disconnect())
+
+  away = parkWhenAway(deck, { signal, renderer, composer, resize, draw: () => composer.render() })
 
   deck.prepend(canvas)
   deck.classList.add('is-3d')
@@ -519,10 +545,21 @@ float vnoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); vec2 u = f * f * (
   setLight(LED.length - 1)
   aimCamera()
   place()
+  await renderer.compileAsync(scene, camera).catch(() => {})
   composer.render()
   canvas.classList.add('is-ready')
   wake()
-  return { setLight, light: () => led, random, step: d => goTo(Math.round(aim) + d), goTo }
+  const dispose = () => {
+    life.abort()
+    visible = false
+    cancelAnimationFrame(frame); clearTimeout(frame)
+    composer.dispose()
+    renderer.dispose()
+    renderer.forceContextLoss()
+    canvas.remove()
+    deck.classList.remove('is-3d')
+  }
+  return { setLight, light: () => led, random, step: d => goTo(Math.round(aim) + d), goTo, dispose }
 }
 
 // ------------------------------------------------------------------ kitchen parts
@@ -736,7 +773,7 @@ function hob() {
   g.strokeStyle = 'rgba(160,160,160,.35)'; g.lineWidth = 2
   for (const [x, y, r] of [[140, 120, 80], [380, 120, 62], [140, 330, 62], [380, 320, 88]]) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.stroke() }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
-  return new THREE.MeshPhysicalMaterial({ map: t, roughness: 0.15, clearcoat: 1, clearcoatRoughness: 0.03 })
+  return new THREE.MeshPhysicalMaterial({ map: t, roughness: 0.3, specularIntensity: 0.3, clearcoat: 0.5, clearcoatRoughness: 0.2, envMapIntensity: 0.2 })   // black glass: the ceiling shows in it, dimly
 }
 
 function wood(color, repeat = 0) {
@@ -760,59 +797,43 @@ function wood(color, repeat = 0) {
 
 // ------------------------------------------------------------------ light and room
 
-// Reflections in the glass: the window on the left, the ceiling light, the room behind the camera
-function kitchenEnv(renderer) {
-  const env = new THREE.Scene()
-  const k = 0.08
-  const room = new THREE.Mesh(new THREE.BoxGeometry(40, 30, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k * 0.99, k * 0.96), side: THREE.BackSide }))
-  room.position.y = 6
-  env.add(room)
-  const box = (w, h, x, y, z, v) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(v, v * 0.99, v * 0.95), side: THREE.DoubleSide }))
-    m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m)
-  }
-  box(10, 11, -18, 5, 8, 1.7)          // window on the left, with its bars
-  for (const y of [1.5, 8.5]) box(10.2, 0.35, -17.9, y, 8.05, 0.08)
-  box(0.35, 11.2, -17.9, 5, 8.05, 0.08)
-  box(6, 9, 6, 3, 19, 0.35)            // the room behind the camera
-  // recessed spots in the ceiling: small, bright, they show as points of light in the glass
-  for (const [x, z] of [[-9, 2], [-3, 2], [3, 2], [9, 2], [-6, 10], [0, 10], [6, 10]]) {
-    const spot = new THREE.Mesh(new THREE.CircleGeometry(0.42, 20), new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 5.8, 5.3), side: THREE.DoubleSide }))
-    spot.position.set(x, 20.9, z); spot.rotation.x = Math.PI / 2; env.add(spot)
-  }
-  const pmrem = new THREE.PMREMGenerator(renderer)
-  const texture = pmrem.fromScene(env, 0.02).texture
-  pmrem.dispose()
-  return texture
-}
-
-// the wall, the floor and the ceiling of the kitchen
+// The kitchen's room: a warm limewash wall, wide oak planks on the floor, a plaster ceiling with
+// its recessed spots, a window on the left with a palm outside whose fronds dapple the kitchen
+// in the morning sun, and the room behind the camera (seen in the glass).
 function roomShell() {
   const group = new THREE.Group()
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 512
-  const g = c.getContext('2d')
-  g.fillStyle = '#c3c4c4'; g.fillRect(0, 0, 1024, 512)
-  const img = g.getImageData(0, 0, 1024, 512)
-  for (let i = 0; i < img.data.length; i += 4) { const n = (Math.random() - 0.5) * 8; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n }
-  g.putImageData(img, 0, 0)
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
-  tex.repeat.set(10, 3)
-  const wallMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 })
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(30000, CEILING - FLOOR), wallMat)
+  const wallMat = surface(plaster({ size: 1024, color: '#eee6d9', clouds: 0.05, grain: 0.02, seed: 21 }), { w: 2400, h: 2400 })
+  const wall = slab(wallMat, 30000, CEILING - FLOOR)
   wall.position.set(0, (CEILING + FLOOR) / 2, -1)
-  wall.receiveShadow = true
-  const floorMat = new THREE.MeshStandardMaterial({ color: '#5f6061', roughness: 0.75 })
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30000, 24000), floorMat)
+  const floorMat = surface(planks({ color: '#b48e62', boards: 5, seed: 43, satin: 0.5, contrast: 0.12 }), { w: 2600, h: 5 * 190 }, { clearcoat: 0.15, clearcoatRoughness: 0.4 })
+  const floor = slab(floorMat, 30000, 24000)
+  for (const k of ['map', 'normalMap', 'roughnessMap']) floor.material[k].rotation = Math.PI / 2     // the planks run towards the wall
   floor.rotation.x = -Math.PI / 2
   floor.position.set(0, FLOOR, 12000)
-  floor.receiveShadow = true
-  const ceilMat = new THREE.MeshStandardMaterial({ color: '#d9d6d0', roughness: 0.95, emissive: '#3a3936' })
-  const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(30000, 24000), ceilMat)
+  const ceilMat = surface(plaster({ color: '#f1efea', clouds: 0.02, grain: 0.015, seed: 8 }), { w: 2000, h: 2000 })
+  const ceiling = slab(ceilMat, 30000, 24000)
   ceiling.rotation.x = Math.PI / 2
   ceiling.position.set(0, CEILING, 12000)
   group.add(wall, floor, ceiling)
+  // recessed spots in the ceiling: small, bright, they show as points of light in the glass
+  const spots = []
+  for (const [x, z] of [[-2400, 700], [-800, 700], [800, 700], [2400, 700], [-1600, 2200], [0, 2200], [1600, 2200]]) {
+    const spot = new THREE.Mesh(new THREE.CircleGeometry(42, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 5.8, 5.3), toneMapped: false }))
+    spot.position.set(x, CEILING - 1, z); spot.rotation.x = Math.PI / 2
+    group.add(spot); spots.push(spot)
+  }
+  // the window on the left and the room behind the camera, for the reflections
+  const window = new THREE.Mesh(new THREE.PlaneGeometry(1600, 1500), new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 4, 4.2), toneMapped: false }))
+  window.rotation.y = Math.PI / 2; window.position.set(-4200, 1300, 2200)
+  const behind = new THREE.Mesh(new THREE.PlaneGeometry(30000, CEILING - FLOOR), new THREE.MeshStandardMaterial({ color: '#d9d5cf', roughness: 0.9 }))
+  behind.rotation.y = Math.PI; behind.position.set(0, (CEILING + FLOOR) / 2, 6000)
+  // the palm between the sun and the kitchen, above the ceiling (which hides it but casts no
+  // shadow), set off to the left so its fronds dapple only that side and the sun falls clear
+  // on the rest
+  const tree = palm({ width: 4200, seed: 11 })
+  tree.position.set(-3100, 2000, 2365)
+  tree.lookAt(-3570, 2600, 3200)
+  group.add(window, behind, tree)
 
   const gc = document.createElement('canvas'); gc.width = 256; gc.height = 128
   const gg = gc.getContext('2d')
@@ -825,7 +846,11 @@ function roomShell() {
   const glowTex = new THREE.CanvasTexture(gc)
   return {
     group,
-    setLit: lit => { wallMat.color.setScalar(lit ? 0.75 : 0.22); floorMat.color.set(lit ? '#5f6061' : '#28292a'); ceilMat.emissiveIntensity = lit ? 1 : 0.15; ceilMat.color.setScalar(lit ? 1 : 0.3) },
+    setLit: lit => {
+      wallMat.color.setScalar(lit ? 1 : 0.3); floorMat.color.setScalar(lit ? 1 : 0.3); ceilMat.color.setScalar(lit ? 1 : 0.3); behind.material.color.setScalar(lit ? 1 : 0.3)
+      window.material.color.set(lit ? '#ffffff' : '#2a3448').multiplyScalar(lit ? 4 : 1)
+      spots.forEach(sp => sp.material.color.setScalar(lit ? 6 : 2.5))
+    },
     // the light pool on the worktop, from the wall forward
     glow: w => {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 560), new THREE.MeshBasicMaterial({ map: glowTex, color: '#000000', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))

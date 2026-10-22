@@ -12,6 +12,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { LED } from './deck3d.js'
+import { mirrorDisc, mirrorFloor, monstera, palm, parkWhenAway, plaster, roomEnvironment, slab, surface, towelRail, travertine } from './room3d.js'
 
 export { LED }
 const T = 19, DEPTH = 150, LIP = 30                       // mm: glass, basin depth, rounded basin rim
@@ -41,9 +42,16 @@ export async function initLavabo3D({ deck, combos, base = 'media/lavabo/', onInd
   const forms = await (await fetch(`${base}formen.json`)).json()
   const canvas = document.createElement('canvas')
   canvas.className = 'deck-canvas'
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: shot, powerPreference: 'high-performance' })   // the composer's target is multisampled; the canvas only takes the finished frame
+  // shaders compile without the page waiting on them: no error read-back (it blocks until each program
+  // is linked), and the scene is compiled in parallel before its first frame (compileAsync)
+  renderer.debug.checkShaderErrors = false
+  // the page keeps one scene alive at a time: dispose() gives every listener, observer and the
+  // whole WebGL context (all its video memory) back; the deck is built again on the way back
+  const life = new AbortController(), signal = life.signal
+  const on = (target, type, fn, options = {}) => target.addEventListener(type, fn, { ...options, signal })
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 nicht verfügbar')
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5))     // a Retina screen at 2× costs twice the pixels for little gain
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -52,7 +60,6 @@ export async function initLavabo3D({ deck, combos, base = 'media/lavabo/', onInd
   if ('transmissionResolutionScale' in renderer) renderer.transmissionResolutionScale = 0.75
 
   const scene = new THREE.Scene()
-  scene.environment = bathroom(renderer)
   const room = wallAndFloor()
   scene.add(room.group)
   if (shot) {
@@ -71,8 +78,16 @@ export async function initLavabo3D({ deck, combos, base = 'media/lavabo/', onInd
   Object.assign(sun.shadow.camera, { left: -1500, right: 1500, top: 1200, bottom: -1200, near: 500, far: 6000 })
   sun.shadow.radius = 6
   sun.shadow.bias = -0.0006
-  const sky = new THREE.HemisphereLight('#e6ecea', '#1b1a19', 0.5)
+  const sky = new THREE.HemisphereLight('#e6ecea', '#4a4440', 0.5)
   scene.add(sun, sun.target, sky)
+  // the reflections in the glass and the chrome: the room itself, lit and dimmed, taken once
+  // each from above the lavabo
+  const envs = {}
+  const environment = lit => {
+    if (!envs[lit]) { room.setLit(lit); envs[lit] = roomEnvironment(renderer, scene, [0, 250, 700], scene.children.filter(o => o !== room.group && !o.isLight && o !== sun.target)) }
+    return envs[lit]
+  }
+  scene.environment = environment(true)
 
   const camera = new THREE.PerspectiveCamera(30, 1, 50, 30000)
   const target = new THREE.Vector3(0, -70, 310)
@@ -83,6 +98,7 @@ export async function initLavabo3D({ deck, combos, base = 'media/lavabo/', onInd
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.45, 0.82)
   composer.addPass(bloom)
   composer.addPass(new OutputPass())
+  deck.__scene = { scene, renderer, render: () => composer.render(), parts: { bloom, sun, floor: room.floor } }   // for the test page
 
   const loader = new THREE.TextureLoader()
   const cache = new Map()
@@ -113,7 +129,7 @@ export async function initLavabo3D({ deck, combos, base = 'media/lavabo/', onInd
     attenuationColor: '#2f8f6f', attenuationDistance: 25, emissive: '#2e8a68', emissiveIntensity: 0.25,
   })
   // chrome mirrors a brighter room, so it reads as polished metal and not as a dark stick
-  const chrome = capped(new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 1, roughness: 0.08, envMap: bathroom(renderer, 0.42), envMapIntensity: 1.2 }))
+  const chrome = capped(new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 1, roughness: 0.08, envMapIntensity: 1.2 }))
   const rimMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', vertexColors: true, toneMapped: false, transparent: true, opacity: 0.6 })
 
   // the paint on the underside: colour (a Verlauf from left to right), the surface as normals,
@@ -149,13 +165,13 @@ vec2 relief = vec2( 0.0 );`)
 		diffuseColor.rgb *= clamp( 1.0 + 1.6 * dot( relief, normalize( vec2( -0.6, 0.8 ) ) ), 0.55, 1.5 );
 		float lit = texture2D( edgeMap, vPlan ).r;
 		float esc = texture2D( escapeMap, vNormalMapUv ).r;
-		vec3 led = mix( ledA, ledB, vPlan.x );
+		vec3 led = mix( mix( ledA, ledB, vPlan.x ), vec3( 1.0 ), 0.3 );   // paler than the LED itself, as the light spreads through the glass
 		totalEmissiveRadiance += led * ledOn * ( lit * ( 0.22 + 3.2 * esc ) + 0.05 );
 	}`)
         .replace('#include <dithering_fragment>', `gl_FragColor.rgb *= shade;
 	#include <dithering_fragment>`)
     }
-    m.customProgramCacheKey = () => 'lavabo-paint-2'
+    m.customProgramCacheKey = () => 'lavabo-paint-3'
     return capped(m)
   }
 
@@ -183,7 +199,7 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
 	{
 		float lit = texture2D( edgeMap, vPlan ).r;
 		float esc = texture2D( escapeMap, vNormalMapUv ).r;
-		vec3 led = mix( ledA, ledB, vPlan.x );
+		vec3 led = mix( mix( ledA, ledB, vPlan.x ), vec3( 1.0 ), 0.3 );
 		// the texture scatters a little room light (silvery) and, with the LED, glows from the edges
 		totalEmissiveRadiance += vec3( 0.82, 0.9, 0.87 ) * esc * 0.018 * shade;
 		totalEmissiveRadiance += led * ledOn * ( lit * ( 0.12 + 3.4 * esc ) + 0.03 );
@@ -191,7 +207,7 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
         .replace('#include <dithering_fragment>', `gl_FragColor.rgb *= shade;
 	#include <dithering_fragment>`)
     }
-    m.customProgramCacheKey = () => 'lavabo-clear-1'
+    m.customProgramCacheKey = () => 'lavabo-clear-2'
     return capped(m)
   }
   // the bowl standing on the slab: clear glass, or painted on the outside
@@ -327,9 +343,10 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
     // with the LED on the room light is dimmed, so the light in the glass carries the picture
     sun.intensity = ledEnabled ? 0.55 : 2.2
     sky.intensity = ledEnabled ? 0.16 : 0.5
-    scene.environmentIntensity = ledEnabled ? 0.45 : 1
+    scene.environmentIntensity = ledEnabled ? 0.6 : 1
     room.setLit(!ledEnabled)
-    bloom.strength = ledEnabled ? 0.6 : 0.2
+    scene.environment = environment(!ledEnabled)
+    bloom.strength = ledEnabled ? 0.45 : 0.2
     bloom.enabled = !shot
     invalidate()
     return LED[led]
@@ -389,9 +406,10 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
   }
 
   let visible = false, frame = 0, dirty = true, last = 0, lastScroll = 0
-  addEventListener('scroll', () => { lastScroll = performance.now() }, { passive: true })
+  on(window, 'scroll', () => { lastScroll = performance.now() }, { passive: true })
   const invalidate = () => { dirty = true; if (!frame && visible) frame = requestAnimationFrame(tick) }
   const tick = now => {
+    if (signal.aborted) return
     frame = 0
     // while the page scrolls the glass holds still, so the scroll keeps the whole frame budget
     if (!drag && now - lastScroll < 140) { last = 0; frame = setTimeout(() => { frame = requestAnimationFrame(tick) }, 140); return }
@@ -441,13 +459,13 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
   }
 
   let drag = null
-  deck.addEventListener('pointerdown', e => {
+  on(deck, 'pointerdown', e => {
     if (e.target.closest('button')) return
     spin = null
     drag = { x: e.clientX, start: pos, lastX: e.clientX, lastT: performance.now(), v: 0, moved: false, id: e.pointerId }
     aim = pos
   })
-  deck.addEventListener('pointermove', e => {
+  on(deck, 'pointermove', e => {
     if (!drag || e.pointerId !== drag.id) return
     const dx = e.clientX - drag.x
     if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; deck.setPointerCapture(e.pointerId) }
@@ -471,31 +489,40 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
       goTo(Math.round(pos) + (x < 0.33 ? -1 : 1))
     }
   }
-  deck.addEventListener('pointerup', end)
-  deck.addEventListener('pointercancel', e => { if (drag) { drag.moved = true; drag.v = 0; end(e) } })
-  deck.addEventListener('keydown', e => {
+  on(deck, 'pointerup', end)
+  on(deck, 'pointercancel', e => { if (drag) { drag.moved = true; drag.v = 0; end(e) } })
+  on(deck, 'keydown', e => {
     if (e.key === 'ArrowRight') { e.preventDefault(); goTo(Math.round(aim) + 1) }
     if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.round(aim) - 1) }
     if (e.key === 'Home') { e.preventDefault(); goTo(0) }
     if (e.key === 'End') { e.preventDefault(); goTo(panels.length - 1) }
   })
 
+  let away = null
   const resize = () => {
+    if (away?.parked) return
     const w = deck.clientWidth, h = deck.clientHeight
     renderer.setSize(w, h, false)
     composer.setPixelRatio(renderer.getPixelRatio())
     composer.setSize(w, h)
+    room.floor.resize(w * renderer.getPixelRatio() / 2, h * renderer.getPixelRatio() / 2)
     camera.aspect = w / h
     camera.updateProjectionMatrix()
     // frame the lavabo on stage with a little of its neighbours, on phones and desktops alike
     invalidate()
   }
-  new ResizeObserver(resize).observe(deck)
-  new IntersectionObserver(([entry]) => {
+  const sizes = new ResizeObserver(resize)
+  sizes.observe(deck)
+  signal.addEventListener('abort', () => sizes.disconnect())
+  const seen = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (visible) wake()
     else if (frame) { cancelAnimationFrame(frame); clearTimeout(frame); frame = 0 }
-  }).observe(deck)
+  })
+  seen.observe(deck)
+  signal.addEventListener('abort', () => seen.disconnect())
+
+  if (!shot) away = parkWhenAway(deck, { signal, renderer, composer, mirror: () => room.floor, resize, draw: () => composer.render() })
 
   deck.prepend(canvas)
   deck.classList.add('is-3d')
@@ -504,10 +531,21 @@ uniform sampler2D edgeMap; uniform sampler2D escapeMap; uniform float ledOn; uni
   setLight(LED.length - 1)
   aimCamera()
   place()
+  await renderer.compileAsync(scene, camera).catch(() => {})
   if (shot) renderer.render(scene, camera); else composer.render()
   canvas.classList.add('is-ready')
   wake()
-  return { setLight, light: () => led, random, step: d => goTo(Math.round(aim) + d), goTo }
+  const dispose = () => {
+    life.abort()
+    visible = false
+    cancelAnimationFrame(frame); clearTimeout(frame)
+    composer.dispose()
+    renderer.dispose()
+    renderer.forceContextLoss()
+    canvas.remove()
+    deck.classList.remove('is-3d')
+  }
+  return { setLight, light: () => led, random, step: d => goTo(Math.round(aim) + d), goTo, dispose }
 }
 
 // ------------------------------------------------------------------ geometry
@@ -814,56 +852,49 @@ function drain(material) {
 
 // ------------------------------------------------------------------ light and room
 
-// Reflections in the glossy top: a soft ceiling, a window on the left and the light above the
-// mirror, which the glass mirrors as a calm band.
-function bathroom(renderer, k = 0.07) {
-  const env = new THREE.Scene()
-  const room = new THREE.Mesh(new THREE.BoxGeometry(40, 30, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k * 1.01, k * 0.98), side: THREE.BackSide }))
-  room.position.y = 6
-  env.add(room)
-  const box = (w, h, x, y, z, v) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(v, v * 0.99, v * 0.95), side: THREE.DoubleSide }))
-    m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m)
-  }
-  box(10, 0.8, 0, 7.6, -10, 1.1)      // light above the mirror: a calm, narrow band in the glass
-  box(16, 12, 0, 19, 0, 0.9)          // ceiling
-  box(9, 12, -18, 5, 4, 1.6)          // window on the left
-  box(5, 12, 18, 4, -4, 0.5)
-  const pmrem = new THREE.PMREMGenerator(renderer)
-  const texture = pmrem.fromScene(env, 0.02).texture
-  pmrem.dispose()
-  return texture
-}
-
-// The wall the lavabos hang on and the floor: neutral grey plaster and stone, lit softly from the
-// left. The LED light stays in the glass; nothing of it is painted onto the wall.
+// The bathroom the lavabos hang in: a wall of vein-cut travertine with a round backlit mirror
+// above the sink, a honed travertine floor that mirrors the room, a towel on its rail, a
+// monstera beside the sink, and the sun from above left through a palm, whose fronds dapple the
+// wall and the glass. The LED light stays in the glass; nothing of it is painted onto the wall.
 function wallAndFloor() {
   const group = new THREE.Group()
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 512
-  const g = c.getContext('2d')
-  g.fillStyle = '#b4b6b7'; g.fillRect(0, 0, 1024, 512)
-  const img = g.getImageData(0, 0, 1024, 512)
-  for (let i = 0; i < img.data.length; i += 4) { const n = (Math.random() - 0.5) * 9; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n }
-  g.putImageData(img, 0, 0)
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
-  tex.repeat.set(6, 3)
-  const wallMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, color: '#ffffff' })
-  // the side wall of a corner lavabo faces away from the window: a little light of its own
-  const sideMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, color: '#ffffff', emissive: '#535657', emissiveMap: tex })
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(16000, 5000), wallMat)
+  const wallMat = surface(travertine({ color: '#e9e0d0', dark: '#bca98c', seed: 61, polish: 0.42 }), { w: 2400, h: 2400 }, { envMapIntensity: 0.7 })
+  // the side wall of a corner lavabo faces away from the window: plaster, a little light of its own
+  const sideMat = surface(plaster({ color: '#e6e2db', seed: 6 }), { w: 2000, h: 2000 }, { emissive: '#3a3734' })
+  const wall = slab(wallMat, 16000, 5000)
   wall.position.set(0, 300, -1)
-  wall.receiveShadow = true
-  const floorMat = new THREE.MeshStandardMaterial({ color: '#585a5c', roughness: 0.8 })
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(16000, 6000), floorMat)
+  const floorMat = surface(travertine({ color: '#d6cab6', dark: '#a69378', seed: 77, polish: 0.16, pits: 0.5 }), { w: 2200, h: 2200 })
+  const floor = mirrorFloor(floorMat, 16000, 6000, { strength: 0.6 })
   floor.rotation.x = -Math.PI / 2
   floor.position.set(0, -HEIGHT, 3000)
-  floor.receiveShadow = true
-  group.add(wall, floor)
+  // the ceiling and the wall behind the camera: what the glass top and the chrome mirror
+  const ceiling = slab(surface(plaster({ color: '#f1efea', clouds: 0.02, seed: 8 }), { w: 2000, h: 2000 }), 16000, 6000)
+  ceiling.rotation.x = Math.PI / 2
+  ceiling.position.set(0, 2400 - HEIGHT, 3000)
+  const behind = slab(surface(plaster({ color: '#dcd8d1', seed: 9 }), { w: 2000, h: 2000 }), 16000, 5000)
+  behind.rotation.y = Math.PI
+  behind.position.set(0, 300, 6000)
+  // a window high on the left wall, bright; the round mirror with its halo above the sink
+  const window = new THREE.Mesh(new THREE.PlaneGeometry(1800, 1400), new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 4, 4.2), toneMapped: false }))
+  window.rotation.y = Math.PI / 2; window.position.set(-4200, 700, 1800)
+  const mirror = mirrorDisc({ radius: 380, lit: 1.5 })
+  mirror.position.set(0, 560, 0)
+  // the towel to the right, the plant on the floor to the left, and above everything the palm
+  // between the sun and the sink
+  const towel = towelRail({ width: 380 }); towel.position.set(1500, -120, 40); group.add(towel)
+  const plant = monstera({ height: 1150, seed: 9 }); plant.position.set(-1700, -HEIGHT, 260); group.add(plant)
+  const tree = palm({ width: 5200, seed: 7 }); tree.position.set(-500, 1900, 500); tree.rotation.x = -Math.PI / 2; group.add(tree)
+  tree.material.colorWrite = false                                   // only its shadow: the camera and the mirror never see it
+  group.add(wall, floor, ceiling, behind, window, mirror)
 
   return {
-    group, wallMat, sideMat,
-    setLit: lit => { wallMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.color.setScalar(lit ? 0.62 : 0.22); sideMat.emissiveIntensity = lit ? 0.55 : 0.12; floorMat.color.set(lit ? '#585a5c' : '#28292a') },
+    group, wallMat, sideMat, floor,
+    setLit: lit => {
+      wallMat.color.setScalar(lit ? 1 : 0.3); sideMat.color.setScalar(lit ? 1 : 0.3); sideMat.emissiveIntensity = lit ? 0.55 : 0.12
+      floor.material.color.setScalar(lit ? 1 : 0.3); ceiling.material.color.setScalar(lit ? 1 : 0.3); behind.material.color.setScalar(lit ? 1 : 0.3)
+      window.material.color.set(lit ? '#ffffff' : '#2a3448').multiplyScalar(lit ? 4 : 1)
+      mirror.userData.light.intensity = lit ? 2e5 : 5e5
+      mirror.userData.halo.material.opacity = lit ? 0.55 : 0.9
+    },
   }
 }

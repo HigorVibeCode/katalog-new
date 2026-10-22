@@ -8,8 +8,11 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
+import { capped, kilnGlass, smoothstep } from './glass3d.js'
+import { bench, brushed, chrome, contactShadow, cove, mirrorFloor, monstera, niche, palm, parkWhenAway, plaster, roomEnvironment, slab, sunlight, surface, travertine, windowFrame } from './room3d.js'
 
 const GW = 1050, GH = 2100, T = 10                        // mm
+const FLOOR = -GH / 2                                     // the glasses stand on the floor
 export const LED = [
   { name: 'Automatisch', auto: true },                      // the colour changes by itself, slowly
   { name: 'Violett · Türkis', a: '#b24dff', b: '#18d8f0' },
@@ -17,39 +20,35 @@ export const LED = [
   { name: 'Warmweiss', a: '#ffbe73', b: '#ffbe73' },
   { name: 'Ohne Licht', a: null, b: null },
 ]
-const smoothstep = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t) }
-// A sharp highlight on the polished glass can exceed what the half-float bloom buffers hold
-// (65504) and turn the whole frame black on some graphics cards; every glass material keeps its
-// output below that (as in lavabo3d.js).
-const capped = m => {
-  const before = m.onBeforeCompile
-  m.onBeforeCompile = (shader, renderer) => {
-    if (before !== THREE.Material.prototype.onBeforeCompile) before.call(m, shader, renderer)
-    shader.fragmentShader = shader.fragmentShader.replace('#include <dithering_fragment>', 'gl_FragColor.rgb = min( gl_FragColor.rgb, vec3( 64.0 ) );\n\t#include <dithering_fragment>')
-  }
-  const key = m.customProgramCacheKey.bind(m)
-  m.customProgramCacheKey = () => key() + '-capped'
-  return m
-}
 const slug = name => name.toLowerCase().replace(/ /g, '-').replace(/ä/g, 'ae')
 
 export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, reduced = false, start = 0 }) {
   const forms = await (await fetch(`${base}formen.json`)).json()
   const canvas = document.createElement('canvas')
   canvas.className = 'deck-canvas'
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' })   // the composer's target is multisampled; the canvas only takes the finished frame
+  // shaders compile without the page waiting on them: no error read-back (it blocks until each program
+  // is linked), and the scene is compiled in parallel before its first frame (compileAsync)
+  renderer.debug.checkShaderErrors = false
+  // the page keeps one scene alive at a time: dispose() gives every listener, observer and the
+  // whole WebGL context (all its video memory) back; the deck is built again on the way back
+  const life = new AbortController(), signal = life.signal
+  const on = (target, type, fn, options = {}) => target.addEventListener(type, fn, { ...options, signal })
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 nicht verfügbar')
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5))     // a Retina screen at 2× costs twice the pixels for little gain
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.05
   renderer.outputColorSpace = THREE.SRGBColorSpace
-  if ('transmissionResolutionScale' in renderer) renderer.transmissionResolutionScale = 0.75
+  // small screens and reduced motion get the lighter picture: a coarser mirror and refraction
+  const lite = reduced || Math.min(innerWidth, innerHeight) < 700 || (navigator.deviceMemory && navigator.deviceMemory <= 4)
+  if ('transmissionResolutionScale' in renderer) renderer.transmissionResolutionScale = lite ? 0.6 : 0.75
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   const scene = new THREE.Scene()
-  const envDark = studio(renderer, false)
-  scene.environment = envDark
-  const room = showroom()
-  scene.add(room.mesh)
+  // the mirror in the floor sees the glasses as cheap ghosts (no refraction), see build
+  const ghosts = []
+  const room = showroom(renderer, scene, lite, { before: () => ghosts.forEach(g => g(true)), after: () => ghosts.forEach(g => g(false)) })
 
   const camera = new THREE.PerspectiveCamera(28, 1, 100, 40000)
   camera.position.set(0, -170, 7300)                       // glass in the upper part, the label below
@@ -62,6 +61,7 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.45, 0.82)
   composer.addPass(bloom)
   composer.addPass(new OutputPass())
+  deck.__scene = { scene, renderer, render: () => composer.render(), parts: { bloom, ...room.parts } }   // for the test page
 
   // Polished edge (cloned per glass): light travelling along the glass turns it green.
   const edge = new THREE.MeshPhysicalMaterial({
@@ -78,6 +78,10 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
   }
   const shared = { ledA: { value: ledA }, ledB: { value: ledB } }
   let ledEnabled = true
+  // the shadow of kiln glass: a fine checker in the depth map, blurred by the soft shadow into
+  // a half shadow – the sun passes through the glass, dimmed, not blocked
+  const halftone = (() => { const n = 8, d = new Uint8Array(n * n * 4); for (let i = 0; i < n * n; i++) { const v = ((i % n) + Math.floor(i / n)) % 2 ? 255 : 0; d.set([v, v, v, v], i * 4) } const t = new THREE.DataTexture(d, n, n); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(70, 140); t.needsUpdate = true; return t })()
+  const glassDepth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, alphaMap: halftone, alphaTest: 0.5 })
 
   const loader = new THREE.TextureLoader()
   const texture = url => new Promise((resolve, reject) => loader.load(url, t => {
@@ -130,105 +134,38 @@ export async function initDeck3D({ deck, combos, base = 'media/glas/', onIndex, 
     panel.loading = true
     const urls = mapsOf(panel.combo)
     const [normalMap, escape, reliefNormal, relief, edges] = await Promise.all([...urls.map(u => u && acquire(u)), edgeMap(panel.combo.form)])
-    const face = glass(normalMap ?? flatNormal, escape ?? noEscape, edges, panel.combo.float, reliefNormal ?? flatNormal, relief ?? noRelief, !relief && !panel.combo.float)
+    const args = [normalMap ?? flatNormal, escape ?? noEscape, edges, panel.combo.float, reliefNormal ?? flatNormal, relief ?? noRelief, !relief && !panel.combo.float]
+    const face = glass(...args)
+    // the ghost: the same glass without refraction, for the mirror in the floor
+    const ghost = glass(...args)
+    Object.assign(ghost, { transmission: 0, transparent: true, opacity: 0.45, depthWrite: false })
     const geo = geometry(panel.combo.form)
     const side = capped(edge.clone()), rimMat = rimMaterial.clone()
-    const mesh = new THREE.Mesh(geo, geo.type === 'BoxGeometry' ? [side, side, side, side, face, face] : [face, side])
+    const real = geo.type === 'BoxGeometry' ? [side, side, side, side, face, face] : [face, side]
+    const faint = geo.type === 'BoxGeometry' ? [side, side, side, side, ghost, ghost] : [ghost, side]
+    const mesh = new THREE.Mesh(geo, real)
+    if (!panel.combo.float) { mesh.castShadow = true; mesh.customDepthMaterial = glassDepth }
+    const swap = on => { mesh.material = on ? faint : real }
+    ghosts.push(swap)
     const group = new THREE.Group()
     group.add(mesh, new THREE.Mesh(rim(panel.combo.form), rimMat))
+    const foot = contactShadow(GW * 1.5, 620, 0.5)          // the dark line where the glass meets the floor
+    foot.position.set(0, FLOOR + 1, 0)
+    group.add(foot)
     scene.add(group)
-    Object.assign(panel, { group, face, side, rimMat, maps: urls.filter(Boolean), loading: false })
+    Object.assign(panel, { group, face, ghost, swap, side, rimMat, foot, maps: urls.filter(Boolean), loading: false })
     invalidate()
   }
   const release = panel => {
     if (!panel.group) return
     scene.remove(panel.group)
-    panel.face.dispose(); panel.side.dispose(); panel.rimMat.dispose()
+    panel.face.dispose(); panel.ghost.dispose(); panel.side.dispose(); panel.rimMat.dispose()
+    ghosts.splice(ghosts.indexOf(panel.swap), 1)
     panel.maps.forEach(drop)
-    Object.assign(panel, { group: null, face: null, side: null, rimMat: null, maps: null })
+    Object.assign(panel, { group: null, face: null, ghost: null, swap: null, side: null, rimMat: null, maps: null })
   }
 
-  // The glass: clear, with the kiln crinkle added to the surface normal, and LED light escaping
-  // where the surface tilts (escape map), strongest near the lit edges (edge map).
-  // Float glass (isFloat): clear and flat, no kiln texture; the escape map is the sandblasted design,
-  // which turns satin, scatters the room light and catches the LED.
-  const glass = (normalMap, escape, edges, isFloat = false, reliefNormal, relief, bare = false) => {
-    const m = new THREE.MeshPhysicalMaterial({
-      color: '#ffffff', metalness: 0, roughness: 0.1, transmission: 1, thickness: 90, ior: 1.5,
-      attenuationColor: '#d6eee4', attenuationDistance: 1400, specularIntensity: 1, envMapIntensity: 1,
-      normalMap, normalScale: new THREE.Vector2(1.5, 1.5),
-    })
-    const own = { crinkleMap: { value: crinkle }, crinkleRepeat: { value: new THREE.Vector2(2.02, 4.04) }, crinkleScale: { value: isFloat ? 0 : 1.7 }, floatGlass: { value: isFloat ? 1 : 0 },
-      escapeMap: { value: escape }, edgeMap: { value: edges }, shade: { value: 1 },
-      ledOn: { value: 0 }, roomGlow: { value: 0.42 }, veil: { value: 0 }, dayRelief: { value: 0 },
-      reliefNormal: { value: reliefNormal }, reliefMap: { value: relief }, structGain: { value: bare ? 1.25 : 1 } }
-    m.userData.uniforms = own
-    m.onBeforeCompile = shader => {
-      Object.assign(shader.uniforms, own, shared)
-      shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', `#include <common>
-uniform sampler2D crinkleMap; uniform vec2 crinkleRepeat; uniform float crinkleScale;
-uniform sampler2D escapeMap; uniform sampler2D edgeMap;
-uniform vec3 ledA; uniform vec3 ledB; uniform float ledOn; uniform float shade; uniform float roomGlow;
-uniform float floatGlass;
-uniform float veil;
-uniform float dayRelief;
-uniform sampler2D reliefNormal; uniform sampler2D reliefMap; uniform float structGain;
-float frostAmt = 0.0;
-float crinkleSpark = 0.0;
-float facing = 0.0;`)
-        .replace('#include <dithering_fragment>', `
-	// glasses behind the stage: a dark, desaturating veil so they never compete with the front one
-	gl_FragColor.rgb = mix( gl_FragColor.rgb, vec3( dot( gl_FragColor.rgb, vec3( 0.299, 0.587, 0.114 ) ) ), veil * 0.85 ) * ( 1.0 - 0.74 * veil );
-	#include <dithering_fragment>`)
-        .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-	frostAmt = floatGlass * texture2D( escapeMap, vNormalMapUv ).r;
-	roughnessFactor = mix( roughnessFactor, 0.62, frostAmt );
-	diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.93, 0.96, 0.95 ), frostAmt );`)
-        .replace('#include <transmission_fragment>', THREE.ShaderChunk.transmission_fragment.replace('material.transmission = transmission;', 'material.transmission = transmission * ( 1.0 - 0.72 * frostAmt );'))
-        .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', `vec3 mapN;
-	{
-		vec3 sN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;
-		vec3 rN = texture2D( reliefNormal, vNormalMapUv ).xyz * 2.0 - 1.0;
-		float keep = texture2D( reliefMap, vNormalMapUv ).b;
-		vec2 g = sN.xy / max( sN.z, 0.2 ) * structGain * mix( 0.12, 1.0, keep ) + rN.xy / max( rN.z, 0.2 );
-		mapN = normalize( vec3( g, 1.0 ) );
-	}`).replace('mapN.xy *= normalScale;', `mapN.xy *= normalScale;
-	vec3 detN = texture2D( crinkleMap, vNormalMapUv * crinkleRepeat ).xyz * 2.0 - 1.0;
-	detN.xy *= crinkleScale;
-	crinkleSpark = length( detN.xy );
-	vec2 macroXY = mapN.xy;
-	mapN = normalize( vec3( mapN.xy + detN.xy, mapN.z * detN.z ) );
-	// facets and relief flanks turned towards the window (upper left) are bright, the others dark
-	facing = dot( macroXY * 3.2 + detN.xy * 1.1, normalize( vec2( -0.8, 0.55 ) ) );
-	diffuseColor.rgb *= 1.0 - roomGlow * clamp( - facing * 1.3, 0.0, 0.65 );`))
-        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-	{
-		vec4 rel4 = texture2D( reliefMap, vNormalMapUv );
-		float esc = clamp( texture2D( escapeMap, vNormalMapUv ).r * mix( 0.12, 1.0, rel4.b ) * ( 1.0 - floatGlass ) + texture2D( escapeMap, vNormalMapUv ).r * floatGlass + rel4.r, 0.0, 1.0 );
-		float lit = texture2D( edgeMap, vNormalMapUv ).r;
-		vec3 led = mix( ledA, ledB, vNormalMapUv.x );
-		float spark = smoothstep( 0.12, 0.65, crinkleSpark );
-		// sandblasted float: the frost scatters the light softly, paler than the LED colour, with a
-		// fine satin grain, and fades away from the lit edges instead of glowing flat
-		float grain = 0.55 + 0.9 * length( texture2D( crinkleMap, vNormalMapUv * crinkleRepeat * 2.3 ).xy * 2.0 - 1.0 );
-		vec3 ledF = mix( led, vec3( 1.0 ), 0.22 * floatGlass );
-		float escF = esc * mix( 1.5, 3.0 * grain * ( 0.3 + 0.7 * lit ), floatGlass );
-		// clear float glass carries no glow of its own: only the frosted design lights up
-		totalEmissiveRadiance += ledF * ledOn * shade * lit * ( 0.03 * ( 1.0 - floatGlass ) + escF + 0.45 * spark * spark );
-		// room light scattered by the facets and the relief: the silvery look of the glass by day
-		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * roomGlow * shade * ( ( 0.03 + 0.08 * spark ) * ( 1.0 - floatGlass ) + 0.8 * clamp( facing, 0.0, 1.0 ) + 0.16 * esc * ( 1.0 - floatGlass ) );
-		// sandblasted areas: a soft satin glow, much brighter with the LED
-		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * frostAmt * shade * ( 0.07 + roomGlow * 0.7 ) * grain;
-		// LED off: the relief (G of the escape map) carries a soft satin sheen of its own, so the
-		// drawing reads a shade lighter than the structure around it
-		float rel = rel4.g * ( 1.0 - floatGlass );
-		totalEmissiveRadiance += vec3( 0.86, 0.9, 0.88 ) * dayRelief * shade * rel * ( 0.045 + 0.11 * clamp( facing + 0.5, 0.0, 1.0 ) );
-	}`)
-    }
-    m.customProgramCacheKey = () => 'kiln-glass-8'
-    return capped(m)
-  }
+  const glass = (...args) => kilnGlass({ crinkle, shared }, ...args)
 
   // Rim colour along the glass: one colour, or a blend from the left to the right edge.
   const paintRim = geo => {
@@ -270,22 +207,24 @@ float facing = 0.0;`)
     if (autoLed) updateAuto(performance.now())
     else if (ledEnabled) { ledA.set(a); ledB.set(b); ledMid.copy(ledA).lerp(ledB, 0.5) }
     rims.forEach(paintRim)
-    room.setLit(false)
-    scene.environment = envDark
-    scene.environmentIntensity = ledEnabled ? 0.55 : 1.6
-    bloom.strength = ledEnabled ? 0.65 : 0.25
+    // with the LED on the room turns to evening: the sun is gone, the cove light stays, the
+    // glass carries the picture; by day the sun comes through the shutters
+    room.setMode(ledEnabled ? 'evening' : 'day')
+    bloom.strength = ledEnabled ? 0.45 : 0.22
+    renderer.toneMappingExposure = 1
     invalidate()
     return LED[led]
   }
   const lightPanel = (panel, front) => {
     const f = ledEnabled ? front : 0
-    const u = panel.face.userData.uniforms
-    u.ledOn.value = f
-    u.roomGlow.value = ledEnabled ? 0.12 * (1 - f) : 0.42 * (0.12 + 0.88 * front)
-    panel.side.emissive.copy(ledEnabled ? ledMid : edge.emissive)
     const back = 1 - front
-    u.veil.value = back
-    u.dayRelief.value = ledEnabled ? 0 : 0.25 + 0.75 * front
+    for (const u of [panel.face.userData.uniforms, panel.ghost.userData.uniforms]) {
+      u.ledOn.value = f
+      u.roomGlow.value = ledEnabled ? 0.12 * (1 - f) : 0.42
+      u.veil.value = ledEnabled ? back : 0              // by day the others stand in the same light, a little behind
+      u.dayRelief.value = ledEnabled ? 0 : 0.25 + 0.75 * front
+    }
+    panel.side.emissive.copy(ledEnabled ? ledMid : edge.emissive)
     panel.side.emissiveIntensity = ledEnabled ? 0.12 + 1.3 * f : 0.25 * (1 - 0.8 * back)
     panel.rimMat.color.setScalar(ledEnabled ? 0.06 + 0.94 * f : 1 - 0.8 * back)
     panel.rimMat.opacity = ledEnabled ? 0.3 + 0.3 * f : 0.45 * (1 - 0.6 * back)   // a quiet, even line
@@ -301,19 +240,24 @@ float facing = 0.0;`)
       if (!panel.group) return
       panel.group.visible = ad < 3.6
       const reach = ad < 1 ? ad * 0.8 : 0.8 + (ad - 1) * 0.26
-      panel.group.position.set(Math.sign(d) * reach * GW, 0, -ad * 900)
+      const scale = 1 + 0.2 * (1 - smoothstep(0, 1, ad))        // the glass on stage is 20 % larger
+      panel.group.position.set(Math.sign(d) * reach * GW, FLOOR * (scale - 1), -ad * 900)   // its foot stays on the floor
       let turn = -Math.max(-1.4, Math.min(1.4, d)) * 0.7
       if (ad < 0.5) turn += sway * (1 - ad * 2)
       // a bent glass seen straight on looks flat: on stage it turns a little so the bend shows
       if (/^Gebogen/.test(panel.combo.form)) turn -= 0.44 * (1 - smoothstep(0, 1, ad))   // right edge forward
       panel.group.rotation.y = turn
-      panel.group.scale.setScalar(1 + 0.2 * (1 - smoothstep(0, 1, ad)))   // the glass on stage is 20 % larger
+      panel.group.scale.setScalar(scale)
+      panel.foot.scale.setScalar(1 / scale)
+      panel.foot.material.opacity = 1 - smoothstep(0.3, 1.2, ad)
       // side glasses step back into the shadow
-      const shade = 1 - Math.min(ad * 0.72, 0.86)
+      const shade = 1 - Math.min(ad * (ledEnabled ? 0.72 : 0.06), ledEnabled ? 0.86 : 0.08)
       lightPanel(panel, 1 - smoothstep(0.12, 0.8, ad))
-      panel.face.color.setScalar(shade)
-      panel.face.envMapIntensity = (0.35 + shade * 0.65) * (ledEnabled ? 1 : 0.2 + 0.8 * (1 - smoothstep(0.12, 0.7, ad)))
-      panel.face.userData.uniforms.shade.value = 0.25 + shade * 0.75
+      for (const m of [panel.face, panel.ghost]) {
+        m.color.setScalar(shade)
+        m.envMapIntensity = (0.35 + shade * 0.65) * (ledEnabled ? 1 : 0.5 + 0.5 * (1 - smoothstep(0.12, 0.7, ad)))
+        m.userData.uniforms.shade.value = 0.25 + shade * 0.75
+      }
       panel.group.renderOrder = -Math.round(ad * 10)
     })
     const index = Math.round(Math.min(panels.length - 1, Math.max(0, pos)))
@@ -322,9 +266,10 @@ float facing = 0.0;`)
 
   // Render only when something changes; a slow sway lets the light play over the front glass.
   let visible = false, frame = 0, dirty = true, last = 0, lastScroll = 0
-  addEventListener('scroll', () => { lastScroll = performance.now() }, { passive: true })
+  on(window, 'scroll', () => { lastScroll = performance.now() }, { passive: true })
   const invalidate = () => { dirty = true; if (!frame && visible) frame = requestAnimationFrame(tick) }
   const tick = now => {
+    if (signal.aborted) return
     frame = 0
     // while the page scrolls the glass holds still, so the scroll keeps the whole frame budget
     if (!drag && now - lastScroll < 140) { last = 0; frame = setTimeout(() => { frame = requestAnimationFrame(tick) }, 140); return }
@@ -349,7 +294,8 @@ float facing = 0.0;`)
       composer.render()
       dirty = false
       // the automatic colour alone needs no more than about 20 frames a second
-      if (visible) frame = animating ? requestAnimationFrame(tick) : setTimeout(() => { frame = requestAnimationFrame(tick) }, 45)
+      // the sway alone (nothing moves but the light on the glass) needs no more than 30 frames a second
+      if (visible) frame = moving || dirty ? requestAnimationFrame(tick) : setTimeout(() => { frame = requestAnimationFrame(tick) }, animating ? 28 : 45)
     } else last = 0
   }
   const wake = () => { idleSince = performance.now(); invalidate() }
@@ -380,13 +326,13 @@ float facing = 0.0;`)
 
   // Input: drag or flick sideways, tap left or right, arrow keys.
   let drag = null
-  deck.addEventListener('pointerdown', e => {
+  on(deck, 'pointerdown', e => {
     if (e.target.closest('button')) return
     spin = null
     drag = { x: e.clientX, start: pos, lastX: e.clientX, lastT: performance.now(), v: 0, moved: false, id: e.pointerId }
     aim = pos
   })
-  deck.addEventListener('pointermove', e => {
+  on(deck, 'pointermove', e => {
     if (!drag || e.pointerId !== drag.id) return
     const dx = e.clientX - drag.x
     if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; deck.setPointerCapture(e.pointerId) }
@@ -413,32 +359,41 @@ float facing = 0.0;`)
       goTo(Math.round(pos) + (x < 0.33 ? -1 : 1))
     }
   }
-  deck.addEventListener('pointerup', end)
-  deck.addEventListener('pointercancel', e => { if (drag) { drag.moved = true; drag.v = 0; end(e) } })
-  deck.addEventListener('keydown', e => {
+  on(deck, 'pointerup', end)
+  on(deck, 'pointercancel', e => { if (drag) { drag.moved = true; drag.v = 0; end(e) } })
+  on(deck, 'keydown', e => {
     if (e.key === 'ArrowRight') { e.preventDefault(); goTo(Math.round(aim) + 1) }
     if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.round(aim) - 1) }
     if (e.key === 'Home') { e.preventDefault(); goTo(0) }
     if (e.key === 'End') { e.preventDefault(); goTo(panels.length - 1) }
   })
 
+  let away = null
   const resize = () => {
+    if (away?.parked) return
     const w = deck.clientWidth, h = deck.clientHeight
     renderer.setSize(w, h, false)
     composer.setPixelRatio(renderer.getPixelRatio())
     composer.setSize(w, h)
+    room.parts.floor.resize(w * renderer.getPixelRatio() / 2, h * renderer.getPixelRatio() / 2)
     camera.aspect = w / h
     // keep the glass the same size on phones and desktops: frame the height
     camera.fov = 28
     camera.updateProjectionMatrix()
     invalidate()
   }
-  new ResizeObserver(resize).observe(deck)
-  new IntersectionObserver(([entry]) => {
+  const sizes = new ResizeObserver(resize)
+  sizes.observe(deck)
+  signal.addEventListener('abort', () => sizes.disconnect())
+  const seen = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (visible) wake()
     else if (frame) { cancelAnimationFrame(frame); clearTimeout(frame); frame = 0 }
-  }).observe(deck)
+  })
+  seen.observe(deck)
+  signal.addEventListener('abort', () => seen.disconnect())
+
+  away = parkWhenAway(deck, { signal, renderer, composer, mirror: () => room.parts.floor, resize, draw: () => composer.render() })
 
   deck.prepend(canvas)
   deck.classList.add('is-3d')
@@ -447,10 +402,21 @@ float facing = 0.0;`)
   await Promise.all(panels.slice(Math.max(0, start - 1), start + 2).map(p => build(p)))
   setLight(LED.length - 1)                                    // the page switches the light on
   place(performance.now())
+  await renderer.compileAsync(scene, camera).catch(() => {})
   composer.render()
   canvas.classList.add('is-ready')
   wake()
-  return { setLight, light: () => led, random, step: d => goTo(Math.round(aim) + d) }
+  const dispose = () => {
+    life.abort()
+    visible = false
+    cancelAnimationFrame(frame); clearTimeout(frame)
+    composer.dispose()
+    renderer.dispose()
+    renderer.forceContextLoss()
+    canvas.remove()
+    deck.classList.remove('is-3d')
+  }
+  return { setLight, light: () => led, random, step: d => goTo(Math.round(aim) + d), dispose }
 }
 
 // ------------------------------------------------------------------ geometry
@@ -506,64 +472,89 @@ function rimGeometry(form, forms) {
 
 // ------------------------------------------------------------------ light and room
 
-// Reflections. Lit room: white walls, a large window on the left and a ceiling light, so the
-// crinkle facets mirror many brightnesses and the glass reads silvery. Dark room (LED on): only
-// faint softboxes at the sides. Never a light source straight in front of the glass.
-function studio(renderer, lit) {
-  const env = new THREE.Scene()
-  const k = lit ? 0.62 : 0.06
-  const room = new THREE.Mesh(new THREE.BoxGeometry(40, 30, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k * 1.01, k * 0.98), side: THREE.BackSide }))
-  room.position.y = 6
-  env.add(room)
-  const box = (w, h, x, y, z, v) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(v, v, v * 0.97), side: THREE.DoubleSide }))
-    m.position.set(x, y, z); m.lookAt(0, 4, 0); env.add(m)
+// The showroom: a bathroom – a back wall of vein-cut travertine with a lit niche, a honed
+// travertine floor that mirrors the room, a window on the left with a palm outside whose fronds
+// throw their dappled shadow across the wall and the floor, a cove of light along the ceiling, a
+// rain shower, a teak bench with a towel, a monstera. By day the sun lights the room; with the
+// LED on it is evening, the cove and the niche alone stay lit. The reflections are the room.
+function showroom(renderer, scene, lite, hooks) {
+  const group = new THREE.Group()
+  const CEIL = 2350, BACK = -2600, SIDE = 3600, FRONT = 9200          // the camera stands inside, at 7300
+  const wallStone = surface(travertine({ color: '#e9e0d0', dark: '#bca98c', seed: 61, polish: 0.42 }), { w: 2400, h: 2400 }, { envMapIntensity: 0.7 })
+  const floorStone = surface(travertine({ color: '#d6cab6', dark: '#a69378', seed: 77, polish: 0.16, pits: 0.5 }), { w: 2200, h: 2200 })
+  const wallPlaster = surface(plaster({ color: '#efece6', seed: 5 }), { w: 2000, h: 2000 })
+  const ceilPlaster = surface(plaster({ color: '#f5f3ee', clouds: 0.03, seed: 8 }), { w: 2000, h: 2000 })
+
+  // the back wall in pieces around the niche, the pattern running on across them
+  const NX = -1500, NY = 1150, NW = 640, NH = 340
+  const backPiece = (x0, x1, y0, y1) => { const m = slab(wallStone, x1 - x0, y1 - y0, [x0 + SIDE, y0 - FLOOR]); m.position.set((x0 + x1) / 2, (y0 + y1) / 2, BACK); group.add(m) }
+  backPiece(-SIDE, NX - NW / 2, FLOOR, CEIL); backPiece(NX + NW / 2, SIDE, FLOOR, CEIL)
+  backPiece(NX - NW / 2, NX + NW / 2, FLOOR, NY - NH / 2); backPiece(NX - NW / 2, NX + NW / 2, NY + NH / 2, CEIL)
+  const nook = niche({ w: NW, h: NH, depth: 120, material: wallStone, lit: 3 })
+  nook.position.set(NX, NY, BACK)
+  group.add(nook)
+  const floor = mirrorFloor(floorStone, 2 * SIDE, FRONT - BACK, { strength: 0.6, ...hooks }); floor.rotation.x = -Math.PI / 2; floor.position.set(0, FLOOR, (FRONT + BACK) / 2)
+  const ceiling = slab(ceilPlaster, 2 * SIDE, FRONT - BACK); ceiling.rotation.x = Math.PI / 2; ceiling.position.set(0, CEIL, (FRONT + BACK) / 2)
+  const right = slab(wallPlaster, FRONT - BACK, CEIL - FLOOR); right.rotation.y = -Math.PI / 2; right.position.set(SIDE, (CEIL + FLOOR) / 2, (FRONT + BACK) / 2)
+  const front = slab(wallPlaster, 2 * SIDE, CEIL - FLOOR); front.rotation.y = Math.PI; front.position.set(0, (CEIL + FLOOR) / 2, FRONT)   // behind the camera: what the chrome and the glass mirror
+  group.add(floor, ceiling, right, front)
+  // the left wall with the window opening: the wall in four pieces around it
+  const WX0 = BACK + 700, WX1 = BACK + 2300, WY0 = -300, WY1 = 1900                     // window in z and y
+  const piece = (z0, z1, y0, y1) => { const m = slab(wallPlaster, z1 - z0, y1 - y0); m.rotation.y = Math.PI / 2; m.position.set(-SIDE, (y0 + y1) / 2, (z0 + z1) / 2); return m }
+  group.add(piece(BACK, WX0, FLOOR, CEIL), piece(WX1, FRONT, FLOOR, CEIL), piece(WX0, WX1, FLOOR, WY0), piece(WX0, WX1, WY1, CEIL))
+  // the window and, outside, the sky and the palm: seen through the window, mirrored in the
+  // glass, and between the sun and the window, so its fronds dapple the room
+  const win = windowFrame({ w: WX1 - WX0, h: WY1 - WY0 })
+  win.rotation.y = Math.PI / 2; win.position.set(-SIDE, (WY0 + WY1) / 2, (WX0 + WX1) / 2)
+  group.add(win)
+  const sky = win.userData.sky
+  const tree = palm({ width: 5600, seed: 5 })
+  tree.rotation.y = Math.PI / 2; tree.position.set(-SIDE - 1400, 700, -300)
+  group.add(tree)
+  // the bench with its towel, the plant
+  const seat = bench({ width: 900 }); seat.position.set(2050, FLOOR, BACK + 520); seat.rotation.y = -0.08; group.add(seat)
+  const plant = monstera({ height: 1150, seed: 4 }); plant.position.set(-2050, FLOOR, BACK + 900); group.add(plant)
+
+  // the rain shower on the back wall, the drain in the floor
+  const metal = chrome()
+  const fitting = (geo, x, y, z, rx = 0, rz = 0) => { const m = new THREE.Mesh(geo, metal); m.position.set(x, y, z); m.rotation.set(rx, 0, rz); m.castShadow = true; group.add(m); return m }
+  fitting(new THREE.CylinderGeometry(11, 11, 420, 24), 1500, 1830, BACK + 210, Math.PI / 2)      // the arm
+  fitting(new THREE.CylinderGeometry(130, 130, 10, 48), 1500, 1830, BACK + 420)                  // the rain head
+  fitting(new THREE.CylinderGeometry(60, 60, 12, 32), 1500, 1830, BACK + 6, Math.PI / 2)        // its rosette
+  fitting(new THREE.CylinderGeometry(70, 70, 12, 32), 1500, 150, BACK + 6, Math.PI / 2)         // the mixer plate
+  fitting(new THREE.CylinderGeometry(20, 22, 90, 24), 1500, 150, BACK + 50, Math.PI / 2)        // its lever body
+  fitting(new THREE.CylinderGeometry(6, 6, 110, 16), 1500, 100, BACK + 95, 0.35)
+  const drain = new THREE.Mesh(new THREE.BoxGeometry(700, 2, 60), brushed()); drain.position.set(1500, FLOOR + 1.5, BACK + 160); group.add(drain)
+  const slot = new THREE.Mesh(new THREE.BoxGeometry(660, 2, 14), new THREE.MeshStandardMaterial({ color: '#1a1917', roughness: 0.8 })); slot.position.set(1500, FLOOR + 2.6, BACK + 160); group.add(slot)
+
+  // the light: the sun through the shutters, the sky, the cove along the back wall
+  const sun = sunlight({ color: '#fff7ee', position: [-6500, 3600, 2200], target: [1200, FLOOR, -1800], extent: 4200, far: 18000, mapSize: lite ? 1024 : 2048 })
+  sun.shadow.radius = 5
+  const sky2 = new THREE.HemisphereLight('#eef3f8', '#a89c90', 0.7)
+  const strip = cove({ width: 2 * SIDE - 200, height: 50, color: '#fff2dc', intensity: 5, position: [0, CEIL - 40, BACK + 110], lookAt: [0, FLOOR, BACK - 700] })
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(2 * SIDE, 90, 140), ceilPlaster); lip.position.set(0, CEIL - 45, BACK + 200); lip.castShadow = true
+  group.add(sun, sun.target, sky2, strip, lip)
+  scene.add(group)
+
+  // the reflections of the room, by day and in the evening, taken from the middle of the stage
+  const envs = {}
+  const take = mode => {
+    if (!envs[mode]) { apply(mode); envs[mode] = roomEnvironment(renderer, scene, [0, 300, 600], scene.children.filter(o => o !== group)) }
+    return envs[mode]
   }
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(k * 0.45, k * 0.44, k * 0.42) }))
-  floor.rotation.x = -Math.PI / 2; floor.position.y = -8.9; env.add(floor)
-  if (lit) {
-    box(10, 12, -19, 6, 3, 6)          // window on the left
-    box(16, 3, 0, 20.5, 0, 3.5)        // ceiling light
-    box(4, 14, 18, 5, -6, 2)           // reflection of a pale wall on the right
-    box(8, 3, -6, -4, 15, 0.25)        // a darker object in front: gives the facets contrast
-  } else {
-    box(5, 16, -16, 5, -2, 3)
-    box(5, 16, 16, 5, -3, 2.4)
-    box(18, 2.5, 0, 19, -2, 1.6)
+  const apply = mode => {
+    const day = mode === 'day'
+    sun.intensity = day ? 1.9 : 0
+    sky2.intensity = day ? 0.8 : 0.7
+    sky2.color.set(day ? '#eef3f8' : '#8a7a68'); sky2.groundColor.set(day ? '#b5aa9e' : '#2a241f')
+    strip.userData.light.intensity = day ? 4 : 18
+    strip.userData.strip.material.color.set(day ? '#fff6e8' : '#ffd9a8').multiplyScalar(day ? 3 : 2.5); strip.userData.light.color.set(day ? '#fff2dc' : '#ffd9a8')
+    sky.material.color.set(day ? '#ffffff' : '#3a4a68').multiplyScalar(day ? 5 : 1.2)
+    tree.material.color.set(day ? '#3d6d3a' : '#101a14')
+    nook.userData.light.userData.light.intensity = day ? 3 : 7
+    scene.environmentIntensity = day ? 1 : 0.75
   }
-  const pmrem = new THREE.PMREMGenerator(renderer)
-  const texture = pmrem.fromScene(env, 0.02).texture
-  pmrem.dispose()
-  return texture
+  const setMode = mode => { const env = take(mode); apply(mode); scene.environment = env }
+  return { group, setMode, parts: { floor, sun, rect: [strip] } }
 }
 
-// The room behind the glasses: a plain plaster wall and floor, lit softly from the left like a
-// window. No spots or light strips behind the glass. With the LED on the room light is dimmed.
-function showroom() {
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 644
-  const g = c.getContext('2d')
-  const W = c.width, H = c.height
-  const floorY = (0.5 + (GH / 2) / 4400) * H
-  let grad = g.createLinearGradient(0, 0, W, 0)
-  grad.addColorStop(0, '#d9d6cf'); grad.addColorStop(0.55, '#b9b6af'); grad.addColorStop(1, '#8f8c86')
-  g.fillStyle = grad; g.fillRect(0, 0, W, floorY)
-  grad = g.createLinearGradient(0, 0, 0, floorY)
-  grad.addColorStop(0, 'rgba(0,0,0,.22)'); grad.addColorStop(0.5, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,.12)')
-  g.fillStyle = grad; g.fillRect(0, 0, W, floorY)
-  const img = g.getImageData(0, 0, W, Math.ceil(floorY))                       // fine plaster mottling
-  for (let i = 0; i < img.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 7
-    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n
-  }
-  g.putImageData(img, 0, 0)
-  grad = g.createLinearGradient(0, floorY, 0, H)
-  grad.addColorStop(0, '#5e5b56'); grad.addColorStop(1, '#2a2826')
-  g.fillStyle = grad; g.fillRect(0, floorY, W, H - floorY)
-  g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, floorY - 2, W, 3)
-  const t = new THREE.CanvasTexture(c)
-  t.colorSpace = THREE.SRGBColorSpace
-  const material = new THREE.MeshBasicMaterial({ map: t, toneMapped: true })
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(7000, 4400), material)
-  mesh.position.set(0, 0, -2600)
-  return { mesh, setLit: lit => material.color.setScalar(lit ? 0.9 : 0.07) }
-}
